@@ -1,0 +1,338 @@
+/* Causal Capybara visual system. Shared tokens and controls live here; screen layout belongs to app.css and panels.css. */
+
+:root {
+  color-scheme: light dark;
+
+  --paper:        light-dark(#f5f7fa, #15191e);
+  --paper-raised: light-dark(#ffffff, #22282f);
+  --paper-sunken: light-dark(#edf1f5, #11161b);
+  --paper-hover:  light-dark(#e9eff4, #2d353e);
+  --ink:          light-dark(#17232d, #f2f6f9);
+  --ink-soft:     light-dark(#34424e, #d8e1e8);
+  --muted:        light-dark(#536473, #abb9c5);
+  --faint:        light-dark(#5f707d, #a2b2be);
+  --rule:         light-dark(#dce4eb, #39434d);
+  --rule-strong:  light-dark(#7c8b98, #8494a1);
+
+  --teal:         light-dark(#087c91, #59bdcc);
+  --teal-soft:    light-dark(#e4f3f6, #143640);
+  --teal-strong:  light-dark(#086578, #8ad4df);
+  --ochre:        light-dark(#ad701c, #e4ae65);
+  --ochre-soft:   light-dark(#fff3e1, #382916);
+  --crimson:      light-dark(#b63a42, #ed7e81);
+  --crimson-soft: light-dark(#fcecef, #3d2129);
+  --moss:         light-dark(#39805c, #75bc92);
+  --moss-soft:    light-dark(#e9f5ee, #1b3528);
+  --dusk:         light-dark(#5074aa, #94b1e0);
+  --dusk-soft:    light-dark(#ebf1fb, #222e43);
+  --plum:         light-dark(#8067a1, #b49bd3);
+  --clay:         light-dark(#af684e, #d9967f);
+  --stone:        light-dark(#74818c, #a5b1bb);
+
+  --teal-text:    light-dark(#086579, #74ccda);
+  --ochre-text:   light-dark(#8c5813, #efbd7c);
+  --crimson-text: light-dark(#a52e3a, #f29699);
+  --moss-text:    light-dark(#286c4b, #8ed1a7);
+  --dusk-text:    light-dark(#416493, #aec8ed);
+  --on-teal:      light-dark(#ffffff, #10262c);
+
+  --treated: var(--teal);
+  --control: var(--stone);
+
+  --shadow-1: 0 1px 2px light-dark(rgba(20, 42, 60, 0.04), rgba(0, 0, 0, 0.18)),
+              0 8px 24px light-dark(rgba(20, 42, 60, 0.045), rgba(0, 0, 0, 0.14));
+  --shadow-2: 0 4px 14px light-dark(rgba(20, 42, 60, 0.08), rgba(0, 0, 0, 0.3)),
+              0 18px 44px light-dark(rgba(20, 42, 60, 0.08), rgba(0, 0, 0, 0.22));
+  --shadow-pop: 0 24px 70px light-dark(rgba(20, 42, 60, 0.22), rgba(0, 0, 0, 0.65));
+
+  --font-ui: system-ui, -apple-system, 'Segoe UI', 'Inter Variable', sans-serif;
+  --font-num: system-ui, -apple-system, 'Segoe UI', 'Inter Variable', sans-serif;
+  --font-mono: 'JetBrains Mono Variable', 'JetBrains Mono', 'Cascadia Mono', 'Consolas', ui-monospace, monospace;
+  --font-serif: 'Source Serif 4', Georgia, 'Times New Roman', serif;
+
+  --t-display: 30px;
+  --t-title: 20px;
+  --t-section: 15px;
+  --t-body: 13.5px;
+  --t-ui: 13px;
+  --t-small: 12px;
+  --t-micro: 11px;
+  --lh-tight: 1.17;
+  --lh-body: 1.54;
+  --num-feat: 'tnum' 1, 'lnum' 1;
+
+  --r-sm: 8px;
+  --r: 11px;
+  --r-lg: 17px;
+
+  --nav-w: 232px;
+  --insp-w: 300px;
+  --strip-h: 68px;
+  --status-h: 30px;
+  --menu-h: 44px;
+}
+
+/* The desktop appearance setting chooses which half of every light-dark() pair applies. */
+:root[data-theme='light'] { color-scheme: light; }
+:root[data-theme='dark'] { color-scheme: dark; }
+
+* { box-sizing: border-box; }
+
+html, body, #root {
+  height: 100%;
+  margin: 0;
+  overflow: hidden;
+}
+
+body {
+  background: var(--paper);
+  color: var(--ink);
+  font-family: var(--font-ui);
+  font-size: var(--t-body);
+  line-height: var(--lh-body);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  font-optical-sizing: auto;
+  /* Keep numerals clear in dense tables. */
+  font-feature-settings: 'cv05' 1, 'cv08' 1, 'ss03' 1;
+  text-rendering: optimizeLegibility;
+}
+
+/* Prose the reader is meant to read, not scan: the design caption, the
+   assumption notes, the explain panel. Slightly larger and more open. */
+.prose, .explain-body, .dag-caption, .assumption-note {
+  font-size: var(--t-body);
+  line-height: var(--lh-body);
+  max-width: 68ch;
+}
+
+/* Focus order follows the interview; focus is always visible. */
+:focus-visible {
+  outline: 2px solid var(--teal);
+  outline-offset: 1px;
+  border-radius: var(--r-sm);
+}
+
+button, input, select, textarea { font: inherit; color: inherit; }
+
+::-webkit-scrollbar { width: 10px; height: 10px; }
+::-webkit-scrollbar-track { background: transparent; }
+/* The thumb is inset by a transparent border rather than one painted in
+   --paper, which was the wrong colour over every sunken pane. */
+::-webkit-scrollbar-thumb {
+  background: var(--rule-strong);
+  border-radius: 6px;
+  border: 3px solid transparent;
+  background-clip: padding-box;
+}
+::-webkit-scrollbar-thumb:hover { background: var(--faint); }
+
+.num { font-family: var(--font-num); font-variant-numeric: tabular-nums lining-nums; }
+.mono { font-family: var(--font-mono); font-size: 12px; }
+.serif { font-family: var(--font-serif); }
+
+/* ---- primitives ------------------------------------------------------- */
+
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  min-height: 34px;
+  padding: 7px 14px;
+  border: 1px solid var(--rule-strong);
+  border-radius: var(--r);
+  background: var(--paper-raised);
+  color: var(--ink);
+  cursor: pointer;
+  font-family: inherit;
+  font-size: var(--t-ui);
+  font-weight: 600;
+  line-height: 1.3;
+  white-space: nowrap;
+  box-shadow: var(--shadow-1);
+  transition: background 160ms ease, border-color 160ms ease, box-shadow 160ms ease, transform 120ms ease;
+}
+.btn:hover:not(:disabled) { background: var(--paper-hover); border-color: var(--rule-strong); box-shadow: var(--shadow-2); }
+/* A button should feel like it took the press. */
+.btn:active:not(:disabled) { transform: scale(0.97); box-shadow: var(--shadow-1); transition-duration: 80ms; }
+.btn:focus-visible { outline: 2px solid var(--teal); outline-offset: 2px; }
+.btn:disabled { opacity: 0.45; cursor: not-allowed; box-shadow: none; }
+.btn.primary {
+  background: var(--teal);
+  border-color: var(--teal);
+  /* Not #fff. The accent lightens at night, and white on it measured 2.58 --
+     the button the whole interview steers you towards read as half-rendered. */
+  color: var(--on-teal);
+  font-weight: 600;
+}
+.btn.primary:hover:not(:disabled) { background: var(--teal-strong); border-color: var(--teal-strong); }
+/* Disabled primary stayed teal-on-white and read as an enabled button that
+   simply refused to work. Drop it out of the accent entirely. */
+.btn.primary:disabled {
+  background: var(--paper-sunken);
+  border-color: var(--rule-strong);
+  color: var(--faint);
+  opacity: 1;
+}
+.btn.ghost { background: transparent; border-color: transparent; }
+.btn.ghost:hover:not(:disabled) { background: var(--paper-hover); }
+.btn.danger { color: var(--crimson-text); border-color: var(--crimson); }
+.btn.sm { min-height: 27px; padding: 4px 10px; font-size: var(--t-small); }
+
+.chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 3px 9px;
+  border-radius: 999px;
+  font-size: var(--t-small);
+  font-weight: 600;
+  letter-spacing: 0.01em;
+  background: var(--paper-sunken);
+  color: var(--muted);
+  border: 1px solid transparent;
+  white-space: nowrap;
+}
+.chip.teal { background: var(--teal-soft); color: var(--teal-text); }
+.chip.ochre { background: var(--ochre-soft); color: var(--ochre-text); }
+.chip.crimson { background: var(--crimson-soft); color: var(--crimson-text); }
+.chip.moss { background: var(--moss-soft); color: var(--moss-text); }
+.chip.role { background: var(--teal-soft); color: var(--teal-text); cursor: default; }
+
+.dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  flex: none;
+  background: var(--faint);
+}
+.dot.healthy { background: var(--moss); }
+.dot.degraded { background: var(--ochre); }
+.dot.unavailable { background: var(--crimson); }
+.dot.checking { background: var(--rule-strong); animation: dot-pulse 1.4s ease-in-out infinite; }
+@keyframes dot-pulse { 0%, 100% { opacity: 0.45; } 50% { opacity: 1; } }
+@media (prefers-reduced-motion: reduce) { .dot.checking { animation: none; } }
+.dot.draft { background: var(--faint); }
+.dot.runnable { background: var(--dusk); }
+.dot.ran { background: var(--moss); }
+.dot.provisional { background: var(--ochre); }
+.dot.failed { background: var(--crimson); }
+
+.card {
+  background: var(--paper-raised);
+  border: 1px solid var(--rule);
+  border-radius: var(--r-lg);
+  box-shadow: var(--shadow-1);
+}
+
+.panel-title {
+  font-size: 10.5px;
+  font-weight: 650;
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
+  color: var(--faint);
+}
+
+.hint { color: var(--muted); font-size: 12px; }
+.tiny { font-size: 11px; }
+
+.field { display: flex; flex-direction: column; gap: 3px; margin-bottom: 10px; }
+.field > label { font-size: 11.5px; font-weight: 600; color: var(--ink-soft); }
+.field > .hint { font-size: 11px; line-height: 1.35; }
+
+input[type='text'], input[type='number'], input[type='search'], select, textarea {
+  padding: 5px 8px;
+  border: 1px solid var(--rule-strong);
+  border-radius: var(--r);
+  background: var(--paper-raised);
+  color: var(--ink);
+  font-family: inherit;
+  font-size: var(--t-ui);
+  min-width: 0;
+  transition: border-color 110ms ease, box-shadow 110ms ease;
+}
+input::placeholder, textarea::placeholder { color: var(--faint); }
+input[type='text']:focus, input[type='number']:focus, input[type='search']:focus, select:focus, textarea:focus {
+  border-color: var(--teal);
+  box-shadow: 0 0 0 3px var(--teal-soft);
+  outline: none;
+}
+
+table.grid { border-collapse: collapse; width: 100%; font-size: 12px; }
+table.grid th {
+  text-align: left;
+  font-weight: 600;
+  color: var(--muted);
+  border-bottom: 1px solid var(--rule-strong);
+  padding: 5px 8px;
+  position: sticky;
+  top: 0;
+  background: var(--paper-raised);
+  z-index: 1;
+  white-space: nowrap;
+}
+table.grid td { padding: 4px 8px; border-bottom: 1px solid var(--rule); }
+table.grid tr:hover td { background: var(--paper-hover); }
+table.grid td.n { text-align: right; font-variant-numeric: tabular-nums; }
+
+.scroll { overflow: auto; min-height: 0; }
+.row { display: flex; align-items: center; gap: 8px; }
+.col { display: flex; flex-direction: column; min-height: 0; }
+.grow { flex: 1 1 auto; min-width: 0; min-height: 0; }
+.spacer { flex: 1 1 auto; }
+.wrap { flex-wrap: wrap; }
+
+.banner {
+  display: flex;
+  gap: 8px;
+  align-items: flex-start;
+  padding: 8px 11px;
+  border-radius: var(--r);
+  border: 1px solid;
+  font-size: 12.5px;
+  line-height: 1.4;
+}
+.banner.info { background: var(--paper-sunken); border-color: var(--rule); color: var(--ink-soft); }
+.banner.caution { background: var(--ochre-soft); border-color: color-mix(in srgb, var(--ochre) 35%, transparent); color: var(--ink); }
+.banner.warning { background: var(--ochre-soft); border-color: var(--ochre); color: var(--ink); }
+.banner.error { background: var(--crimson-soft); border-color: var(--crimson); color: var(--ink); }
+
+/* A whole pixel, not one and a half. Borders are snapped to whole device
+   pixels, so a 1.5px edge lands on 2 at 100% scaling and on 2 or 3 at 125% and
+   150% -- the same dashed box drew a different weight on different sides. The
+   stronger rule colour carries it at 1px. */
+.dropzone {
+  border: 1px dashed var(--rule-strong);
+  border-radius: var(--r);
+  padding: 8px 10px;
+  min-height: 40px;
+  background: var(--paper-sunken);
+  transition: border-color 100ms ease, background 100ms ease;
+}
+.dropzone.over { border-color: var(--teal); background: var(--teal-soft); }
+.dropzone.filled { border-style: solid; border-color: var(--teal); background: var(--paper-raised); }
+.dropzone.forbidden { border-color: color-mix(in srgb, var(--crimson) 55%, transparent); background: var(--crimson-soft); }
+
+.sr-only {
+  position: absolute;
+  width: 1px; height: 1px;
+  padding: 0; margin: -1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+@keyframes spin { to { transform: rotate(360deg); } }
+.spinner {
+  width: 12px; height: 12px;
+  border: 2px solid var(--rule-strong);
+  border-top-color: var(--teal);
+  border-radius: 50%;
+  animation: spin 0.7s linear infinite;
+  flex: none;
+}
+
+@keyframes fade-in { from { opacity: 0; transform: translateY(2px); } to { opacity: 1; transform: none; } }
+.fade-in { animation: fade-in 140ms ease; }

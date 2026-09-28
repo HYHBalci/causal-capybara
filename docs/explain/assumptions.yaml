@@ -1,0 +1,520 @@
+# The assumption ledger, explained.
+#
+# House rule for every entry: say plainly whether anything in the data could
+# test this, and what to do when nothing can. Never write that an assumption
+# "passed" or that a diagnostic "proved" anything. The strongest honest phrase
+# is "the diagnostic did not contradict it".
+
+schema: capy.explain
+version: 1
+
+entries:
+  assumption.exchangeability:
+    title: Exchangeability (no unmeasured confounding)
+    short: >-
+      Treated and untreated units are comparable once you condition on the
+      confounders you measured. Everything that pushed people towards treatment
+      and also moves the outcome is in your adjustment set.
+    detail: >-
+      This is the assumption the whole selection-on-observables design rests on,
+      and no diagnostic in this product can test it. Balance plots show that the
+      variables you measured are now comparable; they say nothing about the ones
+      you did not measure. A perfectly flat Love plot is consistent with total
+      confounding by something you never recorded.
+      What you can do instead: argue from how treatment was actually assigned,
+      draw the graph and see whether your adjustment set closes the back doors,
+      and then ask the sensitivity question -- how strong would an unmeasured
+      confounder have to be, compared with the ones you did measure, before the
+      conclusion changes?
+    worry_when: >-
+      Treatment was chosen by people who knew something about the likely outcome
+      that you do not observe. Clinical judgement, self-selection into a
+      programme, and administrative triage are the classic cases.
+    common_mistake: >-
+      Reading "balance achieved" as "confounding removed". Balance is about the
+      covariates in the model; confounding is about the ones that are not.
+    references:
+      - "Hernán & Robins (2020), Causal Inference: What If, ch. 3"
+      - "Cinelli & Hazlett (2020), Making sense of sensitivity"
+    see_also: [assumption.positivity, concept.confounding, method.obs.aipw, diagnostic.love]
+
+  assumption.positivity:
+    title: Positivity (overlap)
+    short: >-
+      Every kind of unit had some chance of being treated and some chance of not
+      being treated. Where that fails, there is no comparison to make and the
+      model is inventing one.
+    detail: >-
+      Positivity is the assumption you actually can look at. Fit a treatment
+      model, plot the predicted probabilities by arm, and see whether the two
+      distributions overlap. Where treated units sit at probabilities no control
+      unit reaches, the estimate for those units comes from extrapolating the
+      outcome model, not from anything in the data.
+      The effective sample size is the honest denominator: reweighting a
+      comparison group to look like the treated group can leave you with a
+      thousand rows worth a hundred observations.
+      Structural violations (a rule that made some group ineligible) cannot be
+      fixed by any estimator. Random violations (a small sample in a thin
+      region) show up as unstable weights.
+    worry_when: >-
+      Any single weight carries a large share of the total; the effective sample
+      is far below the nominal one; the propensity model separates the arms
+      almost perfectly; treated units sit outside the control group's range.
+    common_mistake: >-
+      Trimming to a default cutoff to make the plot look better. Trimming changes
+      the population the estimate is about, so it belongs in the sample flow as
+      a stated choice, and the Probe bench plots the estimate against the
+      threshold rather than picking one for you.
+    references:
+      - "Petersen et al. (2012), Diagnosing and responding to violations in the positivity assumption"
+      - "Crump et al. (2009), Dealing with limited overlap"
+    see_also: [diagnostic.overlap, diagnostic.ess, concept.effective_sample_size, estimand.ato]
+
+  assumption.sutva:
+    title: SUTVA (no interference, one version of treatment)
+    short: >-
+      One unit's treatment does not change another unit's outcome, and
+      "treated" means the same thing for everyone who got it.
+    detail: >-
+      Two claims in one. No interference says your neighbour's vaccination does
+      not change your infection risk, your rival firm's subsidy does not change
+      your employment. One version of treatment says the programme delivered in
+      one clinic is the same programme delivered in another.
+      Neither is testable from the data in a standard design. Both are often
+      false in exactly the settings policy analysts care about -- vaccination,
+      job training in a local labour market, school choice.
+    worry_when: >-
+      Units interact: they compete for the same jobs, infect each other, share a
+      classroom or a market. Or the "programme" is really a family of programmes
+      whose intensity varied a lot across sites.
+    common_mistake: >-
+      Treating spillover as noise. If treatment helps the treated partly by
+      hurting the untreated, the comparison overstates the total effect, and no
+      amount of adjustment recovers it.
+    references: ["Cox (1958)", "Hudgens & Halloran (2008), Toward causal inference with interference"]
+    see_also: [assumption.consistency]
+
+  assumption.consistency:
+    title: Consistency (a well-defined intervention)
+    short: >-
+      The outcome you observe under the treatment a unit received is the same as
+      the potential outcome under that treatment. In practice: the treatment has
+      to be a thing someone could actually do.
+    detail: >-
+      Consistency is what makes "the effect of X" mean anything. It is
+      comfortable for a drug at a stated dose and uncomfortable for "obesity",
+      "education" or "democracy", where the intervention is not defined and
+      different ways of changing the variable would have different effects.
+      Target-trial thinking is the discipline here: write down the trial you
+      would run, including who is eligible, when time zero is, and what exactly
+      is assigned. If you cannot write it, the estimand is not yet a question.
+    worry_when: >-
+      The treatment is a state of the world rather than an action, or it is
+      coded from several very different real interventions.
+    common_mistake: >-
+      Estimating the effect of a variable nobody could assign, then discussing it
+      as if a policy could change it.
+    references: ["Hernán (2016), Does water kill?", "Hernán & Robins (2016), Using big data to emulate a target trial"]
+    see_also: [assumption.sutva, concept.target_trial]
+
+  assumption.randomisation:
+    title: Randomisation held
+    short: >-
+      Assignment really was by chance, and nothing after assignment broke the
+      comparison -- no differential dropout, no crossover you have not modelled.
+    detail: >-
+      In a clean experiment this is the assumption that does all the work, and it
+      is the one you get for free. What is not free is what happened afterwards.
+      Attrition that differs by arm, treatment received that differs from
+      treatment assigned, and outcomes measured differently by arm all break the
+      guarantee.
+      A baseline balance table checks that nothing went wrong in the mechanics.
+      It is not a test of randomisation: with enough covariates some will differ
+      by chance, and a failed balance test on a genuinely randomised trial is a
+      false alarm as often as a real signal.
+    worry_when: >-
+      Dropout differs across arms; take-up is far from assignment; the randomiser
+      was a person with discretion.
+    common_mistake: >-
+      Running a battery of balance tests and adjusting for whatever came out
+      significant. That is a garden of forking paths, not a fix.
+    references: ["Senn (1994), Testing for baseline balance", "Bruhn & McKenzie (2009)"]
+    see_also: [diagnostic.baseline_balance, estimand.itt, estimand.cace]
+
+  assumption.parallel_trends:
+    title: Parallel trends
+    short: >-
+      Without the policy, treated and comparison groups would have moved the same
+      way. Not that they were at the same level -- that their paths would have
+      been parallel.
+    detail: >-
+      This is the identifying assumption of difference-in-differences, and it is
+      about a counterfactual path nobody observes. The pre-period is the closest
+      thing to evidence: if the groups already moved differently before the
+      policy, the assumption is in trouble. If they moved together, that is
+      consistent with parallel trends and also consistent with them diverging
+      afterwards for reasons unrelated to the policy.
+      Parallel trends is also scale-dependent: trends parallel in levels are
+      generally not parallel in logs. Choosing the scale is part of the
+      assumption, not a presentation detail.
+      When pre-trends are imperfect, honest DiD asks the useful question: how
+      much could trends have drifted before the conclusion breaks?
+    worry_when: >-
+      Pre-period event-study coefficients drift away from zero; the policy was
+      adopted because outcomes were already moving; the groups differ in
+      composition in ways that interact with time.
+    common_mistake: >-
+      Reading a pre-trend test that fails to reject as confirmation. Low power
+      makes that easy, and a wide pre-period confidence interval is not evidence
+      of parallel paths.
+    references:
+      - "Roth (2022), Pretest with caution"
+      - "Rambachan & Roth (2023), A more credible approach to parallel trends"
+    see_also: [diagnostic.pre_trends, diagnostic.event_study, method.did.callaway_santanna, probe.honest_did]
+
+  assumption.no_anticipation:
+    title: No anticipation
+    short: >-
+      Units did not change behaviour before treatment arrived because they knew
+      it was coming.
+    detail: >-
+      Announcement usually precedes implementation, and people respond to
+      announcements. If they do, the "before" period is already partly treated,
+      which biases the comparison and can make the pre-trend look wrong even when
+      parallel trends holds.
+      The pre-period coefficients of an event study are where anticipation shows
+      up: a drift starting exactly at the announcement date is the signature.
+      Interrupted-time-series designs let you mark announcement and
+      implementation as two separate dates for this reason.
+    worry_when: >-
+      There was a public announcement well before the policy started, or the
+      pre-period coefficients move in the period immediately before adoption.
+    references: ["Malani & Reif (2015), Interpreting pre-trends as anticipation"]
+    see_also: [assumption.parallel_trends, diagnostic.event_study]
+
+  assumption.exclusion:
+    title: Exclusion restriction
+    short: >-
+      The instrument affects the outcome only through the treatment. On the
+      board, that is the arrow you did not draw.
+    detail: >-
+      Exclusion cannot be tested. A strong first stage tells you the instrument
+      moves treatment; it tells you nothing about whether it also moves the
+      outcome another way. Overidentification tests compare instruments against
+      each other and are silent when all of them are invalid in the same
+      direction.
+      What you can do: argue from how the instrument was generated, and look for
+      placebo outcomes the instrument should not affect. Finding an effect there
+      is evidence against exclusion; finding none is weak comfort.
+    worry_when: >-
+      The instrument is a policy that changed several things at once; it is
+      correlated with geography, time or institutions that have their own
+      effects; it was chosen because it predicted the outcome.
+    common_mistake: >-
+      Treating a passed overidentification test as evidence for exclusion. It
+      tests whether your instruments agree, not whether they are right.
+    references: ["Angrist, Imbens & Rubin (1996)", "Conley, Hansen & Rossi (2012), Plausibly exogenous"]
+    see_also: [assumption.monotonicity, assumption.relevance, estimand.late, diagnostic.overid]
+
+  assumption.monotonicity:
+    title: Monotonicity (no defiers)
+    short: >-
+      The instrument pushes everyone the same way, or not at all. Nobody takes
+      the treatment only because they were discouraged from it.
+    detail: >-
+      Without monotonicity, the instrumental-variables estimate is a mixture of
+      compliers' and defiers' effects with weights that can be negative, and it
+      need not lie between the effects of any real group. Monotonicity is what
+      makes the estimate a local average treatment effect on compliers.
+      It is not testable, though the implied complier share and the proportions
+      of each response type give a sanity check: a negative implied share is
+      evidence something is wrong.
+    worry_when: >-
+      The instrument is an incentive that could plausibly backfire for some
+      people, or it is a judge or examiner whose leniency ordering differs across
+      case types.
+    references: ["Imbens & Angrist (1994)", "Mogstad, Torgovitsky & Walters (2021)"]
+    see_also: [assumption.exclusion, estimand.late, estimand.cace]
+
+  assumption.relevance:
+    title: Instrument relevance
+    short: >-
+      The instrument actually moves treatment, and moves it enough that the
+      resulting estimate is not mostly noise.
+    detail: >-
+      This one is testable, and the test matters more than people expect. With a
+      weak instrument, two-stage least squares is biased towards the ordinary
+      least squares estimate and its confidence interval has far less than
+      nominal coverage -- a 95% interval that covers the truth 60% of the time.
+      Report the effective F statistic rather than the naive one when the errors
+      are not homoskedastic, and when it is small, report a weak-instrument-robust
+      confidence set instead of the usual interval. An unbounded set is sometimes
+      the honest answer.
+    worry_when: >-
+      An effective F below about 10; a first-stage coefficient that is
+      substantively tiny even if statistically significant; many instruments.
+    common_mistake: >-
+      Adding more instruments to raise the first-stage F. Many weak instruments
+      make the bias worse, not better.
+    references:
+      - "Olea & Pflueger (2013), A robust test for weak instruments"
+      - "Andrews, Stock & Sun (2019), Weak instruments in IV regression"
+    see_also: [diagnostic.first_stage, diagnostic.weak_iv_set, method.iv.weak_robust]
+
+  assumption.no_manipulation:
+    title: No manipulation of the running variable
+    short: >-
+      People could not precisely control which side of the cutoff they landed on.
+    detail: >-
+      Regression discontinuity works because, right at the cutoff, which side you
+      fall on is as good as random. That fails if people can fine-tune their
+      score: applicants who just miss a threshold and resubmit, firms that report
+      just under a reporting limit, students whose marks get nudged over a pass
+      line.
+      The density test is the standard check: if there is a cliff in the number
+      of units just either side of the cutoff, someone was sorting. A smooth
+      density does not prove there was no manipulation, but a jump is strong
+      evidence there was.
+      Covariate balance at the cutoff is the second check: pre-determined
+      characteristics should not jump.
+    worry_when: >-
+      A visible spike or gap in the density at the cutoff; covariates that jump;
+      a cutoff that people knew about and had time to respond to.
+    references:
+      - "McCrary (2008), Manipulation of the running variable"
+      - "Cattaneo, Jansson & Ma (2020), Simple local polynomial density estimators"
+    see_also: [diagnostic.rd_density, assumption.continuity, method.rd.local_linear]
+
+  assumption.continuity:
+    title: Continuity at the cutoff
+    short: >-
+      Everything else that affects the outcome changes smoothly through the
+      cutoff, so the only thing that jumps is the treatment.
+    detail: >-
+      The cutoff has to be doing one job. If the same threshold also triggers a
+      different programme, a tax band or an administrative category, the jump you
+      measure is the combined effect of all of them, and nothing separates them.
+      Continuity is why the estimate is local: it is identified at the cutoff and
+      the extrapolation away from it is a modelling choice, not a finding.
+    worry_when: >-
+      Several rules share the threshold; the running variable is coarse, so
+      "at the cutoff" is really a wide band; the estimate depends heavily on the
+      bandwidth.
+    common_mistake: >-
+      Presenting the discontinuity estimate as the average effect of the
+      programme for everyone eligible.
+    references: ["Hahn, Todd & van der Klaauw (2001)", "Cattaneo, Idrobo & Titiunik (2019)"]
+    see_also: [estimand.late, diagnostic.rd_bandwidth]
+
+  assumption.donor_fit:
+    title: Pre-treatment fit from the donor pool
+    short: >-
+      The weighted combination of untreated units reproduces the treated unit's
+      pre-period path closely enough to stand in for it afterwards.
+    detail: >-
+      A synthetic control that cannot track the treated unit before the
+      intervention has no claim to track it after. Pre-period fit is the closest
+      thing to a testable condition this design has, and it is a necessary
+      condition rather than a sufficient one: a good pre-fit can still be a
+      coincidence, especially with a short pre-period and many donors.
+      Report the pre-period root-mean-square prediction error, and compare it
+      with the same quantity for placebo units. A treated unit whose post/pre
+      error ratio is unremarkable among the placebos has not shown an effect.
+    worry_when: >-
+      Visible pre-period gaps; a short pre-period relative to the number of
+      donors; one donor carrying most of the weight.
+    references: ["Abadie, Diamond & Hainmueller (2010)", "Abadie (2021), Using synthetic controls"]
+    see_also: [assumption.convex_hull, diagnostic.sc_placebo, method.sc.abadie]
+
+  assumption.convex_hull:
+    title: The treated unit is inside the donor pool
+    short: >-
+      The treated unit's characteristics can be written as a weighted average of
+      the donors', with weights that do not go negative.
+    detail: >-
+      Classic synthetic control restricts weights to be non-negative and to sum
+      to one, which forbids extrapolation on purpose. The price is that if the
+      treated unit is more extreme than every donor -- richer, larger, more urban
+      -- no combination can reach it, and the synthetic unit is biased towards
+      the middle of the pool. That bias then shows up as a permanent gap that
+      looks like an effect.
+      Augmented synthetic control corrects for that bias explicitly, and reports
+      the size of the correction so you can see how much work it is doing.
+    worry_when: >-
+      The treated unit is at an extreme of the donor distribution on the
+      predictors, or the pre-period gap has a persistent level offset.
+    references: ["Ben-Michael, Feller & Rothstein (2021), The augmented synthetic control method"]
+    see_also: [assumption.donor_fit, method.sc.augmented]
+
+  assumption.no_cointerventions:
+    title: No co-interventions at the interruption
+    short: >-
+      Nothing else changed at the same moment that also moves the outcome.
+    detail: >-
+      An interrupted time series attributes the whole break to the policy. Policy
+      rarely arrives alone: a smoking ban lands with a media campaign, a lockdown
+      with a benefits change, a guideline with a payment reform. Any of those
+      would produce the same picture.
+      A control series that should have been unaffected is the main defence. If
+      the control breaks at the same moment, something broader happened.
+    worry_when: >-
+      A busy policy period; a national event at the same date; a change in how
+      the outcome was measured or coded at the same date.
+    references: ["Bernal, Cummins & Gasparrini (2017), Interrupted time series regression"]
+    see_also: [assumption.model_form, method.its.controlled]
+
+  assumption.model_form:
+    title: The shape of the counterfactual trend
+    short: >-
+      The line you fit before the interruption is the line the outcome would have
+      continued to follow.
+    detail: >-
+      This is an assumption, not an estimate, and it is doing more work than any
+      coefficient in the model. A linear pre-trend extrapolated over several
+      years is a strong claim. Seasonality, mean reversion after an unusual year,
+      and slow-moving demographics all bend the counterfactual.
+      Autocorrelated residuals are the standard failure: ordinary standard errors
+      then understate uncertainty badly, sometimes by a factor of two or three.
+    worry_when: >-
+      Few pre-period points; residual autocorrelation that survives the model;
+      the estimate flips when you add a seasonal term or a quadratic trend.
+    references: ["Bernal et al. (2017)", "Brodersen et al. (2015), Inferring causal impact"]
+    see_also: [diagnostic.its_autocorrelation, assumption.no_cointerventions]
+
+  assumption.sequential_ignorability:
+    title: Sequential ignorability
+    short: >-
+      No unmeasured confounding of the treatment-outcome relationship, and none
+      of the mediator-outcome relationship either, even after conditioning on
+      treatment.
+    detail: >-
+      Mediation asks for two exchangeability assumptions instead of one, and the
+      second is usually much harder: whatever determines how much of the mediator
+      a person gets is rarely unrelated to their outcome. Randomising treatment
+      does not randomise the mediator.
+      Natural direct and indirect effects need a third, cross-world condition
+      relating potential outcomes under treatment values that no single person
+      can ever experience. No experiment, however large, can test it. That is
+      why interventional (stochastic) effects are the better default in policy
+      and health: they answer a slightly different question that a trial could in
+      principle check.
+    worry_when: >-
+      There is a variable affected by treatment that also confounds the
+      mediator-outcome relationship. Under that structure the natural effects are
+      not identified at all.
+    common_mistake: >-
+      Reporting a product-of-coefficients decomposition as "the mechanism"
+      without stating either assumption.
+    references:
+      - "VanderWeele (2015), Explanation in Causal Inference"
+      - "Robins & Greenland (1992), Identifiability and exchangeability for direct and indirect effects"
+    see_also: [method.med.interventional, method.med.natural_effects, concept.cross_world]
+
+  assumption.no_time_varying_confounding:
+    title: No unmeasured time-varying confounding
+    short: >-
+      At every period, the things that drive the treatment decision and also
+      affect the outcome are measured -- and measured before that decision.
+    detail: >-
+      In longitudinal data the same variable is often a confounder for later
+      treatment and a consequence of earlier treatment. Adjusting for it in an
+      ordinary regression both blocks the path you want and opens a collider
+      path; not adjusting for it leaves confounding. This is precisely the
+      problem g-methods were invented for.
+      Lag discipline is the practical form of this assumption: a covariate may
+      adjust a treatment decision only if it was measured before that decision.
+      The board draws arrows that cannot point into the future for this reason.
+    worry_when: >-
+      Clinical measurements taken after the dose was changed; employment status
+      recorded at the end of a period used to explain treatment at its start.
+    references: ["Robins (1986)", "Hernán, Brumback & Robins (2000), Marginal structural models"]
+    see_also: [method.long.msm_iptw, method.long.gformula, concept.time_varying_confounding]
+
+  assumption.identification:
+    title: The design identifies the effect it claims to
+    short: >-
+      Before any estimator runs, the design has to be capable in principle of
+      answering the question. This row is the ledger's record of that claim.
+    detail: >-
+      Identification is the step between a question and an estimate. It asks: if
+      you had unlimited data of exactly this kind, would the number you computed
+      equal the causal effect you asked for? That is a question about the design
+      and its assumptions, not about sample size, and no amount of data repairs a
+      failure of it.
+      Each design has its own identification argument, and the other rows in this
+      ledger are its parts: comparability for an adjustment design, parallel
+      trends for a difference-in-differences, exclusion and relevance for an
+      instrument, smoothness at the threshold for a discontinuity. This row is
+      the summary claim that those parts hold together for the estimand you
+      selected -- and it is a claim, never a result.
+    worry_when: >-
+      The design cannot produce the estimand you asked for; the assumptions
+      beneath it are contested; or a probe has already shown one of them
+      failing.
+    common_mistake: >-
+      Treating the choice of a well-known estimator as an identification
+      argument. "We used matching" says how the number was computed, not why it
+      is causal.
+    see_also: [concept.estimand_first, design.catalogue, assumption.exchangeability, concept.provisional]
+
+  assumption.mediator_exchangeability:
+    title: No unmeasured confounding of the mediator and the outcome
+    short: >-
+      Whatever determines how much of the mediator a person gets is unrelated to
+      their outcome, once you condition on the treatment and the covariates you
+      measured.
+    detail: >-
+      Mediation asks for comparability twice. The first is the familiar one about
+      treatment. The second is about the mediator, and it is usually much harder,
+      because the mediator is rarely assigned by anybody: people end up with more
+      or less of it for reasons of motivation, health or circumstance, and those
+      same reasons tend to move the outcome directly.
+      Randomising the treatment does nothing for this. A perfectly conducted trial
+      that measures a mediator still has an observational study inside it, and the
+      part of the analysis that splits the effect into pathways rests on that
+      observational study. Nothing in the data tests it; what helps is measuring
+      the plausible common causes of the mediator and the outcome, and reporting
+      how strong an unmeasured one would need to be.
+    worry_when: >-
+      The mediator is a behaviour or a choice; there is a variable affected by
+      treatment that also confounds the mediator and the outcome, in which case
+      the natural pathway effects are not identified at all.
+    common_mistake: >-
+      Reading a randomised treatment as licence to interpret the pathway split
+      causally. The randomisation covers the treatment, not the mediator.
+    references:
+      - "VanderWeele (2015), Explanation in Causal Inference"
+      - "Imai, Keele & Tingley (2010), A general approach to causal mediation analysis"
+    see_also: [assumption.sequential_ignorability, assumption.cross_world, diagnostic.mediation_decomposition, method.med.interventional]
+
+  assumption.cross_world:
+    title: The cross-world condition
+    short: >-
+      A condition relating what would happen to a person under treatment to what
+      their mediator would have been without it -- a combination no person could
+      ever experience.
+    detail: >-
+      Splitting an effect into a natural direct part and a natural indirect part
+      requires comparing a person's outcome if treated, but with their mediator
+      held at the value it would have taken had they not been treated. That
+      pairing exists in no possible world: you cannot both treat and not treat
+      someone. Because no experiment can create it, no experiment -- however
+      large or well run -- can check the condition, and no diagnostic in this
+      product can either.
+      This is a genuine limitation of the natural decomposition, not a
+      shortcoming of any particular software. The usual response is to answer a
+      slightly different question: interventional effects draw the mediator from
+      a distribution rather than from a person's own untreated value, and a trial
+      could in principle implement that. Controlled direct effects sidestep it
+      too, by fixing the mediator at a stated level.
+    worry_when: >-
+      Natural direct and indirect effects are reported as though a diagnostic
+      somewhere supported them, or a treatment-induced confounder of the mediator
+      is present, in which case they are not identified at all.
+    common_mistake: >-
+      Describing the condition as "untested". It is untestable in principle, and
+      saying so is part of reporting it honestly.
+    references:
+      - "Robins & Richardson (2010), Alternative graphical causal models"
+      - "VanderWeele, Vansteelandt & Robins (2014), Effect decomposition in the presence of an exposure-induced mediator-outcome confounder"
+    see_also: [concept.cross_world, assumption.mediator_exchangeability, method.med.interventional, method.med.controlled_direct]

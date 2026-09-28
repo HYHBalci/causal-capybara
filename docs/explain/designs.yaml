@@ -1,0 +1,261 @@
+# The design cards, explained one click deeper than the card itself.
+
+schema: capy.explain
+version: 1
+
+entries:
+  design.rct:
+    title: Randomised or as-if randomised
+    short: >-
+      Assignment was by chance, so the arms are comparable on everything --
+      including the things nobody measured. That is the whole reason experiments
+      are the benchmark.
+    detail: >-
+      What randomisation buys you is exchangeability for free. What it does not
+      buy you is everything afterwards: people drop out, refuse the treatment, or
+      take it when they were not offered it, and each of those can undo the
+      comparison.
+      So the questions this design asks are about implementation. Was assignment
+      really random, or did someone with discretion do it? Did whole clusters get
+      assigned together, in which case the number of independent observations is
+      the number of clusters? Did everyone offered the programme take it, and if
+      not, is the number you want the effect of the offer or the effect on the
+      people it moved?
+      Covariates are for precision here, not identification. Adjust for the ones
+      you named before seeing the data.
+    assumptions:
+      - Randomisation held, and nothing after assignment broke the comparison
+      - SUTVA -- one unit's assignment does not change another's outcome
+      - Consistency -- the treatment is one well-defined thing
+    common_mistake: >-
+      Reporting the complier effect as the policy effect. A policy can offer a
+      programme; it cannot make people take it.
+    references: ["Gerber & Green (2012), Field Experiments", "Duflo, Glennerster & Kremer (2007)"]
+    see_also: [estimand.itt, estimand.cace, diagnostic.baseline_balance, concept.clustering]
+
+  design.observational:
+    title: Adjust for background differences
+    short: >-
+      Treatment was not random, but you believe you measured the things that
+      decided who got it. Everything then rests on that belief.
+    detail: >-
+      This is the workhorse and the hardest design to defend. The estimate is
+      only as good as the adjustment set, and no diagnostic can tell you whether
+      the set is complete -- balance plots only speak about the variables in it.
+      Two things you can do. First, look at overlap: where the treated and
+      untreated groups do not resemble each other at all, no method compares
+      anything, it extrapolates. Second, ask the sensitivity question: how strong
+      would an unmeasured confounder have to be, relative to the ones you did
+      measure, to overturn the finding?
+      Be careful about what goes into the adjustment set. Variables measured after
+      treatment, or caused by it, make things worse rather than better.
+    assumptions:
+      - Exchangeability given the measured confounders -- untestable
+      - Positivity -- visible in the overlap plot
+      - SUTVA and consistency
+    common_mistake: >-
+      Adding every available variable to the adjustment set. Post-treatment
+      variables and colliders introduce bias that was not there before.
+    references: ["Hernán & Robins (2020)", "Imbens & Rubin (2015)"]
+    see_also: [assumption.exchangeability, assumption.positivity, guardrail.bad_control, estimand.att]
+
+  design.did:
+    title: Policy rolled out over time
+    short: >-
+      Some units were treated and others were not, and you observe both before
+      and after. The comparison is of changes, not levels.
+    detail: >-
+      Comparing changes removes anything about a unit that is fixed over time --
+      you do not need to measure it, only to believe it is stable. That is a real
+      gain, and it is bought with a different assumption: that without the policy
+      the two groups would have moved the same way.
+      When everyone adopts at the same date, this is a clean 2x2. When they adopt
+      at different dates, two-way fixed effects stops estimating what you want:
+      it averages comparisons that include already-treated units acting as
+      controls, with weights that can go negative. The modern estimators fix that
+      by only ever comparing a newly treated cohort with units not yet treated.
+      Clustering matters here more than almost anywhere. Standard errors should
+      be clustered at the level treatment was assigned.
+    assumptions:
+      - Parallel trends -- untestable, but the pre-period is evidence
+      - No anticipation before treatment arrives
+      - SUTVA -- treated units do not spill over onto controls
+    common_mistake: >-
+      Running two-way fixed effects on a staggered panel and reporting the
+      coefficient as an average treatment effect on the treated.
+    references:
+      - "Goodman-Bacon (2021), Difference-in-differences with variation in treatment timing"
+      - "Callaway & Sant'Anna (2021)"
+      - "Roth, Sant'Anna, Bilinski & Poe (2023), What's trending in difference-in-differences?"
+    see_also: [assumption.parallel_trends, diagnostic.adoption, method.did.callaway_santanna, estimand.cohort_att]
+
+  design.rd:
+    title: A cutoff decided eligibility
+    short: >-
+      A rule assigned treatment on one side of a threshold. Right at the
+      threshold, which side you land on is as good as random.
+    detail: >-
+      The credibility of this design is local and its estimate is local with it.
+      You learn about units at the cutoff and nobody else, which is exactly right
+      if the policy question is about moving the threshold, and a poor fit if it
+      is about the programme overall.
+      Two things can break it. If people could control their score precisely,
+      they sorted across the line and the comparison is not as-good-as-random --
+      the density test looks for that. If the same threshold triggers other
+      rules, the jump combines them and nothing separates them.
+      The binned scatter is the design. If you cannot see the discontinuity, be
+      suspicious of an estimator that reports one.
+    assumptions:
+      - No precise manipulation of the running variable -- the density test speaks to this
+      - Continuity of everything else at the cutoff
+    common_mistake: >-
+      Presenting the discontinuity estimate as the average effect for everyone
+      eligible. It is the effect at the boundary.
+    references: ["Lee & Lemieux (2010)", "Cattaneo, Idrobo & Titiunik (2019), A practical introduction to RD"]
+    see_also: [assumption.no_manipulation, diagnostic.rd_scatter, estimand.late]
+
+  design.iv:
+    title: Something else pushed people in
+    short: >-
+      An instrument moved treatment without touching the outcome any other way.
+      You learn the effect for the people it moved.
+    detail: >-
+      The instrument does the work randomisation would have done, but only for
+      part of the population: the compliers, whose treatment status the
+      instrument actually changed. It says nothing about people who would have
+      been treated regardless, or never.
+      The arrow you did not draw -- from instrument straight to outcome -- is the
+      exclusion restriction, and it cannot be tested. A strong first stage tells
+      you the instrument moves treatment; it is silent about other routes.
+      Weak instruments are the practical trap. Below an effective F of about ten,
+      the usual interval is not trustworthy and a weak-instrument-robust set is
+      the honest report, even when it is unbounded.
+    assumptions:
+      - Relevance -- testable, and the effective F is the number to read
+      - Exclusion -- untestable
+      - Monotonicity -- no defiers
+    common_mistake: >-
+      Calling the result "the" causal effect. Another instrument moves different
+      people and identifies a different number, and both can be right.
+    references: ["Angrist, Imbens & Rubin (1996)", "Andrews, Stock & Sun (2019)"]
+    see_also: [assumption.exclusion, estimand.late, diagnostic.first_stage]
+
+  design.synth:
+    title: One place, constructed twin
+    short: >-
+      One treated unit, many untreated donors. Build a weighted combination of
+      donors that tracks the treated unit before the intervention, and use it
+      afterwards.
+    detail: >-
+      This is what you reach for when the treated unit is a country, a region or
+      a firm, and there is no comparable single control. The weights are chosen
+      to reproduce the pre-intervention path, and the restriction that they are
+      non-negative and sum to one is deliberate: it forbids extrapolation.
+      Pre-period fit is the test. A synthetic unit that cannot reproduce the
+      treated unit before the intervention has no claim to reproduce it
+      afterwards, and the estimate is then mostly the pre-existing gap.
+      Inference is by permutation, not by standard errors: re-run the method
+      pretending each donor was treated, and see where the real one ranks.
+    assumptions:
+      - The donors can reproduce the treated unit's pre-period
+      - The treated unit is inside the donors' convex hull
+      - No anticipation, and no donor affected by the same intervention
+    common_mistake: >-
+      Reporting weights and a gap plot with no placebo inference. With one treated
+      unit, the placebo distribution is the inference.
+    references: ["Abadie, Diamond & Hainmueller (2010)", "Abadie (2021), Using synthetic controls"]
+    see_also: [assumption.donor_fit, diagnostic.sc_placebo, method.sc.abadie]
+
+  design.its:
+    title: A shock in a single series
+    short: >-
+      One series, one interruption. Fit the trend before, extrapolate it, and
+      compare with what happened.
+    detail: >-
+      Common in public health, where a rule changes nationally and there is no
+      untreated region. The strength is that the unit is its own control; the
+      weakness is that the counterfactual is entirely a modelling assumption,
+      and an extrapolated linear trend over several years is a strong claim.
+      Three things routinely go wrong. Seasonality left unmodelled shows up as an
+      effect. Autocorrelated residuals make the confidence interval far too
+      narrow. And anything else that changed on the same date is inseparable from
+      the policy -- which is why a control series that should not have been
+      affected is worth a great deal.
+    assumptions:
+      - The pre-period trend would have continued
+      - No co-interventions at the same moment
+      - Errors modelled well enough that the interval means something
+    common_mistake: >-
+      Fitting ordinary least squares to a monthly series and reporting the
+      standard errors as they come.
+    references: ["Bernal, Cummins & Gasparrini (2017)", "Brodersen et al. (2015)"]
+    see_also: [assumption.model_form, diagnostic.its_autocorrelation, method.its.controlled]
+
+  design.mediation:
+    title: How it worked (pathways)
+    short: >-
+      Not just whether the treatment worked, but how much of the effect travelled
+      through a particular mechanism.
+    detail: >-
+      Mediation needs two exchangeability assumptions rather than one, and the
+      second is harder than the first: even in a randomised trial, the mediator
+      is not randomised, so whatever determines it may also drive the outcome.
+      Natural direct and indirect effects need a third condition comparing
+      outcomes across worlds no person can inhabit at once. It is not testable,
+      even in principle. Interventional effects replace it with something a trial
+      could implement, which is why they are the better default for policy and
+      health questions.
+      Do not start from a product of two regression coefficients. It is only the
+      indirect effect under linearity and no interaction, and it is silent about
+      the assumptions.
+    assumptions:
+      - No unmeasured treatment-outcome confounding
+      - No unmeasured mediator-outcome confounding, even given treatment
+      - For natural effects, an untestable cross-world condition
+    common_mistake: >-
+      Reporting a proportion mediated without saying that a variable affected by
+      treatment could make the decomposition undefined.
+    references: ["VanderWeele (2015)", "Robins & Greenland (1992)"]
+    see_also: [assumption.sequential_ignorability, concept.cross_world, method.med.interventional]
+
+  design.longitudinal:
+    title: Treatment that changes over time
+    short: >-
+      The same unit is treated, untreated, treated again -- and the confounders
+      move too, partly because of the treatment.
+    detail: >-
+      This is the setting ordinary regression cannot handle. A variable like
+      blood pressure or employment status is a consequence of past treatment and
+      a cause of future treatment. Adjust for it and you block part of the effect
+      and open a collider path; ignore it and confounding remains.
+      G-methods solve it by modelling the treatment process over time instead of
+      conditioning on its consequences: inverse-probability weighting for a
+      marginal structural model, the parametric g-formula, or a sequential
+      doubly robust estimator.
+      Lag discipline is the practical rule, and the board enforces it: a
+      covariate may adjust a treatment decision only if it was measured before
+      that decision. Arrows cannot point into the past.
+    assumptions:
+      - No unmeasured time-varying confounding
+      - Positivity at every period -- and it fails more often than in a cross-section
+      - Correct specification of the treatment and outcome models over time
+    common_mistake: >-
+      Putting time-varying confounders into an ordinary regression alongside
+      treatment. That is precisely the case g-methods exist for.
+    references: ["Robins, Hernán & Brumback (2000)", "Hernán & Robins (2020), part III"]
+    see_also: [concept.time_varying_confounding, method.long.msm_iptw, method.long.gformula]
+
+  design.catalogue:
+    title: The method catalogue
+    short: >-
+      If you already know what you want, skip the cards and search the catalogue
+      directly.
+    detail: >-
+      The catalogue lists every method the product knows about, including those
+      no engine here implements yet. Those appear greyed, with what they are for
+      and what can go wrong, because knowing a method exists is useful even when
+      you cannot press the button.
+      Choosing from the catalogue skips the design interview but not the
+      requirements: a method still needs its roles filled and still declares
+      which estimands it can target.
+    see_also: [concept.estimand_first]

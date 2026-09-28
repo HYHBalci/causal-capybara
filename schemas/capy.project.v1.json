@@ -1,0 +1,73 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://causalcapybara.dev/schemas/capy.project.v1.json",
+  "title": "capy.project.v1",
+  "type": "object",
+  "required": ["schema", "version", "id", "name"],
+  "properties": {
+    "schema": { "const": "capy.project" },
+    "version": { "const": 1 },
+    "id": { "type": "string" },
+    "name": { "type": "string" },
+    "created": { "type": ["string", "null"] },
+    "modified": { "type": ["string", "null"] },
+    "app_version": { "type": ["string", "null"] },
+    "path": { "type": ["string", "null"] },
+    "seed": { "type": ["integer", "null"] },
+    "data": {
+      "type": ["object", "null"],
+      "properties": {
+        "original_path": { "type": ["string", "null"] },
+        "original_checksum": { "type": ["string", "null"] },
+        "parquet_path": { "type": ["string", "null"] },
+        "import_options": { "type": "object" },
+        "n": { "type": ["integer", "null"] },
+        "p": { "type": ["integer", "null"] },
+        "columns": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["name", "dtype"],
+            "properties": {
+              "name": { "type": "string" },
+              "dtype": { "type": "string" },
+              "kind": { "enum": ["binary", "continuous", "categorical", "datetime", "id", "text"] },
+              "n_missing": { "type": "integer" },
+              "n_unique": { "type": "integer" },
+              "labels": { "type": ["object", "null"], "description": "Stata/SPSS value labels preserved across a round trip" }
+            }
+          }
+        }
+      }
+    },
+    "roles_global": { "type": "object", "description": "Optional project-wide default roles: var -> role" },
+    "objects": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["id", "type"],
+        "properties": {
+          "id": { "type": "string" },
+          "type": { "enum": ["question", "spec", "dag", "analysis", "run", "comparison", "simulation", "report", "script", "probe"] },
+          "name": { "type": ["string", "null"] },
+          "spec_id": { "type": ["string", "null"] },
+          "parent_id": { "type": ["string", "null"] },
+          "status": { "enum": ["draft", "runnable", "ran", "provisional", "failed"] },
+          "user_note": { "type": ["string", "null"] },
+          "created": { "type": ["string", "null"] }
+        }
+      }
+    },
+    "lock": {
+      "type": ["object", "null"],
+      "properties": {
+        "r_runtime": { "type": ["string", "null"] },
+        "py_runtime": { "type": ["string", "null"] },
+        "r_lock_hash": { "type": ["string", "null"] },
+        "py_lock_hash": { "type": ["string", "null"] }
+      }
+    },
+    "profile": { "enum": ["beginner", "standard", "advanced"] }
+  },
+  "additionalProperties": true
+}

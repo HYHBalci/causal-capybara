@@ -1,0 +1,895 @@
+# The diagnostic catalogue.
+#
+# GENERATED -- do not hand-edit. Built from what the adapters actually emit, so
+# the ids here cannot drift from the ids in the code.
+#
+# Each record says which designs the diagnostic appears under and which
+# assumption in the ledger it informs. The prose lives in the Explain catalogue
+# under explain_key, and every diagnostic also carries its own summary and its
+# own "what would worry me" line at run time, next to the numbers it is about.
+#
+# Regenerate with:
+#   PYTHONPATH="engines/python;sidecar" python tools/gen_diagnostics.py
+
+schema: capy.diagnostics
+version: 1
+
+diagnostics:
+- id: adoption
+  title: Adoption pattern
+  designs:
+  - did
+  ledger: parallel_trends
+  explain_key: diagnostic.adoption
+  engine: python
+- id: augmentation_gap
+  title: Augmentation gap
+  designs:
+  - longitudinal
+  ledger: convex_hull
+  explain_key: diagnostic.augmentation_gap
+  engine: python
+- id: bacon_decomposition
+  title: Goodman-Bacon decomposition
+  designs:
+  - did
+  ledger: parallel_trends
+  explain_key: diagnostic.bacon_decomposition
+  engine: python
+- id: bandwidth_sensitivity
+  title: Bandwidth sensitivity path
+  designs:
+  - rd
+  ledger: continuity
+  explain_key: diagnostic.bandwidth_sensitivity
+  engine: python
+- id: baseline_balance
+  title: Baseline balance
+  designs:
+  - rct
+  ledger: randomisation
+  explain_key: diagnostic.baseline_balance
+  engine: python
+- id: bias_correction
+  title: Bias correction and robust interval
+  designs:
+  - rd
+  ledger: continuity
+  explain_key: diagnostic.bias_correction
+  engine: python
+- id: block_structure
+  title: Block structure
+  designs:
+  - rct
+  ledger: randomisation
+  explain_key: diagnostic.block_structure
+  engine: python
+- id: block_weighting
+  title: Block weights
+  designs:
+  - rct
+  ledger: randomisation
+  explain_key: diagnostic.block_weighting
+  engine: python
+- id: bootstrap_spread
+  title: Bootstrap spread
+  designs:
+  - longitudinal
+  ledger: null
+  explain_key: diagnostic.bootstrap_spread
+  engine: python
+- id: cate_calibration
+  title: CATE calibration
+  designs:
+  - observational
+  ledger: null
+  explain_key: diagnostic.cate_calibration
+  engine: python
+- id: cate_distribution
+  title: CATE distribution
+  designs:
+  - observational
+  ledger: null
+  explain_key: diagnostic.cate_distribution
+  engine: python
+- id: cde_path
+  title: Controlled direct effect across mediator levels
+  designs:
+  - mediation
+  ledger: sequential_ignorability
+  explain_key: diagnostic.cde_path
+  engine: python
+- id: cell_means
+  title: Cell means
+  designs:
+  - did
+  ledger: parallel_trends
+  explain_key: diagnostic.cell_means
+  engine: python
+- id: cem_strata
+  title: Coarsened strata and common support
+  designs:
+  - observational
+  ledger: positivity
+  explain_key: diagnostic.cem_strata
+  engine: python
+- id: censoring_weights
+  title: Censoring weights
+  designs:
+  - longitudinal
+  ledger: no_time_varying_confounding
+  explain_key: diagnostic.censoring_weights
+  engine: python
+- id: cluster_structure
+  title: Cluster structure
+  designs:
+  - rct
+  ledger: null
+  explain_key: diagnostic.cluster_structure
+  engine: python
+- id: cohort_att
+  title: Cohort effects
+  designs:
+  - did
+  ledger: parallel_trends
+  explain_key: diagnostic.cohort_att
+  engine: python
+- id: cohort_interactions
+  title: Cohort-by-period interactions
+  designs:
+  - did
+  ledger: parallel_trends
+  explain_key: diagnostic.cohort_interactions
+  engine: python
+- id: comparison_group
+  title: Comparison group used
+  designs:
+  - did
+  ledger: parallel_trends
+  explain_key: diagnostic.comparison_group
+  engine: python
+- id: compliance
+  title: Compliance with assignment
+  designs:
+  - rct
+  ledger: monotonicity
+  explain_key: diagnostic.compliance
+  engine: python
+- id: compliers
+  title: Complier share
+  designs:
+  - iv
+  ledger: monotonicity
+  explain_key: diagnostic.compliers
+  engine: python
+- id: constant_effect
+  title: Constant-effect assumption
+  designs:
+  - observational
+  ledger: null
+  explain_key: diagnostic.constant_effect
+  engine: python
+- id: covariate_balance
+  title: Covariate balance
+  designs:
+  - rd
+  ledger: exchangeability
+  explain_key: diagnostic.covariate_balance
+  engine: python
+- id: differential_attrition
+  title: Differential attrition
+  designs:
+  - rct
+  ledger: randomisation
+  explain_key: diagnostic.differential_attrition
+  engine: python
+- id: ebal_convergence
+  title: Moment balance
+  designs:
+  - observational
+  ledger: exchangeability
+  explain_key: diagnostic.ebal_convergence
+  engine: python
+- id: endogeneity
+  title: Endogeneity test
+  designs:
+  - iv
+  ledger: null
+  explain_key: diagnostic.endogeneity
+  engine: python
+- id: ess
+  title: Effective sample size
+  designs:
+  - observational
+  ledger: positivity
+  explain_key: diagnostic.ess
+  engine: python
+- id: evalue
+  title: E-value
+  designs:
+  - longitudinal
+  - mediation
+  - observational
+  - undecided
+  ledger: exchangeability
+  explain_key: diagnostic.evalue
+  engine: python
+- id: evalue_scale
+  title: E-value scale
+  designs:
+  - longitudinal
+  - mediation
+  - observational
+  - undecided
+  ledger: exchangeability
+  explain_key: diagnostic.evalue_scale
+  engine: python
+- id: event_study
+  title: Event study
+  designs:
+  - did
+  ledger: parallel_trends
+  explain_key: diagnostic.event_study
+  engine: python
+- id: extreme_confounder
+  title: Confounder strength needed to explain the estimate
+  designs:
+  - longitudinal
+  - mediation
+  - observational
+  - undecided
+  ledger: exchangeability
+  explain_key: diagnostic.extreme_confounder
+  engine: python
+- id: first_stage
+  title: First stage
+  designs:
+  - iv
+  - rd
+  ledger: relevance
+  explain_key: diagnostic.first_stage
+  engine: python
+- id: fold_stability
+  title: Stability across folds
+  designs:
+  - observational
+  ledger: null
+  explain_key: diagnostic.fold_stability
+  engine: python
+- id: forest_honesty
+  title: Honest splitting scheme
+  designs:
+  - observational
+  ledger: null
+  explain_key: diagnostic.forest_honesty
+  engine: python
+- id: group_time_att
+  title: Group-time effects
+  designs:
+  - did
+  ledger: parallel_trends
+  explain_key: diagnostic.group_time_att
+  engine: python
+- id: honest_did
+  title: Honest DiD breakdown value
+  designs:
+  - did
+  ledger: parallel_trends
+  explain_key: diagnostic.honest_did
+  engine: python
+- id: icc_design_effect
+  title: Intra-cluster correlation and design effect
+  designs:
+  - rct
+  ledger: null
+  explain_key: diagnostic.icc_design_effect
+  engine: python
+- id: imputation_fit
+  title: Untreated-cell model fit
+  designs:
+  - did
+  ledger: parallel_trends
+  explain_key: diagnostic.imputation_fit
+  engine: python
+- id: influence_spread
+  title: Influence-function spread
+  designs:
+  - longitudinal
+  ledger: null
+  explain_key: diagnostic.influence_spread
+  engine: python
+- id: its_autocorrelation
+  title: Residual autocorrelation
+  designs:
+  - its
+  ledger: model_form
+  explain_key: diagnostic.its_autocorrelation
+  engine: python
+- id: its_control_shock
+  title: Control series at the interruption
+  designs:
+  - its
+  ledger: no_cointerventions
+  explain_key: diagnostic.its_control_shock
+  engine: python
+- id: its_counterfactual
+  title: Counterfactual projection
+  designs:
+  - its
+  ledger: model_form
+  explain_key: diagnostic.its_counterfactual
+  engine: python
+- id: its_model_choice
+  title: Model choice
+  designs:
+  - its
+  ledger: model_form
+  explain_key: diagnostic.its_model_choice
+  engine: python
+- id: its_pre_period
+  title: Pre-period length
+  designs:
+  - its
+  ledger: model_form
+  explain_key: diagnostic.its_pre_period
+  engine: python
+- id: its_seasonality
+  title: Seasonality
+  designs:
+  - its
+  ledger: model_form
+  explain_key: diagnostic.its_seasonality
+  engine: python
+- id: its_series
+  title: The series and the interruption
+  designs:
+  - its
+  ledger: model_form
+  explain_key: diagnostic.its_series
+  engine: python
+- id: leave_one_out
+  title: Leave one unit out
+  designs:
+  - did
+  - its
+  - iv
+  - longitudinal
+  - mediation
+  - observational
+  - rct
+  - rd
+  - synth
+  ledger: null
+  explain_key: diagnostic.leave_one_out
+  engine: python
+- id: level_jump_at_kink
+  title: Level jump at a kink
+  designs:
+  - rd
+  ledger: continuity
+  explain_key: diagnostic.level_jump_at_kink
+  engine: python
+- id: linear_form
+  title: Linearity of the outcome model
+  designs:
+  - longitudinal
+  - mediation
+  - observational
+  - undecided
+  ledger: null
+  explain_key: diagnostic.linear_form
+  engine: python
+- id: love
+  title: Covariate balance (Love plot)
+  designs:
+  - observational
+  ledger: exchangeability
+  explain_key: diagnostic.love
+  engine: python
+- id: manipulation
+  title: Density at the cutoff
+  designs:
+  - rd
+  ledger: no_manipulation
+  explain_key: diagnostic.manipulation
+  engine: python
+- id: mediation_decomposition
+  title: Total = direct + indirect
+  designs:
+  - mediation
+  ledger: sequential_ignorability
+  explain_key: diagnostic.mediation_decomposition
+  engine: python
+- id: metalearner_plug_in
+  title: Plug-in bias of the meta-learner
+  designs:
+  - observational
+  ledger: null
+  explain_key: diagnostic.metalearner_plug_in
+  engine: python
+- id: model_reliance
+  title: How much the model is doing
+  designs:
+  - observational
+  ledger: positivity
+  explain_key: diagnostic.model_reliance
+  engine: python
+- id: multiple_mediators
+  title: Multiple mediators
+  designs:
+  - mediation
+  ledger: sequential_ignorability
+  explain_key: diagnostic.multiple_mediators
+  engine: python
+- id: n_matched
+  title: Match quality
+  designs:
+  - observational
+  ledger: positivity
+  explain_key: diagnostic.n_matched
+  engine: python
+- id: natural_course
+  title: Natural-course calibration
+  designs:
+  - longitudinal
+  ledger: no_time_varying_confounding
+  explain_key: diagnostic.natural_course
+  engine: python
+- id: negative_control
+  title: Negative control
+  designs:
+  - did
+  - its
+  - iv
+  - longitudinal
+  - mediation
+  - observational
+  - rct
+  - rd
+  - synth
+  ledger: exchangeability
+  explain_key: diagnostic.negative_control
+  engine: python
+- id: nuisance_rmse
+  title: Nuisance models by fold
+  designs:
+  - observational
+  ledger: null
+  explain_key: diagnostic.nuisance_rmse
+  engine: python
+- id: oster_assumptions
+  title: Oster's assumptions
+  designs:
+  - observational
+  - undecided
+  ledger: exchangeability
+  explain_key: diagnostic.oster_assumptions
+  engine: python
+- id: oster_delta
+  title: Oster delta
+  designs:
+  - observational
+  - undecided
+  ledger: exchangeability
+  explain_key: diagnostic.oster_delta
+  engine: python
+- id: outcome_distribution
+  title: Outcome distribution
+  designs:
+  - rct
+  ledger: null
+  explain_key: diagnostic.outcome_distribution
+  engine: python
+- id: overid
+  title: Overidentification test
+  designs:
+  - iv
+  ledger: exclusion
+  explain_key: diagnostic.overid
+  engine: python
+- id: overlap
+  title: Overlap between the arms
+  designs:
+  - did
+  - observational
+  ledger: positivity
+  explain_key: diagnostic.overlap
+  engine: python
+- id: pair_quality
+  title: Matched-pair quality
+  designs:
+  - observational
+  ledger: positivity
+  explain_key: diagnostic.pair_quality
+  engine: python
+- id: panel_balance
+  title: Panel balance
+  designs:
+  - did
+  ledger: null
+  explain_key: diagnostic.panel_balance
+  engine: python
+- id: permutation_distribution
+  title: Randomisation distribution
+  designs:
+  - rct
+  ledger: randomisation
+  explain_key: diagnostic.permutation_distribution
+  engine: python
+- id: person_time
+  title: Person-time and switching
+  designs:
+  - longitudinal
+  ledger: no_time_varying_confounding
+  explain_key: diagnostic.person_time
+  engine: python
+- id: placebo_outcome
+  title: Placebo outcome
+  designs:
+  - did
+  - its
+  - iv
+  - longitudinal
+  - mediation
+  - observational
+  - rct
+  - rd
+  - synth
+  ledger: exchangeability
+  explain_key: diagnostic.placebo_outcome
+  engine: python
+- id: placebo_reduced_form
+  title: Placebo reduced form
+  designs:
+  - iv
+  ledger: exclusion
+  explain_key: diagnostic.placebo_reduced_form
+  engine: python
+- id: placebo_treatment
+  title: Placebo treatment
+  designs:
+  - did
+  - its
+  - iv
+  - longitudinal
+  - mediation
+  - observational
+  - rct
+  - rd
+  - synth
+  ledger: exchangeability
+  explain_key: diagnostic.placebo_treatment
+  engine: python
+- id: policy_value
+  title: Honest policy value
+  designs:
+  - observational
+  ledger: null
+  explain_key: diagnostic.policy_value
+  engine: python
+- id: positivity_by_period
+  title: Positivity by period
+  designs:
+  - longitudinal
+  ledger: positivity
+  explain_key: diagnostic.positivity_by_period
+  engine: python
+- id: pre_trend_size
+  title: Size of the pre-trend
+  designs:
+  - did
+  ledger: parallel_trends
+  explain_key: diagnostic.pre_trend_size
+  engine: python
+- id: pre_trends
+  title: Pre-trend test
+  designs:
+  - did
+  ledger: parallel_trends
+  explain_key: diagnostic.pre_trends
+  engine: python
+- id: probe_runs
+  title: Probe runs
+  designs:
+  - did
+  - its
+  - iv
+  - longitudinal
+  - mediation
+  - observational
+  - rct
+  - rd
+  - synth
+  ledger: null
+  explain_key: diagnostic.probe_runs
+  engine: python
+- id: propensity_clipping
+  title: Propensity clipping
+  designs:
+  - observational
+  ledger: positivity
+  explain_key: diagnostic.propensity_clipping
+  engine: python
+- id: ps_calibration
+  title: Treatment-model calibration
+  designs:
+  - observational
+  ledger: positivity
+  explain_key: diagnostic.ps_calibration
+  engine: python
+- id: random_common_cause
+  title: Random common cause
+  designs:
+  - did
+  - its
+  - iv
+  - longitudinal
+  - mediation
+  - observational
+  - rct
+  - rd
+  - synth
+  ledger: exchangeability
+  explain_key: diagnostic.random_common_cause
+  engine: python
+- id: rate
+  title: Rank-weighted average treatment effect
+  designs:
+  - observational
+  ledger: null
+  explain_key: diagnostic.rate
+  engine: python
+- id: raw_means
+  title: Raw means by cohort and period
+  designs:
+  - did
+  ledger: parallel_trends
+  explain_key: diagnostic.raw_means
+  engine: python
+- id: rd_plot
+  title: Binned scatter at the cutoff
+  designs:
+  - rd
+  ledger: continuity
+  explain_key: diagnostic.rd_plot
+  engine: python
+- id: reduced_form
+  title: Reduced form
+  designs:
+  - iv
+  ledger: exclusion
+  explain_key: diagnostic.reduced_form
+  engine: python
+- id: regime_support
+  title: Support for the intervention regime
+  designs:
+  - longitudinal
+  ledger: positivity
+  explain_key: diagnostic.regime_support
+  engine: python
+- id: robustness_value
+  title: Robustness value
+  designs:
+  - longitudinal
+  - mediation
+  - observational
+  - undecided
+  ledger: exchangeability
+  explain_key: diagnostic.robustness_value
+  engine: python
+- id: rosenbaum_bounds
+  title: Rosenbaum bounds
+  designs:
+  - observational
+  ledger: exchangeability
+  explain_key: diagnostic.rosenbaum_bounds
+  engine: python
+- id: running_variable_discreteness
+  title: Discreteness of the running variable
+  designs:
+  - rd
+  ledger: continuity
+  explain_key: diagnostic.running_variable_discreteness
+  engine: python
+- id: sc_augmentation
+  title: Size of the augmentation correction
+  designs:
+  - synth
+  ledger: convex_hull
+  explain_key: diagnostic.sc_augmentation
+  engine: python
+- id: sc_convex_hull
+  title: Treated unit inside the donor hull
+  designs:
+  - did
+  - synth
+  ledger: convex_hull
+  explain_key: diagnostic.sc_convex_hull
+  engine: python
+- id: sc_gap
+  title: Treated minus synthetic gap
+  designs:
+  - did
+  - synth
+  ledger: donor_fit
+  explain_key: diagnostic.sc_gap
+  engine: python
+- id: sc_loo
+  title: Leave one donor out
+  designs:
+  - did
+  - synth
+  ledger: donor_fit
+  explain_key: diagnostic.sc_loo
+  engine: python
+- id: sc_mc_rank
+  title: Matrix-completion rank
+  designs:
+  - did
+  - synth
+  ledger: donor_fit
+  explain_key: diagnostic.sc_mc_rank
+  engine: python
+- id: sc_placebo_space
+  title: Placebo in space
+  designs:
+  - did
+  - synth
+  ledger: donor_fit
+  explain_key: diagnostic.sc_placebo_space
+  engine: python
+- id: sc_placebo_time
+  title: Placebo in time
+  designs:
+  - did
+  - synth
+  ledger: no_anticipation
+  explain_key: diagnostic.sc_placebo_time
+  engine: python
+- id: sc_pre_fit
+  title: Pre-treatment fit
+  designs:
+  - did
+  - synth
+  ledger: donor_fit
+  explain_key: diagnostic.sc_pre_fit
+  engine: python
+- id: sc_time_weights
+  title: Time weights
+  designs:
+  - did
+  - synth
+  ledger: donor_fit
+  explain_key: diagnostic.sc_time_weights
+  engine: python
+- id: sc_weights
+  title: Donor weights
+  designs:
+  - did
+  - synth
+  ledger: convex_hull
+  explain_key: diagnostic.sc_weights
+  engine: python
+- id: seed_stability
+  title: Stability across seeds
+  designs:
+  - observational
+  ledger: null
+  explain_key: diagnostic.seed_stability
+  engine: python
+- id: spec_curve
+  title: Specification curve
+  designs:
+  - did
+  - its
+  - iv
+  - longitudinal
+  - mediation
+  - observational
+  - rct
+  - rd
+  - synth
+  ledger: null
+  explain_key: diagnostic.spec_curve
+  engine: python
+- id: strategy_paths
+  title: Treatment strategies compared
+  designs:
+  - longitudinal
+  ledger: consistency
+  explain_key: diagnostic.strategy_paths
+  engine: python
+- id: subgroups
+  title: Pre-specified subgroups
+  designs:
+  - '*'
+  ledger: null
+  explain_key: diagnostic.subgroups
+  engine: python
+- id: subset_stability
+  title: Stability on random subsets
+  designs:
+  - did
+  - its
+  - iv
+  - longitudinal
+  - mediation
+  - observational
+  - rct
+  - rd
+  - synth
+  ledger: null
+  explain_key: diagnostic.subset_stability
+  engine: python
+- id: temporal_ordering
+  title: Temporal ordering of covariates
+  designs:
+  - longitudinal
+  - mediation
+  ledger: no_time_varying_confounding
+  explain_key: diagnostic.temporal_ordering
+  engine: python
+- id: tmle_targeting
+  title: Targeting step
+  designs:
+  - observational
+  ledger: null
+  explain_key: diagnostic.tmle_targeting
+  engine: python
+- id: treatment_mediator_interaction
+  title: Treatment-mediator interaction
+  designs:
+  - mediation
+  ledger: sequential_ignorability
+  explain_key: diagnostic.treatment_mediator_interaction
+  engine: python
+- id: trim_cost
+  title: What trimming costs
+  designs:
+  - observational
+  ledger: positivity
+  explain_key: diagnostic.trim_cost
+  engine: python
+- id: trim_stability
+  title: Stability across trimming thresholds
+  designs:
+  - observational
+  ledger: positivity
+  explain_key: diagnostic.trim_stability
+  engine: python
+- id: unobserved_confounder
+  title: Simulated unobserved confounder
+  designs:
+  - did
+  - its
+  - iv
+  - longitudinal
+  - mediation
+  - observational
+  - rct
+  - rd
+  - synth
+  ledger: exchangeability
+  explain_key: diagnostic.unobserved_confounder
+  engine: python
+- id: weak_iv_set
+  title: Weak-instrument-robust set
+  designs:
+  - iv
+  ledger: relevance
+  explain_key: diagnostic.weak_iv_set
+  engine: python
+- id: weighted_balance
+  title: Balance after weighting
+  designs:
+  - longitudinal
+  ledger: exchangeability
+  explain_key: diagnostic.weighted_balance
+  engine: python
+- id: weights_by_period
+  title: Weights by period
+  designs:
+  - longitudinal
+  ledger: positivity
+  explain_key: diagnostic.weights_by_period
+  engine: python

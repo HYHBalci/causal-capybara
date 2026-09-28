@@ -1,0 +1,51 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://causalcapybara.dev/schemas/capy.report.v1.json",
+  "title": "capy.report.v1",
+  "description": "An ordered list of sections bound to project objects, not a blob of Markdown the user must keep in sync.",
+  "type": "object",
+  "required": ["schema", "version", "id", "sections"],
+  "properties": {
+    "schema": { "const": "capy.report" },
+    "version": { "const": 1 },
+    "id": { "type": "string" },
+    "title": { "type": ["string", "null"] },
+    "sections": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["id", "kind"],
+        "properties": {
+          "id": { "type": "string" },
+          "kind": {
+            "enum": ["question", "ledger", "forest", "plot", "estimates_table", "sample_flow", "probe", "code", "prose_generated", "prose_user", "heading", "comparison", "simulation"]
+          },
+          "title": { "type": ["string", "null"] },
+          "bind": {
+            "type": ["object", "null"],
+            "properties": {
+              "run_id": { "type": ["string", "null"] },
+              "spec_id": { "type": ["string", "null"] },
+              "comparison_id": { "type": ["string", "null"] },
+              "sim_id": { "type": ["string", "null"] },
+              "artifact_id": { "type": ["string", "null"] }
+            }
+          },
+          "text": { "type": ["string", "null"] },
+          "generated_at": { "type": ["string", "null"] },
+          "stale": { "type": "boolean", "default": false },
+          "user_edited": { "type": "boolean", "default": false }
+        }
+      }
+    },
+    "options": {
+      "type": "object",
+      "properties": {
+        "hide_timestamps": { "type": "boolean", "default": false },
+        "hide_paths": { "type": "boolean", "default": false },
+        "tone": { "enum": ["beginner", "standard", "advanced"] }
+      }
+    }
+  },
+  "additionalProperties": true
+}

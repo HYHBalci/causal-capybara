@@ -1,0 +1,140 @@
+
+# Estimands as sentences, not acronyms.
+#
+# Beginner never sees ATO or RATE until the profile switch. Unavailable estimands
+# stay visible but disabled, with one line saying why.
+
+schema: capy.estimands
+version: 1
+
+estimands:
+  - id: ATE
+    sentence: If everyone got the programme, how would the average outcome change?
+    acronym: ATE
+    name: Average treatment effect
+    profile: beginner
+    designs: [rct, observational, iv, longitudinal, mediation]
+    requires: []
+    explain_key: estimand.ate
+    short: The effect averaged over everyone in the population.
+    common_mistake: Reporting an ATE from a design that only identifies the effect for the treated, or for compliers.
+
+  - id: ATT
+    sentence: For people who actually got it, what did it do?
+    acronym: ATT
+    name: Average treatment effect on the treated
+    profile: beginner
+    designs: [rct, observational, did, synth, its, longitudinal, rd]
+    requires: []
+    explain_key: estimand.att
+    short: The effect among the units that were actually treated.
+    common_mistake: Assuming the ATT equals the ATE when treated units differ from untreated ones -- which is exactly why they needed adjusting.
+
+  - id: ATC
+    sentence: For people who didn't get it, what would it have done?
+    acronym: ATC
+    name: Average treatment effect on the controls
+    profile: standard
+    designs: [rct, observational]
+    requires: []
+    explain_key: estimand.atc
+    short: The effect the programme would have had on those who did not receive it.
+    common_mistake: Extrapolating to untreated units that look nothing like any treated unit.
+
+  - id: ATO
+    sentence: For the people where treated and untreated genuinely overlap, what did it do?
+    acronym: ATO
+    name: Average treatment effect on the overlap population
+    profile: advanced
+    designs: [observational]
+    requires: []
+    explain_key: estimand.ato
+    short: A weighted effect that puts most weight where the groups are comparable. Stable, but the population is defined by the data.
+    common_mistake: Reporting it as if it were the ATE for a policy-relevant population.
+
+  - id: LATE
+    sentence: For people who only got it because of the instrument or the cutoff, what did it do?
+    acronym: LATE
+    name: Local average treatment effect
+    profile: standard
+    designs: [iv, rd]
+    requires: [instruments_or_running]
+    explain_key: estimand.late
+    short: The effect for compliers -- units whose treatment was moved by the instrument, or who sit at the cutoff.
+    common_mistake: Calling it "the" effect. Different instruments identify different compliers and so different numbers.
+
+  - id: CACE
+    sentence: For the people who comply with what they were offered, what did it do?
+    acronym: CACE
+    name: Complier average causal effect
+    profile: standard
+    designs: [rct, iv]
+    requires: [instruments_or_assignment]
+    explain_key: estimand.cace
+    short: The LATE in a randomised encouragement design.
+    common_mistake: Reporting the CACE when the policy question is about everyone offered the programme -- that is the ITT.
+
+  - id: LATET
+    sentence: For treated compliers, what did it do?
+    acronym: LATET
+    name: Local average treatment effect on the treated
+    profile: advanced
+    designs: [iv]
+    requires: [instruments_or_assignment]
+    explain_key: estimand.latet
+    short: The complier effect restricted to those actually treated.
+
+  - id: ITT
+    sentence: For everyone who was offered it, what did the offer do?
+    acronym: ITT
+    name: Intention to treat
+    profile: beginner
+    designs: [rct]
+    requires: []
+    explain_key: estimand.itt
+    short: The effect of being offered the programme, whether or not people took it up. Usually the policy-relevant number.
+    common_mistake: Treating a diluted ITT as evidence the programme does not work, when take-up was the problem.
+
+  - id: cohort_ATT
+    sentence: For each group that adopted it, what did their own rollout do?
+    acronym: ATT(g,t)
+    name: Group-time average treatment effect
+    profile: standard
+    designs: [did]
+    requires: [staggered_panel]
+    explain_key: estimand.cohort_att
+    short: One effect per adopting cohort and period, which can then be aggregated honestly.
+    common_mistake: Averaging cohorts with weights that can go negative -- which is what plain two-way fixed effects does.
+
+  - id: CATE
+    sentence: How does the effect vary from person to person, or place to place?
+    acronym: CATE
+    name: Conditional average treatment effect
+    profile: advanced
+    designs: [rct, observational, did]
+    requires: []
+    explain_key: estimand.cate
+    short: The effect as a function of covariates.
+    common_mistake: Reading noise as heterogeneity. Honest splitting and calibration checks exist for this reason.
+
+  - id: GATE
+    sentence: How does the effect vary across pre-specified groups?
+    acronym: GATE
+    name: Group average treatment effect
+    profile: standard
+    designs: [rct, observational, did]
+    requires: []
+    explain_key: estimand.gate
+    short: The effect within groups you named before looking.
+    common_mistake: Naming the groups after seeing the results.
+
+  - id: dose_response
+    sentence: If we changed the dose, how would the outcome change?
+    acronym: ADRF
+    name: Average dose-response function
+    profile: advanced
+    designs: [observational]
+    requires: [continuous_treatment]
+    explain_key: estimand.dose_response
+    short: The effect as a function of a continuous treatment level.
+    common_mistake: Fitting a single linear coefficient to a dose that acts non-linearly.

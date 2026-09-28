@@ -1,0 +1,526 @@
+# The vocabulary the interface uses, in the interface's own voice.
+#
+# These are the entries behind the Explain chips that are not a design, an
+# estimand, an assumption or a method: the ideas a policy analyst meets on the
+# glass and deserves two sentences about without leaving the screen.
+
+schema: capy.explain
+version: 1
+
+entries:
+  concept.about:
+    title: About Causal Capybara
+    short: >-
+      A desktop studio for applied causal inference. Serious causal inference,
+      casual to use.
+    detail: >-
+      The object of work here is a causal question, not an equation. You state
+      the question in ordinary language, complete a picture of the research
+      design, look at the diagnostics that design depends on, and then estimate
+      -- usually with several methods at once, because the disagreement between
+      them is part of what you learned.
+      Everything runs locally. Your data does not leave this machine unless you
+      export it, and there is no telemetry. The engines are the R and Python
+      packages the field already publishes with; this application orchestrates
+      them, records what was assumed, and refuses to present an estimate as
+      causal because of the estimator's name.
+      Copyright 2026 Yusufhan Balci; VCESR. Original project code and
+      documentation are licensed under Apache-2.0; see the installed LICENSE
+      and NOTICE for the terms and third-party attribution.
+    see_also: [concept.provisional, concept.forest_plot]
+
+  concept.confounding:
+    title: Confounding
+    short: >-
+      A common cause of both the treatment and the outcome makes the two look
+      related even when the treatment does nothing.
+    detail: >-
+      If healthier people are both more likely to take a drug and more likely to
+      survive, the drug looks effective whether or not it is. Adjusting means
+      comparing treated and untreated units that match on the common cause, so
+      that the remaining difference cannot be explained by it.
+      The hard part is not the arithmetic; it is knowing what the common causes
+      are. Adjustment can only handle the ones you measured, which is why the
+      exchangeability assumption stays untested no matter how good the balance
+      plot looks.
+    common_mistake: >-
+      Adjusting for everything available. Some variables -- descendants of the
+      treatment, and colliders -- introduce bias when you condition on them.
+    see_also: [assumption.exchangeability, concept.collider, guardrail.bad_control]
+
+  concept.collider:
+    title: Colliders and why adjusting can hurt
+    short: >-
+      A variable that two arrows point into. Conditioning on it creates an
+      association between its causes that was not there before.
+    detail: >-
+      Suppose talent and looks both help an actor get hired, and are unrelated in
+      the population. Among people who were hired, the two become negatively
+      related: if someone got in without much talent, they probably had looks.
+      Nothing caused that association except your decision to look only at the
+      hired.
+      The same thing happens whenever you adjust for a variable that treatment
+      and outcome both influence, or condition on a sample selected on such a
+      variable. It is bias you added.
+    common_mistake: >-
+      Treating "adjust for more covariates" as always safer. Colliders and
+      post-treatment variables make it worse.
+    references: ["Elwert & Winship (2014), Endogenous selection bias"]
+    see_also: [guardrail.bad_control, concept.selection_bias, design.catalogue]
+
+  guardrail.bad_control:
+    title: Bad controls
+    short: >-
+      Anything measured after treatment, or caused by it, does not belong in the
+      adjustment set. Adjusting for it blocks part of the effect you are trying
+      to measure.
+    detail: >-
+      If a training programme raises earnings partly by raising the chance of
+      being employed, then adjusting for employment removes that pathway from the
+      estimate. The number you get is not the effect of the programme; it is the
+      effect holding fixed one of the ways the programme works.
+      Causal Capybara flags variables that look post-treatment -- by name, and by
+      timing when the design has a time variable -- and marks them on the board.
+      It does not remove them for you: the guardrail explains, and you decide.
+      If you genuinely want the effect that does not run through a mediator, that
+      is a controlled direct effect, and it is a different estimand with its own
+      assumptions.
+    worry_when: >-
+      A covariate is named like a follow-up measurement; a covariate is dated
+      after the treatment decision; adjusting for it moves the estimate a lot.
+    see_also: [concept.collider, design.mediation, assumption.exchangeability]
+
+  concept.selection_bias:
+    title: Selection bias
+    short: >-
+      Who ends up in your analysis sample can create an association all by
+      itself, quite apart from confounding.
+    detail: >-
+      Dropout that differs by treatment arm, complete-case analysis when
+      missingness depends on the outcome, and administrative samples that only
+      record people who reached a certain stage all condition on a consequence of
+      the very things you are studying.
+      This is why every dropped row appears in the sample flow with a reason. The
+      flow is not bookkeeping: it is the record of which selections you made, so
+      that you and a reader can judge whether any of them was a collider.
+    see_also: [concept.collider, concept.consort]
+
+  concept.consort:
+    title: The sample flow
+    short: >-
+      A step-by-step record of how the imported rows became the analysis sample,
+      with a reason for every row that left.
+    detail: >-
+      Borrowed from the CONSORT diagrams of clinical trials. Complete-case drops,
+      caliper failures, trimming, bandwidth truncation and donor restrictions all
+      appear as explicit steps.
+      The rule behind it is that no estimator in this product is allowed to
+      silently change the population an estimate refers to. If matching could not
+      find a partner for a fifth of the treated units, the estimand is now the
+      effect for the other four fifths, and the flow says so.
+    see_also: [concept.selection_bias, concept.effective_sample_size]
+
+  concept.clustering:
+    title: Clustering
+    short: >-
+      When treatment was assigned to whole groups -- states, schools, clinics --
+      the number of independent observations is closer to the number of groups
+      than the number of rows.
+    detail: >-
+      Standard errors that ignore the group structure can be several times too
+      small, which turns a null result into a finding. The rule of thumb is to
+      cluster at the level treatment was assigned at, which is usually coarser
+      than the level the data is stored at.
+      With few clusters -- under about forty -- the usual cluster-robust
+      correction is itself unreliable, and the honest move is a small-sample
+      correction, a t distribution with the number of clusters minus one, or a
+      cluster bootstrap. This product states which one it used on every result.
+    worry_when: >-
+      Fewer than about forty clusters; very unequal cluster sizes; clustering at
+      a finer level than treatment was assigned.
+    references: ["Cameron & Miller (2015), A practitioner's guide to cluster-robust inference"]
+    see_also: [design.did, method.rct.cluster]
+
+  concept.provisional:
+    title: Provisional results
+    short: >-
+      A result the product does not think you should trust as it stands. It still
+      computed it; it just will not let the flag disappear.
+    detail: >-
+      A run is marked provisional when something specific happened: the core
+      diagnostic for the design was never opened, the weights are degenerate, the
+      instrument is weak, a staggered panel was estimated with two-way fixed
+      effects, matching dropped part of the treated group, or a synthetic control
+      could not reproduce the pre-period.
+      The flag travels. It appears on the forest plot as a different marker, in
+      the estimates table, in the navigator, in the status bar's count, and in
+      the generated report. You can always proceed; you cannot quietly proceed.
+    see_also: [concept.forest_plot, assumption.positivity]
+
+  concept.effective_sample_size:
+    title: Effective sample size
+    short: >-
+      How many observations your weighted comparison is really worth. Almost
+      always smaller than the number of rows, sometimes dramatically.
+    detail: >-
+      Weighting a comparison group to resemble the treated group concentrates the
+      analysis on the few comparison units that actually resemble them. Kish's
+      effective sample size expresses that concentration as a count: a thousand
+      rows with wildly unequal weights can be worth eighty observations.
+      It is the honest denominator. When it collapses, the confidence interval is
+      narrower than the evidence, and the estimate rests on a handful of units
+      whose individual peculiarities now matter.
+    worry_when: >-
+      The effective sample is below about 40% of the nominal one, or a single
+      weight carries more than a fifth of the total.
+    see_also: [diagnostic.ess, assumption.positivity, estimand.ato]
+
+  concept.standardised_difference:
+    title: Standardised mean difference
+    short: >-
+      The gap between groups on a covariate, divided by a pooled standard
+      deviation, so covariates on different scales can be compared on one axis.
+    detail: >-
+      It is the number a Love plot shows, before and after adjustment. The
+      convention of worrying above 0.1 is a convention, not a law -- it comes
+      from simulation studies, and what matters is whether a residual imbalance
+      is on a variable that strongly predicts the outcome.
+      Unlike a t-test of balance, it does not shrink as the sample grows, which
+      is why balance is judged with it rather than with p-values.
+    references: ["Austin (2009), Balance diagnostics"]
+    see_also: [diagnostic.love, assumption.exchangeability]
+
+  concept.forest_plot:
+    title: The forest plot, and why there is no headline number
+    short: >-
+      One row per method, each with its interval. When several methods ran, the
+      forest is the result -- not a single number chosen from it.
+    detail: >-
+      Picking the estimate you liked best after seeing them all is how honest
+      people produce dishonest research. This product therefore shows a headline
+      number only when exactly one method ran; otherwise the range across
+      defensible methods is the finding, and the generated prose describes the
+      range.
+      You can nominate a preferred estimate for a report. It is stored as a
+      choice and displayed as a choice, not as a conclusion.
+    see_also: [concept.spec_curve, concept.provisional]
+
+  concept.spec_curve:
+    title: Specification curve
+    short: >-
+      Every defensible version of the analysis, sorted by estimate, so you can
+      see the whole distribution instead of one draw from it.
+    detail: >-
+      A robustness check that reports three alternative specifications is a
+      sample of size three from a space the analyst chose. A specification curve
+      runs the grid -- covariate sets, calipers, bandwidths, trimming thresholds
+      -- and plots all of them with the headline marked.
+      A conclusion that survives most of the curve is stronger than one that
+      survives three hand-picked variants. A curve that swings through zero tells
+      you the finding is a specification, not a result.
+    references: ["Simonsohn, Simmons & Nelson (2020), Specification curve analysis"]
+    see_also: [probe.alternate_spec, concept.forest_plot]
+
+  concept.placebo:
+    title: Placebo tests
+    short: >-
+      Run the same analysis somewhere the effect cannot exist. If you find one,
+      the design is producing effects that are not there.
+    detail: >-
+      A placebo outcome is one the treatment should not touch. A placebo
+      treatment is a fake date or a permuted assignment. A placebo unit is a
+      donor treated as though it had been intervened on. Each asks the same
+      question: does this design manufacture findings?
+      A clean placebo is reassuring and not decisive -- it rules out one route to
+      a false positive, not all of them. A dirty placebo is much more
+      informative, because it demonstrates a problem rather than failing to find
+      one.
+    see_also: [probe.placebo_outcome, probe.placebo_treatment, diagnostic.sc_placebo]
+
+  concept.negative_control:
+    title: Negative controls
+    short: >-
+      A variable that shares your suspected confounding but cannot be affected by
+      the treatment. An effect there is a measurement of your bias.
+    detail: >-
+      If a vaccine appears to prevent injuries as well as influenza, the
+      apparent influenza effect is at least partly healthy-user bias. That is
+      more useful than any test of balance, because it puts a number on the
+      confounding rather than asserting its absence.
+      Negative-control exposures work the same way in reverse: something that
+      could not cause the outcome but shares its confounders.
+    references: ["Lipsitch, Tchetgen Tchetgen & Cohen (2010), Negative controls"]
+    see_also: [probe.negative_control, assumption.exchangeability]
+
+  concept.cross_fitting:
+    title: Cross-fitting
+    short: >-
+      Fit the nuisance models on one part of the data and apply them to another,
+      so a flexible learner cannot fit its own noise into the effect estimate.
+    detail: >-
+      Machine-learning models for the treatment and outcome overfit, and if the
+      same rows fit the model and enter the score, the overfitting shows up as
+      bias in the estimate and as a confidence interval that is too narrow.
+      Splitting into folds, fitting on the complement and predicting on the held-
+      out fold removes that route, at the price of a little variance.
+      It is what makes double machine learning honest, and it is why the fold
+      diagnostics are mandatory whenever a learner is used: if the estimate
+      swings wildly across folds, the answer depends on the split.
+    references: ["Chernozhukov et al. (2018), Double/debiased machine learning"]
+    see_also: [method.ml.dml_irm, diagnostic.nuisance_rmse, concept.honest_splitting]
+
+  concept.honest_splitting:
+    title: Honest splitting
+    short: >-
+      Use one half of the data to decide where the subgroups are and the other
+      half to estimate their effects.
+    detail: >-
+      If the same rows choose the split and estimate the effect inside it, the
+      estimate is biased upwards by construction: the split was chosen because
+      the effect looked large there. Honest trees and honest forests avoid it by
+      separating the two jobs inside every tree.
+      The price is variance -- half the rows for each job -- which is why honest
+      methods need more data than they first appear to. The reward is a
+      heterogeneity estimate you can believe.
+    references: ["Athey & Imbens (2016), Recursive partitioning for heterogeneous causal effects"]
+    see_also: [method.ml.causal_forest, estimand.cate, concept.multiplicity]
+
+  concept.multiplicity:
+    title: Subgroups and multiplicity
+    short: >-
+      Look at enough subgroups and one will look impressive. Pre-specify them, or
+      report that you did not.
+    detail: >-
+      With twenty subgroups and no real heterogeneity, you expect one significant
+      result at the 5% level. The problem is not the arithmetic, it is that the
+      subgroup gets written up as a finding and the other nineteen do not appear.
+      Causal Capybara marks subgroup estimates as a separate group in the results
+      and attaches a multiplicity caution rather than presenting them as a table
+      of independent findings. For discovered rather than pre-specified
+      heterogeneity, the calibration test and the rank-weighted effect are the
+      honest summaries.
+    see_also: [estimand.gate, estimand.cate, concept.honest_splitting]
+
+  concept.target_trial:
+    title: The target trial
+    short: >-
+      Write down the randomised experiment you would run if you could, then ask
+      what your data lets you emulate.
+    detail: >-
+      Eligibility, time zero, the treatment strategies being compared, the
+      follow-up, the outcome, and the causal contrast. Making each explicit
+      catches most of the errors that produce implausible observational results:
+      immortal time bias, prevalent-user bias, and outcomes that precede the
+      exposure.
+      It is also the fastest way to notice that a question has no well-defined
+      intervention behind it, in which case the estimand needs rewriting before
+      any estimator is chosen.
+    references: ["Hernán & Robins (2016), Using big data to emulate a target trial"]
+    see_also: [assumption.consistency, design.longitudinal]
+
+  concept.time_varying_confounding:
+    title: Time-varying confounding
+    short: >-
+      A variable that is both a consequence of past treatment and a cause of
+      future treatment. Ordinary regression cannot handle it; g-methods can.
+    detail: >-
+      In a study of a blood-pressure drug, blood pressure is affected by earlier
+      doses and drives later ones. Adjust for it and you block part of the drug's
+      effect and open a collider path. Leave it out and confounding remains.
+      Inverse-probability weighting for a marginal structural model, the
+      parametric g-formula, and longitudinal targeted learning all solve the same
+      problem in different ways: they model the treatment process over time
+      rather than conditioning on its consequences.
+    references: ["Robins, Hernán & Brumback (2000)", "Daniel et al. (2013), Methods for dealing with time-dependent confounding"]
+    see_also: [assumption.no_time_varying_confounding, method.long.msm_iptw, method.long.gformula]
+
+  concept.cross_world:
+    title: Cross-world assumptions
+    short: >-
+      A condition relating outcomes under treatment and mediator values that no
+      single person could ever experience together. Not testable, even in
+      principle.
+    detail: >-
+      Natural direct and indirect effects need you to compare what would happen
+      if a person were treated but their mediator took the value it would have
+      taken untreated. No experiment can create that world for anyone, so no
+      experiment can check the assumption.
+      This is why interventional (stochastic) direct and indirect effects are
+      preferred in policy and health settings: they replace the impossible
+      comparison with one where the mediator is drawn from a distribution, which
+      a trial could in principle implement.
+    references: ["Robins & Richardson (2010)", "VanderWeele, Vansteelandt & Robins (2014)"]
+    see_also: [assumption.sequential_ignorability, method.med.interventional]
+
+  concept.estimand_first:
+    title: Estimand first, estimator second
+    short: >-
+      Decide what number you want before deciding how to compute it. The
+      estimator does not define the question; the question restricts the
+      estimators.
+    detail: >-
+      "The effect of the programme" is not yet a quantity. For whom -- everyone,
+      the people who took it up, the people at the eligibility cutoff, the people
+      an encouragement moved? Against what -- no programme, the old programme,
+      the programme at a different dose?
+      Different designs identify different estimands, and this is why the app
+      shows unavailable estimands greyed rather than hiding them: it is telling
+      you what your design cannot answer, which is usually more useful than what
+      it can.
+    see_also: [estimand.ate, estimand.att, estimand.late, design.catalogue]
+
+  concept.twfe:
+    title: Two-way fixed effects
+    short: >-
+      A regression that gives every unit its own baseline level and every period
+      its own shift, so only change within a unit over time is compared. It is
+      the workhorse behind difference-in-differences, and it misbehaves when
+      units adopt at different dates.
+    detail: >-
+      "Fixed effect" here just means a separate intercept. One per unit absorbs
+      everything about a state that never changes -- its size, its politics, its
+      weather. One per period absorbs anything that hit everybody at once, like a
+      recession. What is left to explain the outcome is the timing of the policy.
+      With two groups and two periods this reproduces the
+      difference-in-differences answer exactly.
+      With many adoption dates it no longer does. The single coefficient becomes
+      a weighted average of every two-group, two-period comparison the data
+      allows, including ones that use an early adopter as the control for a later
+      one. Those weights are decided by the arithmetic rather than by you, and
+      some of them can be negative. The decomposition diagnostic shows what your
+      particular number is made of.
+    common_mistake: >-
+      Reading the coefficient as "the" effect. Under staggered adoption it is an
+      average with weights nobody chose, and it is not guaranteed to lie between
+      the smallest and the largest of the true effects it averages.
+    see_also: [concept.staggered_adoption, method.did.twfe, diagnostic.bacon_decomposition, warning.twfe_staggered]
+
+  concept.staggered_adoption:
+    title: Staggered adoption
+    short: >-
+      Units switch the policy on at different dates rather than all at once. It
+      is the ordinary case in policy data, and it breaks the simplest
+      before-and-after arithmetic.
+    detail: >-
+      With a single adoption date the comparison is easy to state: adopters
+      against non-adopters, before against after. When states adopt in 2004, 2009
+      and 2013, one regression coefficient has to combine many overlapping
+      comparisons, and some of them treat a unit that is already under the policy
+      as though it were an untreated control. If the effect grows or fades after
+      adoption, those comparisons subtract one real effect from another and can
+      drag the average towards zero, or past it.
+      Estimators built for staggered adoption avoid this by never using an
+      already-treated unit as a control. They compute one effect for each
+      adoption cohort in each period and then average those blocks with weights
+      you can look at and argue with.
+    see_also: [concept.twfe, concept.not_yet_treated, diagnostic.bacon_decomposition, diagnostic.group_time_att, method.did.callaway_santanna]
+
+  concept.not_yet_treated:
+    title: Not-yet-treated comparisons
+    short: >-
+      Units that do adopt the policy, but later. While they are still waiting
+      they can serve as the comparison group for units that adopted earlier.
+    detail: >-
+      The obvious comparison group in a staggered design is the units that never
+      adopt. Sometimes there are very few of them, and they are often unusual for
+      the very reason they never adopted. The alternative is to borrow from the
+      future: in 2006 a state that adopts in 2011 is untreated, and it probably
+      resembles a 2007 adopter more closely than a permanent hold-out does.
+      Two costs come with it. The pool thins as the panel runs on and more units
+      switch on, so the later periods rest on fewer comparisons than the early
+      ones. And it assumes those waiting units are not already reacting to a
+      policy they can see coming, which is the no-anticipation assumption doing
+      real work rather than sitting decoratively in the ledger.
+    see_also: [concept.staggered_adoption, diagnostic.comparison_group, diagnostic.group_time_att, assumption.no_anticipation]
+
+  concept.donor_pool:
+    title: The donor pool
+    short: >-
+      The set of untreated places a synthetic comparison is allowed to be built
+      from. Choosing it is a research decision, not a technical one.
+    detail: >-
+      A synthetic control builds its stand-in by blending other units, and it can
+      only blend the ones you put in front of it. Include somewhere that got its
+      own version of the policy and the comparison is contaminated by it. Include
+      somewhere with nothing in common with the treated place and it will simply
+      receive a weight of zero -- harmless, but it makes the pool look larger
+      than it really is. Leave out the one place that would have matched well and
+      the fit suffers for a reason nothing in the output will name.
+      The pool also fixes how strong the placebo evidence can be. The treated
+      unit's gap is judged against the gaps you get by pretending each donor was
+      treated instead, so five donors give five comparisons, and "more extreme
+      than all of them" is a one-in-six statement. No amount of computing makes
+      it a stronger one.
+    common_mistake: >-
+      Treating the pool as given because it arrived with the dataset. Write down
+      why each unit is in it and why the excluded ones are out; that list is part
+      of the design and belongs in the write-up.
+    see_also: [method.sc.abadie, diagnostic.sc_weights, diagnostic.sc_convex_hull, assumption.donor_fit]
+
+  concept.cluster_robust_se:
+    title: Cluster-robust standard errors
+    short: >-
+      A way of computing uncertainty that treats each group -- a school, a
+      village, a clinic -- as one group's worth of independent evidence, rather
+      than counting every row inside it separately.
+    detail: >-
+      If a whole school was assigned to the programme together, its pupils do not
+      each carry separate evidence about whether the programme works: they share
+      a headteacher, a catchment and a year. An interval computed as though the
+      pupils were independent counts the same information over and over and comes
+      out far too narrow, so an effect looks settled when it is not. The
+      cluster-robust version allows rows within a group to be related in any way
+      at all, and assumes only that different groups are independent of each
+      other.
+      What it needs in return is enough groups. Its accuracy grows with the
+      number of clusters, not the number of rows, and with only a couple of dozen
+      it becomes optimistic again -- which is the point at which a small-sample
+      correction, or reshuffling whole clusters at a time, is the safer route.
+    common_mistake: >-
+      Clustering at the wrong level -- on the individual when assignment was by
+      school, or on the year when the policy varied by state. The rule is to
+      cluster at the level treatment was assigned.
+    see_also: [concept.clustering, diagnostic.cluster_structure, method.rct.cluster, diagnostic.permutation_distribution]
+
+  concept.complete_case:
+    title: Complete-case analysis
+    short: >-
+      Dropping every row that is missing any value the analysis needs and
+      computing on what is left. Most software does this silently.
+    detail: >-
+      The rows that survive are not a random sample of the rows you started with.
+      If the people doing badly were also the ones more likely to skip the
+      follow-up, the surviving sample is healthier than the population it is
+      meant to describe, and every number computed on it inherits that. The bias
+      can run in either direction, and how large it is cannot be read off the
+      rows that remain.
+      It is not always wrong. If whatever drove the missingness is unrelated to
+      the outcome once you account for the variables you kept, complete cases are
+      unbiased and merely less precise. The honest minimum is to report how many
+      rows went, and whether they went from the treated and untreated groups at
+      the same rate.
+    common_mistake: >-
+      Reporting the analysis sample size without the starting one, so a third of
+      the data can disappear without anybody noticing.
+    see_also: [diagnostic.differential_attrition, concept.selection_bias, concept.consort]
+
+  concept.caliper:
+    title: Caliper
+    short: >-
+      The largest difference you are willing to tolerate inside a matched pair.
+      Beyond it the treated unit is left unmatched rather than paired with
+      somebody unlike them.
+    detail: >-
+      Matching pairs each treated unit with the most similar untreated one
+      available -- but "the most similar available" can still be very dissimilar
+      when the comparison pool is thin. A caliper puts a bound on the gap,
+      usually stated as a fraction of the spread of the estimated treatment
+      probability, and refuses the pair when nothing falls inside it.
+      The trade is explicit. A tight caliper gives better-matched pairs and drops
+      more treated units; a loose one keeps everybody and admits worse
+      comparisons. The dropping is not just a loss of precision: the question
+      changes with it, because the answer now describes the treated units that
+      could be matched rather than all of them. That is why the count of
+      unmatched treated units belongs beside the estimate rather than in a
+      footnote.
+    see_also: [diagnostic.n_matched, method.obs.matching.nn, diagnostic.overlap, concept.standardised_difference]

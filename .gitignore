@@ -1,0 +1,26 @@
+# Build scratch, virtual environments and anything a run produces.
+.capy-build/
+.venv/
+venv/
+__pycache__/
+*.py[cod]
+.pytest_cache/
+node_modules/
+app/dist/
+sidecar/build/
+engines/python/build/
+sidecar/dist/
+*.egg-info/
+*.tsbuildinfo
+app/src-tauri/target/
+app/src-tauri/gen/
+*.log
+.audit/
+
+# Projects are user data. A .capy folder is meant to be committable *by the
+# user*, in their own repository -- not carried around in this one.
+*.capy/
+
+# Local app and release-test state.
+.codex-run/
+.release-test-home/

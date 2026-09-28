@@ -1,0 +1,67 @@
+name: Bug report
+description: Report a reproducible Causal Capybara problem.
+title: "[Bug] "
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for reporting a bug. Do not attach real research datasets, private
+        projects, credentials, or unredacted logs. Report security issues privately
+        using the route in https://github.com/HYHBalci/causal-capybara/security/policy.
+  - type: input
+    id: version
+    attributes:
+      label: Version
+      description: App version or source commit.
+      placeholder: "0.1.0 or commit SHA"
+    validations:
+      required: true
+  - type: dropdown
+    id: operating_system
+    attributes:
+      label: Operating system
+      options:
+        - Windows 11 x64
+        - Windows 10 x64
+        - Other
+    validations:
+      required: true
+  - type: dropdown
+    id: install_source
+    attributes:
+      label: Install source
+      options:
+        - GitHub Release installer
+        - CI artifact
+        - Built from source
+        - Other
+    validations:
+      required: true
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps to reproduce
+      description: Use a synthetic or public example where possible.
+      placeholder: |
+        1. Open...
+        2. Select...
+        3. Observe...
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected behavior
+    validations:
+      required: true
+  - type: textarea
+    id: actual
+    attributes:
+      label: Actual behavior
+    validations:
+      required: true
+  - type: textarea
+    id: logs
+    attributes:
+      label: Relevant logs or screenshots
+      description: Optional. Remove names, paths, tokens, data rows, and other sensitive details before attaching.

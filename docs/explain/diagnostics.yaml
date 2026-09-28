@@ -1,0 +1,2543 @@
+# The diagnostics, explained.
+#
+# Every entry carries a "what would worry me" line, because a plot you cannot
+# interpret is decoration. None of them can confirm an assumption; the strongest
+# thing any of them does is fail to contradict one.
+
+schema: capy.explain
+version: 1
+
+entries:
+  diagnostic.overlap:
+    title: Overlap
+    short: >-
+      The distribution of the estimated probability of treatment, drawn
+      separately for the treated and the untreated. Where they do not overlap,
+      there is no comparison to make.
+    detail: >-
+      Fit a model for the probability of being treated given the covariates, then
+      plot the fitted probabilities by arm. If treated units sit at values no
+      control unit reaches, the estimate for those units is produced by
+      extrapolating the outcome model rather than by comparing anything.
+      The summary reports the share of units outside the common support and how
+      many effective control observations survive reweighting. Both matter: a
+      picture can look reasonable while the effective sample has collapsed.
+    worry_when: >-
+      A long stretch where only one arm appears; a treatment model that separates
+      the groups almost perfectly; an effective control sample far below the
+      nominal one.
+    references: ["Rosenbaum & Rubin (1983)", "Crump et al. (2009)"]
+    see_also: [assumption.positivity, diagnostic.ess, estimand.ato]
+
+  diagnostic.love:
+    title: Love plot (covariate balance)
+    short: >-
+      Absolute standardised differences for every covariate, before and after
+      adjustment, on one axis.
+    detail: >-
+      Named after Thomas Love. Each covariate contributes one point before
+      adjustment and one after, so you can see at a glance whether matching or
+      weighting achieved what it promised.
+      The dashed line at 0.1 is a convention. What matters is whether a residual
+      imbalance sits on a variable that strongly predicts the outcome; a large
+      remaining difference on an irrelevant covariate is harmless, and a small
+      one on a powerful predictor is not.
+      Variance ratios are reported alongside: two groups can have the same mean
+      and very different spread, and matching on means alone will not show it.
+    worry_when: >-
+      Any covariate still far from zero after adjustment; a variance ratio far
+      from one; balance achieved only by discarding much of the sample.
+    references: ["Austin (2009), Balance diagnostics for comparing the distribution of baseline covariates"]
+    see_also: [concept.standardised_difference, assumption.exchangeability, diagnostic.ess]
+
+  diagnostic.ess:
+    title: Effective sample size
+    short: >-
+      How many observations the weighted comparison is really worth, and how much
+      of the total weight the single largest unit carries.
+    detail: >-
+      Weighting concentrates the analysis on the units that resemble the other
+      arm. Kish's effective sample size turns that concentration into a count you
+      can compare with the nominal one.
+      The weight histogram is the same information as a picture: a long right
+      tail means a handful of rows are carrying the estimate, and their
+      idiosyncrasies now show up in your confidence interval as precision you do
+      not have.
+    worry_when: >-
+      An effective sample below about 40% of the nominal one; a single weight
+      above about a fifth of the total; a histogram with a visible tail of
+      extreme weights.
+    see_also: [concept.effective_sample_size, assumption.positivity, probe.trim_curve]
+
+  diagnostic.ps_calibration:
+    title: Treatment-model calibration
+    short: >-
+      Within bands of predicted treatment probability, does the share actually
+      treated match the prediction?
+    detail: >-
+      A propensity score is only useful if it is a probability. Sorting units
+      into deciles of the predicted probability and comparing with the realised
+      treatment share is the simplest check that the model is not badly
+      misspecified.
+      A badly calibrated treatment model makes every weight derived from it
+      suspect, and a doubly robust estimator loses one of its two chances.
+    worry_when: >-
+      Deciles where the predicted and realised shares are far apart, especially at
+      the extremes where the weights are largest.
+    see_also: [diagnostic.overlap, method.obs.aipw]
+
+  diagnostic.baseline_balance:
+    title: Baseline balance
+    short: >-
+      In a randomised design, a check that the arms look alike on characteristics
+      measured before assignment.
+    detail: >-
+      Randomisation makes the arms comparable in expectation, not in every
+      sample. The balance table is a check on the mechanics: that the randomiser
+      worked, that nobody was reassigned, that the data was not merged wrongly.
+      It is not a test of whether randomisation "worked" in a deeper sense. With
+      many covariates some will differ by chance, and adjusting for whichever
+      ones came out significant is a forking path, not a repair. Pre-specified
+      covariate adjustment for precision is a different and better idea.
+    worry_when: >-
+      A large imbalance on a strong predictor of the outcome; imbalance that
+      correlates with the order of enrolment; differential dropout after
+      assignment.
+    references: ["Senn (1994)", "Altman (1985), Comparability of randomised groups"]
+    see_also: [assumption.randomisation, concept.standardised_difference]
+
+  diagnostic.adoption:
+    title: Adoption pattern
+    short: >-
+      A grid of units by period, lit where treatment is on, sorted by when each
+      unit adopted.
+    detail: >-
+      This is the picture that decides which difference-in-differences estimator
+      you should be using. A single block of lit cells starting at one date is a
+      2x2. A staircase is staggered adoption, and two-way fixed effects is then
+      averaging comparisons that include already-treated units used as controls.
+      It also shows what you have to compare against: a row of never-treated
+      units at the bottom, or nothing, in which case the comparison group has to
+      be units not yet treated.
+    worry_when: >-
+      No never-treated units; cohorts containing a single unit; treatment that
+      switches back off, which the staggered estimators assume does not happen.
+    see_also: [assumption.parallel_trends, method.did.callaway_santanna, method.did.twfe]
+
+  diagnostic.event_study:
+    title: Event study
+    short: >-
+      One coefficient per period relative to treatment, with the period before
+      treatment set to zero.
+    detail: >-
+      The post-period coefficients trace out how the effect develops -- immediate,
+      growing, fading. The pre-period coefficients are the closest thing to
+      evidence about parallel trends: if the groups were already diverging, the
+      design is in trouble.
+      Read the pre-period as a picture rather than as a test. A wide, flat
+      pre-period with large standard errors is not evidence of parallel trends;
+      it is evidence you cannot tell.
+    worry_when: >-
+      Pre-period coefficients drifting away from zero, especially starting at the
+      announcement date; effects that appear entirely in the first period and
+      vanish; wildly different dynamics across cohorts.
+    references: ["Sun & Abraham (2021)", "Borusyak, Jaravel & Spiess (2024)"]
+    see_also: [diagnostic.pre_trends, assumption.no_anticipation, probe.honest_did]
+
+  diagnostic.pre_trends:
+    title: Pre-trend test
+    short: >-
+      A joint test that the pre-treatment coefficients are all zero. Useful, and
+      much weaker evidence than it looks.
+    detail: >-
+      Failing to reject is not confirmation. Pre-trend tests often have low power
+      precisely in the situations where a violation would matter, and
+      conditioning the analysis on having passed one distorts the estimates that
+      follow.
+      The better question is the one honest DiD asks: given what the pre-period
+      shows, how far could trends have differed before the conclusion stops
+      holding? That produces a breakdown value rather than a verdict.
+    worry_when: >-
+      A test that passes only because the pre-period intervals are enormous; a
+      visible trend that the joint test does not reject.
+    references: ["Roth (2022), Pretest with caution", "Rambachan & Roth (2023)"]
+    see_also: [assumption.parallel_trends, probe.honest_did]
+
+  diagnostic.rd_scatter:
+    title: Binned scatter at the cutoff
+    short: >-
+      Local averages of the outcome in bins of the running variable, either side
+      of the cutoff, with the fitted curves.
+    detail: >-
+      This plot is the regression discontinuity design. Before any bandwidth,
+      kernel or polynomial order has been chosen, it shows whether there is a
+      jump and whether the relationship away from the cutoff is smooth enough for
+      the local fit to be credible.
+      Bins are a presentation choice and the fit is not: if the visible jump
+      depends on the number of bins, that is worth knowing before the estimate.
+    worry_when: >-
+      No visible discontinuity where the estimate reports a large one; strong
+      curvature right at the cutoff; very few observations in the bins nearest
+      the threshold.
+    references: ["Calonico, Cattaneo & Titiunik (2015), Optimal data-driven RD plots"]
+    see_also: [design.rd, diagnostic.rd_bandwidth, assumption.continuity]
+
+  diagnostic.rd_density:
+    title: Density at the cutoff
+    short: >-
+      The number of units just either side of the threshold. A cliff means
+      somebody was sorting.
+    detail: >-
+      If people could control their score precisely, those who wanted the
+      treatment would pile up just above the cutoff and those who did not would
+      pile up just below. That is visible as a discontinuity in the density, and
+      it breaks the as-good-as-random comparison the design depends on.
+      A smooth density does not prove nobody manipulated anything; a jump is
+      strong evidence somebody did.
+    worry_when: >-
+      A visible spike or gap at the threshold; a running variable with heaping at
+      round numbers; a cutoff that people knew about in advance.
+    references: ["McCrary (2008)", "Cattaneo, Jansson & Ma (2020)"]
+    see_also: [assumption.no_manipulation, method.rd.density_test]
+
+  diagnostic.rd_bandwidth:
+    title: Bandwidth sensitivity path
+    short: >-
+      The estimate plotted against the bandwidth, so the choice is visible rather
+      than buried in an option.
+    detail: >-
+      Every regression discontinuity estimate is a bandwidth choice. A
+      data-driven selector picks one that trades bias against variance, and
+      reasonable selectors disagree.
+      A finding that exists across a wide range of bandwidths is much stronger
+      than one that appears at the optimum and vanishes either side of it. The
+      path is how you tell which you have.
+    worry_when: >-
+      The estimate changes sign or magnitude sharply across nearby bandwidths;
+      the result exists only at the widest bandwidths, where the local
+      approximation is weakest.
+    see_also: [method.rd.local_linear, assumption.continuity]
+
+  diagnostic.first_stage:
+    title: First stage
+    short: >-
+      How much the instrument actually moves the treatment, shown as a picture and
+      as an F statistic.
+    detail: >-
+      A significant first stage is not the same as a strong one. What matters for
+      the reliability of the second stage is the effective F statistic, which
+      accounts for heteroskedasticity and clustering; the naive F can be
+      comfortably large while the effective F is not.
+      Below roughly ten, two-stage least squares is biased towards ordinary least
+      squares and its confidence interval undercovers badly. The honest report
+      there is a weak-instrument-robust confidence set.
+    worry_when: >-
+      An effective F below about ten; a first-stage effect that is statistically
+      significant but substantively negligible; many instruments each doing very
+      little.
+    references: ["Olea & Pflueger (2013)", "Andrews, Stock & Sun (2019)"]
+    see_also: [assumption.relevance, diagnostic.weak_iv_set, method.iv.weak_robust]
+
+  diagnostic.weak_iv_set:
+    title: Weak-instrument-robust confidence set
+    short: >-
+      A confidence set built by inverting a test that stays valid however weak the
+      instrument is. It can be an interval, several intervals, or the whole line.
+    detail: >-
+      The usual two-stage least squares interval assumes the instrument is
+      strong. When it is not, that interval is simply wrong -- too narrow, and
+      centred in the wrong place.
+      The Anderson-Rubin set makes no such assumption. An unbounded set is not a
+      failure of the method: it is the correct statement that the data cannot
+      pin the parameter down, and reporting a tidy interval instead would be the
+      failure.
+    worry_when: >-
+      The robust set is much wider than the Wald interval, or unbounded, while the
+      Wald interval looks precise.
+    references: ["Anderson & Rubin (1949)", "Moreira (2003), A conditional likelihood ratio test"]
+    see_also: [diagnostic.first_stage, assumption.relevance]
+
+  diagnostic.overid:
+    title: Overidentification test
+    short: >-
+      With more instruments than endogenous regressors, a check that they agree
+      with each other.
+    detail: >-
+      Sargan under homoskedasticity, Hansen's J with robust errors. Rejection
+      says at least one instrument is invalid, or that effects are heterogeneous
+      so different instruments identify different local effects.
+      Failing to reject says the instruments agree. If they are all invalid in
+      the same direction, they will agree perfectly, which is why this test is
+      not evidence for the exclusion restriction.
+    worry_when: >-
+      A rejection; or a comfortable pass being described as validating exclusion.
+    see_also: [assumption.exclusion, estimand.late]
+
+  diagnostic.sc_placebo:
+    title: Synthetic control placebos
+    short: >-
+      Re-run the whole method pretending each donor was the treated unit. If many
+      donors show a gap as large, the real one is unremarkable.
+    detail: >-
+      With one treated unit there is no sampling distribution to appeal to, so
+      inference is done by permutation. The natural statistic is the ratio of
+      post-period to pre-period prediction error: a unit that was fitted badly
+      before the intervention will look dramatic afterwards for no good reason.
+      The exact p-value is the rank of the treated unit among the placebos, so
+      with seventeen donors the smallest achievable value is about 0.06. That is
+      a property of the design, not a shortcoming of the software.
+    worry_when: >-
+      Several placebos with larger gaps than the treated unit; a treated unit
+      whose pre-period fit is worse than most donors'.
+    references: ["Abadie, Diamond & Hainmueller (2010)", "Abadie (2021)"]
+    see_also: [assumption.donor_fit, method.sc.abadie, concept.placebo]
+
+  diagnostic.its_autocorrelation:
+    title: Residual autocorrelation
+    short: >-
+      Whether the residuals of the segmented regression are still correlated over
+      time. If they are, ordinary standard errors are far too small.
+    detail: >-
+      Monthly and quarterly series are almost always autocorrelated: a busy month
+      is followed by a busy month. Ignoring it does not bias the estimate much
+      but it shrinks the standard error, sometimes by a factor of two or three,
+      which turns noise into a finding.
+      The autocorrelation function of the residuals and a Ljung-Box test are the
+      standard checks. When they fire, use a HAC standard error or model the
+      error process explicitly, and say which in the report.
+    worry_when: >-
+      Large residual autocorrelation at lag one, or at the seasonal lag, that
+      survives the fitted model.
+    references: ["Bernal, Cummins & Gasparrini (2017)"]
+    see_also: [assumption.model_form, method.its.segmented]
+
+  diagnostic.nuisance_rmse:
+    title: Nuisance model quality by fold
+    short: >-
+      How well the treatment and outcome models predicted on data they did not
+      see, fold by fold.
+    detail: >-
+      Double machine learning is only as good as its cross-fitting. These numbers
+      tell you whether the nuisance models are learning anything, and whether they
+      are stable: an out-of-fold error that swings wildly means the answer depends
+      on which rows landed where.
+      They are not model-selection criteria. A better-predicting nuisance model
+      does not automatically give a better causal estimate; orthogonality is what
+      protects the estimate, and these diagnostics tell you whether the machinery
+      behind it is behaving.
+    worry_when: >-
+      Error or discrimination that varies a lot across folds; a treatment model
+      that predicts treatment almost perfectly, which is a positivity problem in
+      disguise.
+    see_also: [concept.cross_fitting, method.ml.dml_irm, diagnostic.fold_stability]
+
+  diagnostic.fold_stability:
+    title: Stability across folds
+    short: >-
+      The estimate computed within each cross-fitting fold. They should scatter
+      around the overall estimate by roughly its standard error.
+    detail: >-
+      A spread far larger than the standard error means the estimate is being
+      driven by which rows happened to fall in which fold, and the reported
+      precision is fiction. Re-running with a different seed and comparing is the
+      cheapest follow-up.
+    worry_when: >-
+      Fold estimates spanning several standard errors, or changing sign.
+    see_also: [concept.cross_fitting, diagnostic.nuisance_rmse]
+
+  diagnostic.cate_calibration:
+    title: CATE calibration
+    short: >-
+      Sort units by predicted effect, then check whether the groups you predicted
+      would benefit most actually did.
+    detail: >-
+      A model will always produce varying predictions, including from pure noise.
+      Calibration asks whether the ranking means anything: regress the realised
+      effect on the predicted one, and see whether the slope is near one.
+      A slope near zero says the heterogeneity is a model artefact. This is the
+      check that separates "we found who benefits" from "we fitted a forest".
+    worry_when: >-
+      A calibration slope far from one, or a confidence interval on it that
+      comfortably includes zero.
+    references: ["Chernozhukov et al. (2018), Generic machine learning inference"]
+    see_also: [estimand.cate, diagnostic.rate, concept.honest_splitting]
+
+  diagnostic.rate:
+    title: RATE (rank-weighted average treatment effect)
+    short: >-
+      A single number for how much better you would do by treating people in the
+      order the model recommends, rather than at random.
+    detail: >-
+      It summarises the curve traced out as you treat progressively more of the
+      population in predicted-benefit order. A RATE indistinguishable from zero
+      means the model's ranking is not usable for targeting, whatever its
+      predictions look like.
+      It has a standard error, which matters: comparing two targeting rules by
+      eye is how people convince themselves of heterogeneity that is not there.
+    references: ["Yadlowsky et al. (2021), Evaluating treatment prioritization rules"]
+    see_also: [estimand.cate, diagnostic.cate_calibration, method.ml.policy_tree]
+
+  diagnostic.forest:
+    title: Forest plot
+    short: >-
+      One row per method or per subgroup, each with its point estimate and
+      interval, on a shared axis.
+    detail: >-
+      The workhorse plot of this product. Engine is shown by colour, and a
+      provisional run gets a different marker so it cannot be mistaken for a
+      clean one.
+      When several methods ran, this plot is the result. There is no headline
+      number, because choosing one after seeing them all is how honest people
+      produce dishonest research.
+    see_also: [concept.forest_plot, concept.provisional]
+
+  diagnostic.cem_strata:
+    title: Coarsened strata and common support
+    short: >-
+      How many of the coarsened cells contain both treated and untreated units,
+      and how many treated units had no comparable cell at all.
+    detail: >-
+      Coarsened exact matching guarantees balance by refusing to compare across
+      cells. The price is pruning: with several covariates, most cells contain
+      only one arm, and the treated units in those cells leave the analysis.
+      That pruning is information. It tells you exactly where the data cannot
+      answer the question, which a smooth propensity model hides.
+    worry_when: >-
+      A large share of treated units pruned; the estimand quietly becoming the
+      effect for an unusual subset.
+    references: ["Iacus, King & Porro (2012)"]
+    see_also: [method.obs.matching.cem, concept.consort]
+
+  diagnostic.n_matched:
+    title: Match quality
+    short: >-
+      How many treated units found a partner, how many comparison units were
+      used, and how often the same one was reused.
+    detail: >-
+      Matching without replacement forces bad pairs when the comparison pool is
+      thin; matching with replacement fixes that and concentrates the estimate on
+      a few units, which the effective sample size then reveals.
+      Treated units that found no partner within the caliper leave the analysis,
+      and that changes the estimand: it is now the effect for the treated units
+      that could be matched.
+    worry_when: >-
+      Many unmatched treated units; one comparison unit reused a large number of
+      times; matches that are close on the score but far apart on the covariates.
+    see_also: [method.obs.matching.nn, concept.consort, diagnostic.love]
+
+  diagnostic.model_reliance:
+    title: How much the model is doing
+    short: >-
+      A reminder that outcome regression extrapolates silently wherever the
+      groups do not overlap.
+    detail: >-
+      Matching and weighting fail loudly when there is nobody to compare with:
+      units get dropped, or weights explode. A regression just predicts. The
+      number it returns for a treated unit with no comparable control is the
+      model's opinion, and nothing in the coefficient table marks it as such.
+      That is why this product pairs outcome regression with the overlap plot
+      rather than presenting it alone.
+    see_also: [method.obs.outcome_regression, assumption.positivity, diagnostic.overlap]
+
+  # -- randomised trials ------------------------------------------------------
+
+  diagnostic.block_structure:
+    title: Block sizes and treated shares
+    short: >-
+      When randomisation was done separately inside strata -- clinics, schools,
+      waves -- this shows how big each block is and what share of it was treated.
+    detail: >-
+      A blocked trial is many small trials stacked together, and the analysis has
+      to respect that: comparisons are made inside blocks and then averaged. This
+      table is how you check the stacking is sound. Blocks that hold only treated
+      units, or only untreated ones, contain no comparison and are dropped, and
+      the table says how many were lost that way.
+      Block sizes also decide how the interval is computed. With two units in a
+      block there is no spread to measure inside it, so the calculation falls
+      back on pooling across blocks, which assumes the blocks behave alike. That
+      is a real assumption and it is worth knowing when you are leaning on it.
+    worry_when: >-
+      Most blocks hold a single treated and a single control unit, or a handful
+      of large blocks carry the whole estimate; the interval then rests on the
+      pooled fallback rather than on anything measured inside the blocks.
+    see_also: [diagnostic.block_weighting, assumption.randomisation, diagnostic.baseline_balance]
+
+  diagnostic.block_weighting:
+    title: Which average each estimator reports
+    short: >-
+      Two ways of combining blocked results give two different numbers, and the
+      difference is a difference in the question, not in the arithmetic.
+    detail: >-
+      Averaging the block-level effects with each block weighted by how many
+      units it holds gives the average effect across everyone in the study.
+      Putting an indicator variable in for each block instead gives a
+      precision-weighted average: it leans on the blocks where the treated share
+      is nearest a half, because those blocks carry the most information. The two
+      agree only when the treated share is the same in every block.
+      Neither is wrong. But if you asked for the average effect on this
+      population, the size-weighted number is the one that answers it, and the
+      regression coefficient is quietly answering a different question under the
+      same name.
+    worry_when: >-
+      The two numbers disagree while the treated share moves across blocks; the
+      choice of estimator is then a choice of estimand, not a choice of standard
+      error.
+    see_also: [diagnostic.block_structure, estimand.ate, concept.estimand_first]
+
+  diagnostic.cluster_structure:
+    title: Clusters
+    short: >-
+      How many groups treatment was assigned to, how big they are, and how much
+      of the sample the largest one holds.
+    detail: >-
+      When whole schools, villages or clinics were assigned together, the schools
+      are the units that were randomised, not the pupils. The correction for that
+      is a cluster-robust standard error, and its reliability grows with the
+      number of clusters, not the number of rows: fifty thousand pupils in twelve
+      schools carry twelve schools' worth of information about the policy.
+      The table therefore reports the count, the spread of sizes and the share
+      held by the largest cluster, because one or two dominant clusters behave
+      like an even smaller study than the count suggests.
+    worry_when: >-
+      Fewer than about forty clusters, or one or two clusters holding much of the
+      sample. The interval is then too narrow and the p-value too small.
+    references: ["Cameron & Miller (2015), A practitioner's guide to cluster-robust inference"]
+    see_also: [concept.clustering, concept.cluster_robust_se, diagnostic.icc_design_effect]
+
+  diagnostic.icc_design_effect:
+    title: Intracluster correlation and design effect
+    short: >-
+      How alike people are inside the same cluster, and how many independent
+      observations your rows are really worth once that similarity is counted.
+    detail: >-
+      Two pupils in one school resemble each other more than two pupils picked at
+      random from the country, and the intracluster correlation puts a number
+      between zero and one on that resemblance. Combine it with the cluster sizes
+      and you get the design effect: the factor by which the sample behaves
+      smaller than it looks. A design effect of four means a thousand rows carry
+      about two hundred and fifty observations' worth of information.
+      This is not a fault to be repaired. It is the price of assigning treatment
+      to groups, and it should have been in the sample-size calculation before the
+      study ran.
+    worry_when: >-
+      A design effect well above two, or an effective sample close to the number
+      of clusters; in the latter case analyse the cluster averages and say so.
+    see_also: [concept.clustering, diagnostic.cluster_structure, concept.effective_sample_size]
+
+  diagnostic.differential_attrition:
+    title: Loss to the analysis sample
+    short: >-
+      Whether the treated arm and the control arm lost rows at the same rate on
+      the way from assignment to analysis.
+    detail: >-
+      Randomisation makes the arms comparable at the moment of assignment. It
+      says nothing about who is still in the file at the end. If the people
+      offered the programme are more likely to answer the follow-up survey -- or
+      less likely -- then the sample being compared has been selected by
+      something that happened after assignment, and the protection randomisation
+      bought you is gone.
+      Adjusting for baseline characteristics does not repair this, because the
+      selection happened downstream of the treatment rather than before it. What
+      helps is bounding the answer under best and worst cases for the missing
+      rows, and reporting the loss plainly.
+    worry_when: >-
+      The two arms lose rows at visibly different rates, or the reasons for
+      leaving differ by arm.
+    see_also: [concept.selection_bias, concept.consort, concept.complete_case]
+
+  diagnostic.outcome_distribution:
+    title: The outcome, drawn
+    short: >-
+      The shape of the outcome in each arm, before any model is fitted.
+    detail: >-
+      A difference in means is a summary, and summaries hide things. An outcome
+      piled up at zero, a count with a long tail, or a scale where almost
+      everybody gives the same answer will each produce a mean difference, and in
+      each case the mean difference is a poor description of what the treatment
+      did.
+      Look at the shape first. It tells you whether a straight-line model is a
+      reasonable working description, whether the effect might sit at one end of
+      the distribution rather than in the middle, and whether a transformation
+      would change the question you are answering rather than just the units it
+      is answered in.
+    worry_when: >-
+      A heavy tail; a floor or ceiling that a large share of the sample sits on;
+      two arms with the same mean and visibly different spread.
+    see_also: [assumption.model_form, estimand.ate, diagnostic.baseline_balance]
+
+  diagnostic.permutation_distribution:
+    title: Randomisation distribution
+    short: >-
+      Reshuffle the treatment labels the way the study actually assigned them,
+      thousands of times, and see how unusual the real result looks.
+    detail: >-
+      This is inference that borrows nothing from the bell curve. If the
+      treatment did nothing at all to anybody, then any relabelling of who was
+      treated was equally likely, and the estimate you got should look like a
+      typical draw from the reshuffled ones. The p-value is the share of
+      reshuffles that came out at least as extreme as the real result.
+      The reshuffling has to imitate the real assignment -- inside blocks, whole
+      clusters at a time -- or it is answering a question about a study that was
+      never run. Note also what is being tested: the sharp null that treatment
+      changed nothing for anyone, which is a stronger statement than the usual
+      null that the average effect is zero.
+    worry_when: >-
+      The reshuffled distribution is not centred near zero, which means the
+      scheme being simulated is not the scheme that produced the data; or so few
+      distinct assignments exist that no small p-value is attainable at all.
+    references: ["Fisher (1935)", "Imbens & Rubin (2015), Causal Inference for Statistics, ch. 5"]
+    see_also: [assumption.randomisation, diagnostic.cluster_structure, diagnostic.block_structure]
+
+  diagnostic.compliance:
+    title: Compliance and the complier group
+    short: >-
+      How many people in each arm actually took the treatment, and what that
+      implies about who the estimate is about.
+    detail: >-
+      Offering a programme is not the same as delivering it. Some people offered
+      it decline; some people not offered it find it anyway. The gap in take-up
+      between the arms is what the analysis divides by when it converts the
+      effect of the offer into the effect of the treatment, so a small gap means
+      dividing by a small number, and the interval widens fast.
+      That same gap defines who the number describes. Provided the offer never
+      pushed anybody away from treatment, the people whose take-up the offer
+      actually changed are the compliers, and the estimate is their effect -- not
+      the effect for the people who would have taken it up regardless, nor for
+      those who never would, nor for the population as a whole.
+    worry_when: >-
+      Take-up in the control arm is high, or the take-up gap is small; the group
+      the estimate describes is then a small and unusual slice of the sample.
+    see_also: [estimand.cace, estimand.itt, assumption.monotonicity, diagnostic.compliers]
+
+  diagnostic.cace_bootstrap:
+    title: Bootstrap distribution of the complier effect
+    short: >-
+      The complier effect recomputed on thousands of resamples of your data, so
+      you can see the spread rather than trust a formula for it.
+    detail: >-
+      The complier effect is a ratio: the effect of the offer on the outcome
+      divided by the effect of the offer on take-up. Ratios are awkward. The
+      usual formula for their standard error assumes the denominator is
+      comfortably away from zero, and when it is not the formula stops being
+      trustworthy while still returning a tidy number.
+      Resampling the rows -- or whole clusters, when treatment was assigned to
+      clusters -- and recomputing the ratio each time shows the real shape. A
+      long tail, or a distribution that is not symmetric, means the formula-based
+      interval is the wrong shape and the interval read off these draws is the
+      honest one to quote.
+    worry_when: >-
+      The bootstrap spread and the formula-based standard error disagree by more
+      than about half; the take-up gap is then close enough to zero that the
+      usual approximation has broken down.
+    see_also: [estimand.cace, diagnostic.compliance, diagnostic.bootstrap_spread]
+
+  # -- weighting, matching and what the adjustment cost ------------------------
+
+  diagnostic.weights:
+    title: The weights themselves
+    short: >-
+      A histogram of the weight each row was given. A long tail means a few rows
+      are carrying the answer.
+    detail: >-
+      Weighting makes the comparison group resemble the treated group by counting
+      some rows more than once. A control unit that looks unusually like the
+      treated group can end up standing in for dozens of people, and the estimate
+      then depends on that one person's outcome far more than the row count
+      suggests.
+      The picture is the fastest way to see it. A tidy hump near one is what a
+      well-overlapping comparison looks like. A spike out at the right-hand end
+      is a positivity problem arriving in a different costume, and the effective
+      sample size below puts a number on what it cost.
+    worry_when: >-
+      A visible tail of extreme weights; one weight carrying more than about a
+      fifth of the total; weights so large that removing one row would move the
+      estimate noticeably.
+    see_also: [diagnostic.ess, assumption.positivity, diagnostic.propensity_clipping]
+
+  diagnostic.propensity_clipping:
+    title: Propensity clipping
+    short: >-
+      How many units had an estimated chance of treatment so close to zero or one
+      that the analysis had to trim it back before dividing by it.
+    detail: >-
+      Inverse-probability weighting divides by the estimated chance of getting
+      the treatment you actually got. When that chance is 0.001 the weight is a
+      thousand, and one row swamps everything. The standard defence is clipping:
+      pull extreme probabilities back to a floor and a ceiling before the
+      division.
+      Clipping stabilises the arithmetic and quietly changes the question. The
+      units at the clip are the ones with no counterpart in the other arm, so
+      keeping them at a fictitious probability is a modelling choice, not a
+      measurement. Whichever way you go, the honest report says how many units
+      were clipped and where the boundaries were set.
+    worry_when: >-
+      More than a few per cent of units sitting at the clip, or one arm reaching
+      probabilities the other never approaches; the estimate is then carried by
+      extrapolation rather than by comparable units.
+    see_also: [assumption.positivity, diagnostic.overlap, diagnostic.trim_cost, estimand.ato]
+
+  diagnostic.trim_cost:
+    title: What trimming costs in sample
+    short: >-
+      How many units a proposed trimming rule would drop, and who they are.
+    detail: >-
+      Trimming discards units whose estimated chance of treatment is too extreme
+      for a stable comparison. It is a defensible response to poor overlap, and
+      it is not free: the units dropped are not a random sample, they are
+      precisely the ones least like anybody in the other arm.
+      After trimming, the estimate refers to the units that remain. If a fifth of
+      the treated group has gone, "the effect of the programme on participants"
+      is no longer what the number means, and the sample flow records the change
+      so the report can say so.
+    worry_when: >-
+      A threshold that drops a large share of the treated units, which has
+      quietly redefined who the answer is about.
+    see_also: [diagnostic.trim_stability, concept.consort, estimand.ato, assumption.positivity]
+
+  diagnostic.trim_stability:
+    title: How much trimming moves the answer
+    short: >-
+      The estimate recomputed at a range of trimming thresholds, so you can see
+      whether the units in the tails are deciding it.
+    detail: >-
+      If the estimate barely moves as you trim more aggressively, the tails were
+      not doing much and the finding is about the bulk of the data. If it walks
+      steadily in one direction, the answer is being set by the units with the
+      least comparable counterparts -- the ones the model had to extrapolate for.
+      There is no threshold that is correct in general. The point of the curve is
+      to make the choice visible rather than to make it for you, and to let a
+      reader see whether the headline sits in the middle of the range or at one
+      end of it.
+    worry_when: >-
+      The estimate walks steadily as you trim, or changes sign anywhere along the
+      path.
+    see_also: [diagnostic.trim_cost, concept.spec_curve, diagnostic.overlap]
+
+  diagnostic.pair_quality:
+    title: Pair quality
+    short: >-
+      How the matched pairs behind a sensitivity analysis were formed, and
+      whether they are the same pairs the headline estimate used.
+    detail: >-
+      Some sensitivity analyses -- the ones that ask how strong hidden bias would
+      have to be -- are defined on matched pairs. When the main analysis matched
+      differently, with replacement or one treated unit to several controls, the
+      probe has to build its own pairs first, and the number it reports then
+      describes those pairs rather than the estimate on the screen.
+      That is not a bug, but it is a caveat worth carrying into the write-up: the
+      sensitivity statement applies to the paired comparison shown here.
+    worry_when: >-
+      The main analysis used a different matching rule from the probe, so the
+      sensitivity number describes pairs the headline never used.
+    see_also: [diagnostic.rosenbaum_bounds, diagnostic.n_matched, concept.caliper]
+
+  diagnostic.influence_spread:
+    title: Whose data is carrying the estimate
+    short: >-
+      Each unit's contribution to the estimate, and how much of the total the
+      largest single contribution is.
+    detail: >-
+      Most modern estimators can be written as an average of one number per unit,
+      and the standard error is the spread of those numbers divided by the
+      sample size. That makes the contributions readable: you can see whether the
+      answer is an average over many people or a handful of unusual rows with
+      everybody else along for the ride.
+      A single dominant contribution is an extreme weight wearing different
+      clothes, and it has the same consequence -- the confidence interval assumes
+      an averaging that did not really happen.
+    worry_when: >-
+      One unit carrying a large share of the total contribution; removing it
+      would visibly move the estimate.
+    see_also: [diagnostic.weights, diagnostic.ess, concept.effective_sample_size]
+
+  diagnostic.ebal_convergence:
+    title: Moment balance
+    short: >-
+      Whether the weighting actually achieved the balance it was asked for, and
+      how far short it fell.
+    detail: >-
+      Entropy balancing does not fit a model of treatment and hope for balance;
+      it solves directly for weights that make named summaries of the covariates
+      -- means, and optionally spreads -- match between the groups exactly. When
+      a solution exists, the remaining gaps are zero by construction and this
+      table is a receipt.
+      When no solution exists, the gaps are not zero, and that is informative: it
+      means the treated group's profile is outside anything a reweighting of the
+      available comparison units can reproduce. That is a data problem, not a
+      solver problem, and no amount of tuning fixes it.
+    worry_when: >-
+      Non-zero gaps after the solve, which say the treated profile is outside
+      what reweighting the comparison group can reach.
+    references: ["Hainmueller (2012), Entropy balancing"]
+    see_also: [diagnostic.love, assumption.positivity, diagnostic.weights]
+
+  diagnostic.bootstrap_spread:
+    title: Bootstrap behaviour
+    short: >-
+      The whole estimate recomputed on many resamples of the data, and whether
+      those resamples behaved themselves.
+    detail: >-
+      Resampling the data with replacement and repeating the entire fit -- models
+      and all -- gives a picture of how much the answer would move if you had
+      drawn a different sample from the same population. It is the fallback when
+      no formula for the standard error is trustworthy, which is often the case
+      once weights have been estimated rather than known.
+      Two things are worth reading here rather than just the interval. First, how
+      many resamples failed: a fit that breaks on some draws is telling you the
+      model is fragile. Second, the shape: two humps mean the models are not
+      fitting the same way on every resample, and an average of two behaviours is
+      not a summary of either.
+    worry_when: >-
+      Resamples that fail to produce an estimate; a distribution with two humps;
+      a bootstrap spread far above what the formula-based standard error claimed.
+    see_also: [diagnostic.seed_stability, diagnostic.fold_stability, diagnostic.subset_stability]
+
+  diagnostic.subset_stability:
+    title: Stability on random subsets
+    short: >-
+      Refit the analysis on random parts of the data and see whether the answer
+      stays put.
+    detail: >-
+      Half the data gives a noisier estimate, and that is expected: the interval
+      should widen by roughly the square root of two. What is not expected is
+      draws that contradict each other, or a spread far wider than the loss of
+      precision explains. That pattern means the estimate depends on which rows
+      happened to be included, which is a different and worse problem than
+      ordinary sampling noise.
+      This is a blunt check and a useful one, because it needs no assumptions
+      beyond the ones the analysis already makes.
+    worry_when: >-
+      A spread much wider than the loss of precision explains, or subsets that
+      flip sign while the headline interval excludes zero.
+    see_also: [diagnostic.bootstrap_spread, diagnostic.leave_one_out, concept.provisional]
+
+  diagnostic.leave_one_out:
+    title: Leave one out
+    short: >-
+      Drop one unit -- or one cluster, or one donor -- at a time, refit, and see
+      how far the estimate travels.
+    detail: >-
+      An estimate that survives dropping any single unit is about a population.
+      An estimate that collapses when one row leaves is about that row. This
+      check does not need a model of anything; it just re-runs the analysis with
+      each unit held out and plots where the answers land.
+      It matters most when the number of units doing the work is small: a
+      synthetic control built from a handful of donors, a panel with few
+      clusters, or a matched analysis where one comparison unit was reused many
+      times.
+    worry_when: >-
+      One omission that changes the answer materially. The estimate is then about
+      that unit, not about the population it claims to describe.
+    see_also: [diagnostic.sc_loo, diagnostic.influence_spread, diagnostic.subset_stability]
+
+  diagnostic.spec_curve:
+    title: Specification curve
+    short: >-
+      Every defensible version of this analysis, sorted from smallest estimate to
+      largest, with the one on your board marked.
+    detail: >-
+      Reporting three robustness checks is a sample of size three from a space
+      the analyst chose. Running the grid -- covariate sets, calipers,
+      bandwidths, trimming rules -- and drawing all of the answers puts the whole
+      space on one picture, so a reader can see how much of it supports the
+      conclusion.
+      A finding that holds across most of the curve is stronger than one that
+      holds for three hand-picked variants. A curve that crosses zero says the
+      finding is a specification rather than a result. Where the marked
+      specification sits in the ordering is itself worth reading.
+    worry_when: >-
+      A curve that crosses zero; or the specification on the board sitting at one
+      end of the curve rather than in the middle of it.
+    references: ["Simonsohn, Simmons & Nelson (2020), Specification curve analysis"]
+    see_also: [concept.spec_curve, probe.alternate_spec, concept.forest_plot]
+
+  diagnostic.probe_runs:
+    title: Re-runs behind this probe
+    short: >-
+      How many of the re-runs a probe needed actually produced a number, and why
+      the rest stopped.
+    detail: >-
+      A probe such as a placebo test or a specification curve works by running
+      the whole analysis again under changed conditions. Some of those runs fail:
+      a model does not converge, a subsample has nobody in one arm, a bandwidth
+      leaves too few observations.
+      Failures are not neutral and they are not noise. The specifications that
+      could not be estimated are often the demanding ones, so a probe that only
+      reports its successes is quietly reporting the easy half. This row exists so
+      the count is visible next to the conclusion drawn from it.
+    worry_when: >-
+      A large share of re-runs failing, especially when the failures cluster in
+      one part of the grid.
+    see_also: [diagnostic.spec_curve, concept.provisional, probe.comparison]
+
+  probe.comparison:
+    title: The probe against the headline
+    short: >-
+      One row per re-run of the analysis, on the same axis as the estimate they
+      are probing, so you can see the movement rather than read about it.
+    detail: >-
+      Every probe in this product ends in the same picture: the headline estimate
+      and the alternatives beside it, each with its interval. Reading it is a
+      matter of distance and overlap -- how far the probe runs sit from the
+      original, and whether the difference is bigger than the noise in either.
+      A probe that lands on top of the headline has failed to find a problem,
+      which is weaker than finding no problem. A probe that lands somewhere else
+      has found one, and that is the more informative outcome even though it is
+      the less welcome one.
+    see_also: [concept.forest_plot, diagnostic.probe_runs, concept.provisional]
+
+  # -- how much unmeasured confounding would it take? --------------------------
+
+  diagnostic.unobserved_confounder:
+    title: How much unmeasured confounding it would take
+    short: >-
+      Nobody can prove there is no missing common cause. This asks the answerable
+      question instead: how strong would one have to be to overturn the finding?
+    detail: >-
+      Every adjustment in an observational design rests on having measured the
+      things that pushed people towards treatment and also move the outcome. That
+      assumption cannot be checked against the data, because the variables in
+      question are precisely the ones you do not have.
+      What can be done is to imagine one and see what it would need to look like.
+      If a variable would have to be more strongly related to both the treatment
+      and the outcome than anything you actually measured, the finding is fairly
+      robust. If an ordinary, unremarkable variable would be enough, it is not.
+      That comparison -- against the covariates you did collect -- is what makes
+      the exercise informative rather than decorative.
+    worry_when: >-
+      A confounder weaker than the ones you did measure would be enough to take
+      the estimate to zero.
+    see_also: [assumption.exchangeability, diagnostic.robustness_value, diagnostic.evalue, probe.cinelli_hazlett]
+
+  diagnostic.robustness_value:
+    title: Robustness value
+    short: >-
+      A single number for how strongly an unmeasured variable would have to be
+      related to both the treatment and the outcome to explain the result away.
+    detail: >-
+      The robustness value is expressed as a share of the variation left over
+      after your controls: a value of 0.05 means a hidden variable explaining
+      five per cent of the remaining variation in treatment and five per cent of
+      the remaining variation in the outcome would be enough to erase the
+      estimate.
+      Its usefulness comes from the benchmark. The same quantity can be computed
+      for the covariates you did measure, so you can say "an unmeasured variable
+      would have to be twice as informative as household income" instead of
+      quoting an abstract number. Note the calculation assumes the hidden
+      variable enters linearly and on its own, so it is a guide, not a guarantee.
+    worry_when: >-
+      The strength required is no more than a covariate you already measured. If
+      a variable you happened to collect is that informative, one you did not
+      collect plausibly is too.
+    references: ["Cinelli & Hazlett (2020), Making sense of sensitivity"]
+    see_also: [diagnostic.extreme_confounder, diagnostic.unobserved_confounder, probe.cinelli_hazlett]
+
+  diagnostic.extreme_confounder:
+    title: The extreme case
+    short: >-
+      Suppose a hidden variable explained everything left unexplained about who
+      was treated. How much of the outcome would it still need to explain?
+    detail: >-
+      This is the worst case for one half of the problem and therefore a useful
+      bound. By granting the hidden variable complete command of the treatment
+      assignment, the question reduces to a single quantity: how strongly it
+      would have to relate to the outcome to move the estimate to zero.
+      If that remaining requirement is large, the finding survives even the most
+      adverse assumption about selection into treatment. If it is small, then
+      even a mild relationship with the outcome would suffice, and the estimate
+      should be described as fragile.
+    worry_when: >-
+      The share required is small enough that an ordinary unmeasured variable
+      could reach it.
+    references: ["Cinelli & Hazlett (2020), Making sense of sensitivity"]
+    see_also: [diagnostic.robustness_value, diagnostic.unobserved_confounder, assumption.exchangeability]
+
+  diagnostic.evalue:
+    title: E-value
+    short: >-
+      The smallest strength of association -- with the treatment and with the
+      outcome -- that an unmeasured variable would need to explain away the
+      result.
+    detail: >-
+      An E-value of 2.5 means a hidden variable would have to be associated with
+      both the treatment and the outcome by a risk ratio of at least 2.5, above
+      and beyond the covariates already in the model, before the finding could be
+      attributed to it entirely. The same calculation applied to the end of the
+      confidence interval says what it would take to move the result to the edge
+      of statistical significance rather than to nothing.
+      It is a convenient summary and it is not a test. It says nothing about
+      whether such a variable exists, and it assumes a single confounder acting
+      simply. Its value comes from the comparison with the associations your
+      measured covariates actually show.
+    worry_when: >-
+      An E-value near 1, meaning a very ordinary unmeasured variable would be
+      enough; or an E-value smaller than the associations your measured
+      covariates display.
+    references: ["VanderWeele & Ding (2017), Sensitivity analysis: introducing the E-value"]
+    see_also: [diagnostic.evalue_scale, diagnostic.robustness_value, assumption.exchangeability]
+
+  diagnostic.evalue_scale:
+    title: How the estimate was put on the risk-ratio scale
+    short: >-
+      The E-value is defined for ratios of risks, so anything measured on another
+      scale has to be converted first -- and the conversion is an approximation.
+    detail: >-
+      A difference in means, an odds ratio, a hazard ratio: each needs a
+      different bridge to the risk-ratio scale the E-value formula expects, and
+      each bridge carries its own conditions. Converting an odds ratio assumes
+      the outcome is rare. Converting a standardised mean difference assumes the
+      outcome is roughly bell-shaped. Where those conditions fail, the E-value
+      inherits the failure.
+      This row records which conversion was used, so that a reader can judge it
+      rather than take the resulting number at face value.
+    worry_when: >-
+      The conversion's own conditions fail -- a common outcome treated as rare, or
+      a mean difference on an outcome that is far from bell-shaped.
+    references: ["VanderWeele & Ding (2017)", "Ding & VanderWeele (2016)"]
+    see_also: [diagnostic.evalue, assumption.model_form]
+
+  diagnostic.oster_delta:
+    title: Coefficient stability (Oster's delta)
+    short: >-
+      How much more important the things you did not measure would have to be
+      than the things you did, to explain the result away.
+    detail: >-
+      The idea starts from something you can watch: how far the estimate moves
+      when you add your control variables, and how much better the model fits
+      once they are in. If adding controls barely moves the estimate but greatly
+      improves the fit, the controls were informative and yet unimportant to the
+      answer -- which is mild evidence that further controls would behave the
+      same way. Delta turns that reasoning into a number.
+      Read it with care. The calculation needs an assumption about how well a
+      regression on absolutely everything would fit, and nothing in your data
+      pins that down; the bound moves a long way as you change it.
+    worry_when: >-
+      A delta below 1, which means the conclusion needs the unmeasured variables
+      to matter less than the ones you happened to collect; or a bound that swings
+      as the assumed maximum fit is varied.
+    references: ["Oster (2019), Unobservable selection and coefficient stability"]
+    see_also: [diagnostic.oster_assumptions, diagnostic.robustness_value, probe.oster]
+
+  diagnostic.oster_assumptions:
+    title: What the coefficient-stability bound assumes
+    short: >-
+      The two assumptions behind the delta figure, stated plainly, because the
+      number is meaningless without them.
+    detail: >-
+      The first is proportional selection: the variables you did not measure are
+      related to the treatment in the same proportion as the ones you did. That
+      would be true if your controls were a random draw from all possible
+      confounders, and they almost never are -- researchers measure what they
+      suspect matters.
+      The second is a value for how well a regression including everything would
+      fit the outcome. It is assumed rather than estimated, usually as a multiple
+      of the fit you achieved, and the bound is sensitive to the choice. Both
+      assumptions are reported here so the bound can be read as the conditional
+      statement it is.
+    worry_when: >-
+      Controls that were chosen precisely because they were thought to matter,
+      which is exactly when proportional selection is least plausible.
+    references: ["Oster (2019)"]
+    see_also: [diagnostic.oster_delta, assumption.exchangeability]
+
+  diagnostic.rosenbaum_bounds:
+    title: Sensitivity to hidden bias
+    short: >-
+      For matched pairs: how unequal two apparently identical units' chances of
+      treatment would have to be before the conclusion stops holding.
+    detail: >-
+      Matching pairs units that look alike on the variables you measured. If
+      something you did not measure still made one of them more likely to be
+      treated, the pair is not the fair comparison it appears to be. The bound
+      asks how large that hidden difference in the odds of treatment would have
+      to be -- a factor of 1.2, of 2, of 5 -- before the result could be
+      explained by it.
+      The number is often called Gamma. It is a statement about a comparison, not
+      a discovery about the world: it does not say a hidden variable exists, only
+      what one would have to do. Note too that it assumes the hidden variable
+      affects treatment but is otherwise summarised by that single factor.
+    worry_when: >-
+      A breakdown value close to 1. A value of 1.1 means a hidden variable that
+      shifted the odds of treatment by a tenth would suffice, and unmeasured
+      variables routinely do more than that.
+    references: ["Rosenbaum (2002), Observational Studies, ch. 4"]
+    see_also: [diagnostic.pair_quality, probe.rosenbaum, diagnostic.n_matched]
+
+  diagnostic.random_common_cause:
+    title: Random common cause
+    short: >-
+      Add a variable that is pure noise to the adjustment set. A well-behaved
+      estimate should not move.
+    detail: >-
+      This is a check on the machinery rather than on the design. A variable
+      generated at random causes nothing and is caused by nothing, so including
+      it should leave the estimate essentially where it was, give or take a
+      little sampling noise.
+      When the estimate does move, the adjustment is unstable -- typically
+      because the model is straining against thin overlap, or has more parameters
+      than the data can support. Passing this check is reassuring about the
+      arithmetic and says nothing whatever about unmeasured confounding.
+    worry_when: >-
+      An estimate that shifts when a variable known to cause nothing is added.
+      That is instability in the adjustment, not evidence about the effect.
+    see_also: [probe.random_common_cause, diagnostic.subset_stability, concept.confounding]
+
+  diagnostic.negative_control:
+    title: Negative control
+    short: >-
+      An outcome the treatment cannot possibly have affected. Any effect found
+      there is a measurement of your own bias.
+    detail: >-
+      Choose something that shares the same confounding as your real outcome but
+      that the treatment could not touch -- an event before treatment began, or
+      an unrelated condition. If people who took the treatment also do better on
+      that, the difference cannot be the treatment, so it is whatever else
+      separates the groups.
+      This is more useful than any balance table, because it puts a number on the
+      confounding rather than asserting its absence. A clean negative control is
+      reassuring but not decisive: it rules out one route to a false positive,
+      not all of them.
+    worry_when: >-
+      A negative control that is not null. The bias it reveals is not confined to
+      the control -- it is a property of the comparison you are making.
+    references: ["Lipsitch, Tchetgen Tchetgen & Cohen (2010), Negative controls"]
+    see_also: [concept.negative_control, probe.negative_control, assumption.exchangeability]
+
+  diagnostic.placebo_outcome:
+    title: Placebo outcome
+    short: >-
+      Run the same analysis on an outcome the treatment should not move. Finding
+      an effect means the design manufactures them.
+    detail: >-
+      The logic is the same as a negative control and the emphasis is different:
+      here the point is to test the design as a whole -- the comparison group, the
+      timing, the adjustment -- rather than to measure confounding specifically.
+      A placebo effect of the same size and sign as the headline is a serious
+      problem, because whatever produced it is presumably also present in the
+      real outcome. A null placebo is worth reporting and is weak evidence: it
+      shows the design did not fail in this particular way.
+    worry_when: >-
+      A placebo effect of the same size and sign as the headline. The design
+      cannot tell the two apart.
+    see_also: [concept.placebo, probe.placebo_outcome, diagnostic.placebo_treatment]
+
+  diagnostic.placebo_treatment:
+    title: Placebo treatment
+    short: >-
+      Pretend the treatment happened to someone else, or at a date when nothing
+      happened, and see whether the method still finds an effect.
+    detail: >-
+      A fake treatment has no effect by construction, so anything the analysis
+      reports for it is coming from somewhere else: a trend the design does not
+      handle, a comparison group that was never comparable, or a model flexible
+      enough to fit noise.
+      This is one of the few checks that can demonstrate a problem rather than
+      merely fail to find one, which makes a dirty result here far more
+      informative than a clean one.
+    worry_when: >-
+      A fake treatment that reproduces the headline effect. Whatever the design
+      is picking up, it is not the policy.
+    see_also: [concept.placebo, probe.placebo_treatment, diagnostic.sc_placebo_time]
+
+  diagnostic.temporal_ordering:
+    title: Temporal ordering
+    short: >-
+      A check that every variable used to adjust a decision was measured before
+      that decision was taken.
+    detail: >-
+      A variable cannot confound a choice that had already been made. If a
+      measurement was taken after treatment started, adjusting for it does not
+      remove bias; it removes part of the effect, because some of what the
+      treatment did shows up in that measurement.
+      In longitudinal data this is easy to get wrong, because the same variable
+      appears at many time points and only some of them are eligible. The rule is
+      simple to state and worth restating: a covariate may adjust a treatment
+      decision only if it was recorded before that decision.
+    worry_when: >-
+      A covariate measured after the treatment it is adjusting for.
+    see_also: [guardrail.bad_control, concept.time_varying_confounding, assumption.no_time_varying_confounding]
+
+  # -- machine learning and effects that differ between people -----------------
+
+  diagnostic.cate_distribution:
+    title: Distribution of estimated effects
+    short: >-
+      The spread of the per-person effect estimates: how different the model
+      thinks people are.
+    detail: >-
+      A model that predicts one effect per person will always produce a spread,
+      because estimation error alone produces one. So this picture is a
+      description of the predictions, not evidence that the underlying effects
+      differ. Read it together with the calibration check: if the ranking cannot
+      be shown to mean anything, the width here is mostly noise.
+      A spread of essentially zero is a finding rather than a failure. It says
+      the learner looked for differences between people and did not find any that
+      the data supports, which is a perfectly good answer to the question.
+    worry_when: >-
+      A wide spread while the calibration check says the ranking carries no
+      information; you are then looking at estimation error, not heterogeneity.
+    see_also: [estimand.cate, diagnostic.cate_calibration, diagnostic.rate, concept.multiplicity]
+
+  diagnostic.constant_effect:
+    title: The one-effect-for-everyone restriction
+    short: >-
+      Some estimators assume the treatment does the same thing to everybody. This
+      says what that assumption buys and what it costs.
+    detail: >-
+      The partially linear model writes the outcome as one effect multiplied by
+      the treatment, plus a flexible function of the confounders. The flexibility
+      is all on the confounding side; the effect itself is a single number by
+      construction. That restriction makes the estimator efficient and simple.
+      When effects really do differ between people, the number it returns is a
+      weighted average that leans towards the units whose treatment was hardest to
+      predict. That is not the average treatment effect, though it is often close.
+      If the heterogeneity checks find real differences, use the estimator that
+      targets the average directly instead.
+    worry_when: >-
+      The calibration diagnostic finds real heterogeneity, in which case this
+      restriction is doing work that the data does not support.
+    see_also: [method.ml.dml_plr, method.ml.dml_irm, estimand.ate, diagnostic.cate_calibration]
+
+  diagnostic.forest_honesty:
+    title: Honest splitting and out-of-bag prediction
+    short: >-
+      Confirmation that each tree used one set of rows to decide where the
+      subgroups are and a different set to estimate the effect inside them.
+    detail: >-
+      If the same rows both choose a split and estimate the effect on either side
+      of it, the effect will look large -- the split was chosen because it looked
+      large. Honest forests avoid that by dividing each tree's sample in two: one
+      half draws the boundaries, the other half fills in the numbers, and no unit
+      contributes to both jobs in the same tree.
+      Each unit's own predicted effect then comes only from trees that never saw
+      it. The cost is sample size, and this panel reports what that cost was:
+      leaves too sparse to estimate, and units with few trees to average over,
+      both push the per-person predictions back towards the overall average.
+    worry_when: >-
+      A large share of leaves falling back to the overall estimate, or units with
+      very few trees that never saw them; the per-person effects are then mostly
+      the average wearing a disguise.
+    references: ["Wager & Athey (2018), Estimation and inference of heterogeneous treatment effects"]
+    see_also: [concept.honest_splitting, method.ml.causal_forest, diagnostic.cate_calibration]
+
+  diagnostic.metalearner_plug_in:
+    title: The learner's own average, and why it is not the headline
+    short: >-
+      Averaging a machine-learning model's per-person predictions gives a
+      different number from the headline estimate, and the headline is the one
+      with an honest interval.
+    detail: >-
+      Flexible learners are deliberately cautious: they pull predictions towards
+      the middle to avoid fitting noise. That shrinkage is what makes them good
+      at ranking people, and it is exactly what makes their average a poor
+      estimate of the average effect -- the bias does not cancel out when you
+      average, and no standard error is available for it.
+      So the two numbers do different jobs. Use the per-person predictions to
+      decide who to prioritise; use the headline, which is built to have a valid
+      interval, to say how large the effect is.
+    worry_when: >-
+      The two numbers are far apart, which measures how much the learner shrank
+      its predictions; quoting the plug-in average as a magnitude would then be
+      wrong.
+    see_also: [estimand.cate, method.ml.dml_irm, diagnostic.cate_distribution]
+
+  diagnostic.policy_value:
+    title: What the targeting rule is worth
+    short: >-
+      How much better off you would be following the model's recommendation about
+      who to treat, valued on data the model never saw.
+    detail: >-
+      A rule learned from data always looks good on that same data. The only
+      honest valuation holds part of the sample back, applies the finished rule
+      to it, and scores what it would have achieved there. That is the number to
+      quote.
+      The comparison that matters is not against treating nobody but against
+      treating everybody, since blanket treatment is usually simpler to run and
+      easier to defend. If the gain over treating everybody has an interval that
+      includes zero, targeting has not been shown to be worth its complexity.
+      Note the interval holds the fitted models fixed, so it is slightly narrower
+      than the truth.
+    worry_when: >-
+      The held-out value falling well below the in-sample one, which means the
+      rule fitted noise; or a gain over treating everybody whose interval
+      includes zero.
+    references: ["Athey & Wager (2021), Policy learning with observational data"]
+    see_also: [method.ml.policy_tree, diagnostic.rate, estimand.cate]
+
+  diagnostic.seed_stability:
+    title: Stability across random seeds
+    short: >-
+      Repeat the whole procedure with different random splits and see whether the
+      answer stays put.
+    detail: >-
+      Cross-fitting divides the data into folds at random, and the division is an
+      arbitrary choice made by a random number generator. If the estimate changes
+      materially when that choice changes, then the reported precision is
+      describing sampling variation while ignoring a second source of variation
+      that is just as real.
+      The remedy when it fires is to average over several splits and to widen the
+      interval accordingly, or to use a simpler learner that is less sensitive to
+      which rows it trained on.
+    worry_when: >-
+      A spread across seeds comparable to the standard error, or a sign that
+      changes; the split is arbitrary and the answer should not depend on it.
+    see_also: [concept.cross_fitting, diagnostic.fold_stability, diagnostic.bootstrap_spread]
+
+  diagnostic.subgroups:
+    title: Pre-registered subgroups
+    short: >-
+      Effects estimated inside named groups, with a reminder of how easily one of
+      them looks impressive by chance.
+    detail: >-
+      Each subgroup contrast is estimated the same way as the headline, so
+      individually they are sound. The difficulty is collective: with twenty
+      contrasts and no real differences at all, you expect one to cross the
+      conventional threshold by luck, and it is that one that tends to get
+      written up.
+      The defence is to say in advance which subgroups you would examine, and to
+      label everything else as exploration. Where a stricter threshold is
+      appropriate, this panel reports what it would be for the number of
+      contrasts actually run.
+    worry_when: >-
+      Any of these groups was chosen after seeing the data, or a single
+      significant subgroup is reported without the others beside it.
+    see_also: [concept.multiplicity, estimand.gate, diagnostic.cate_calibration]
+
+  diagnostic.tmle_targeting:
+    title: The targeting step
+    short: >-
+      How far the final correction moved the estimate away from the plain outcome
+      model's answer, and whether the correction converged.
+    detail: >-
+      Targeted learning starts from an outcome model's prediction and then
+      applies one small correction designed to remove the bias that a
+      prediction-focused model leaves behind. That correction is driven by the
+      treatment probabilities, so its size tells you two things at once: how far
+      off the initial outcome model was, and how extreme the weights are.
+      A small, cleanly converged correction is the healthy case. A large one is
+      not automatically wrong, but it means the answer is coming from the
+      correction rather than from the model it corrected, and the overlap
+      diagnostics are then the ones to read.
+    worry_when: >-
+      A large correction, or an equation the step failed to solve; both point
+      back to extreme treatment probabilities.
+    references: ["van der Laan & Rose (2011), Targeted Learning"]
+    see_also: [method.obs.tmle, diagnostic.overlap, diagnostic.propensity_clipping]
+
+  # -- difference-in-differences ----------------------------------------------
+
+  diagnostic.raw_means:
+    title: Raw means by group and period
+    short: >-
+      The average outcome for each group in each period, before any model is
+      fitted.
+    detail: >-
+      This is the picture the whole design argues about. Difference-in-differences
+      claims that, absent the policy, the treated group's line would have
+      continued parallel to the comparison group's. You cannot check that claim
+      after treatment, but you can look at the lines before it, and you can see
+      whether they were the same shape.
+      Everything the estimator does afterwards is a subtraction on these
+      averages. If the lines look wrong here -- crossing, diverging, one of them
+      jumping in a period when nothing happened to it -- no fixed effect further
+      down the pipeline will repair that.
+    worry_when: >-
+      Lines that already diverge before anyone adopts; a group whose line is a
+      different shape entirely; a jump in a period when nothing happened.
+    see_also: [assumption.parallel_trends, diagnostic.event_study, diagnostic.cell_means]
+
+  diagnostic.cell_means:
+    title: The cell means behind the estimate
+    short: >-
+      The four averages -- treated and comparison, before and after -- that the
+      headline difference is built from.
+    detail: >-
+      A two-group, two-period difference-in-differences is arithmetic on four
+      numbers: the change in the treated group minus the change in the comparison
+      group. Seeing the four makes the estimate legible, and it makes obvious
+      things that a coefficient hides, such as a comparison group that moved a
+      long way on its own.
+      When a third dimension is involved -- a group inside the treated units that
+      the policy could not have affected -- the same table shows the extra
+      subtraction, and whether the thing being subtracted really looks like a
+      common shock.
+    worry_when: >-
+      One cell holding very few observations; a comparison group whose change is
+      large in its own right, so the estimate is a difference between two moving
+      things.
+    see_also: [diagnostic.raw_means, method.did.twoway_2x2, assumption.parallel_trends]
+
+  diagnostic.panel_balance:
+    title: Panel balance and attrition
+    short: >-
+      Whether the same units are present in every period, and when the ones that
+      come and go do so.
+    detail: >-
+      Fixed effects compare a unit with itself over time, which works when the
+      unit is there throughout. Units that appear or disappear mid-panel change
+      the composition of the average, and if they do so around the time treatment
+      arrives, the change in the average is partly a change in who is being
+      averaged.
+      That is selection, not bookkeeping, and no fixed effect removes it. The
+      honest responses are to restrict to a balanced set of units and see whether
+      the answer moves, or to model the entry and exit explicitly.
+    worry_when: >-
+      Units entering or leaving the panel around the time they adopt; the
+      composition, rather than the policy, then moves the outcome.
+    see_also: [concept.selection_bias, concept.consort, diagnostic.differential_attrition]
+
+  diagnostic.bacon_decomposition:
+    title: What the two-way fixed-effects number is made of
+    short: >-
+      Every simple before-and-after comparison hidden inside a single
+      fixed-effects coefficient, and how much weight each one carries.
+    detail: >-
+      When units adopt a policy at different dates, a two-way fixed-effects
+      regression is not one comparison; it is an average of many two-group,
+      two-period comparisons. Some of them are the ones you would want: a group
+      that adopts against a group that never does. Others compare a late adopter
+      against an early adopter who is already treated -- using treated units as
+      the control group.
+      Those latter comparisons subtract the early group's ongoing effect, so if
+      effects grow over time they can push the average in the wrong direction, and
+      the weight attached to them can even be negative. This decomposition shows
+      how much of your number comes from each kind, which is the evidence for
+      whether a modern estimator is needed.
+    worry_when: >-
+      A large share of the estimate coming from comparisons that use
+      already-treated units as controls, especially when their average differs
+      from the clean comparisons.
+    references: ["Goodman-Bacon (2021), Difference-in-differences with variation in treatment timing"]
+    see_also: [concept.twfe, concept.staggered_adoption, method.did.callaway_santanna, diagnostic.adoption]
+
+  diagnostic.cohort_att:
+    title: Effect by adoption cohort
+    short: >-
+      One effect per group of units that adopted at the same date, instead of one
+      number for all of them.
+    detail: >-
+      Units that adopted in 2015 and units that adopted in 2019 may have had very
+      different experiences: different circumstances, different versions of the
+      policy, different lengths of exposure. Estimating each cohort separately
+      shows that variation instead of averaging it away, and the overall figure
+      is then an explicit average of these with weights you can see.
+      Cohorts built from very few units produce noisy estimates, so read the
+      spread together with the intervals rather than as a set of firm findings.
+    worry_when: >-
+      Cohorts that disagree in sign or size, which means a single average hides
+      which rollout actually worked; or a cohort resting on one or two units.
+    references: ["Callaway & Sant'Anna (2021)"]
+    see_also: [estimand.cohort_att, diagnostic.group_time_att, concept.staggered_adoption]
+
+  diagnostic.group_time_att:
+    title: Group-time effects
+    short: >-
+      One effect for each adoption cohort in each period, which is the building
+      block every modern staggered estimator aggregates.
+    detail: >-
+      Rather than fitting one coefficient to everything, these estimators compute
+      a separate comparison for each cohort and each period, always against units
+      that are not treated in either of the two periods being compared. Every
+      headline number -- overall, by cohort, by time since adoption -- is then an
+      average of these blocks with stated weights.
+      The advantage is that no already-treated unit is ever used as a control, so
+      the negative-weight problem cannot arise. The cost is that some blocks rest
+      on very little data, and the table lets you see which.
+    worry_when: >-
+      A block resting on one or two treated units, or on a very small comparison
+      group; the average inherits that fragility without showing it.
+    references: ["Callaway & Sant'Anna (2021)", "Sun & Abraham (2021)"]
+    see_also: [diagnostic.cohort_att, concept.not_yet_treated, method.did.callaway_santanna]
+
+  diagnostic.cohort_interactions:
+    title: Cohort-by-period coefficients
+    short: >-
+      The full set of coefficients, one for each cohort at each distance from its
+      own adoption date, before they are averaged.
+    detail: >-
+      Interacting the cohort with time since adoption avoids the trap of forcing
+      one path on every group. It also produces a great many coefficients, and
+      the ones estimated from a single small cohort will swing around and drag
+      the weighted average with them.
+      Reading the grid is worthwhile before reading the average: it shows whether
+      the pattern is a genuine common shape or one cohort's story presented as
+      everybody's.
+    worry_when: >-
+      A cell resting on one cohort with a handful of units; its coefficient will
+      swing and pull the weighted average with it.
+    references: ["Sun & Abraham (2021)"]
+    see_also: [diagnostic.group_time_att, diagnostic.event_study, concept.staggered_adoption]
+
+  diagnostic.comparison_group:
+    title: The comparison group
+    short: >-
+      Which units are standing in for what would have happened without the
+      policy, and how many of them there are.
+    detail: >-
+      A staggered design can draw its comparison from units that never adopt, or
+      from units that have not adopted yet, or from both. Never-treated units are
+      the cleanest comparison and are sometimes unusual for the very reason they
+      never adopted. Not-yet-treated units are more similar but stop being
+      available as the panel fills up with adopters.
+      This row says which pool was used and how thin it is. A handful of
+      never-treated units, or cohorts of one, can do most of the work while the
+      confidence interval gives no hint of how much rests on them.
+    worry_when: >-
+      A very small comparison pool, or one built entirely from units that are
+      unlike the adopters in obvious ways.
+    see_also: [concept.not_yet_treated, diagnostic.adoption, assumption.parallel_trends]
+
+  diagnostic.imputation_fit:
+    title: Fit of the comparison model
+    short: >-
+      How well the model of untreated behaviour describes the periods where
+      nobody was treated, since everything else is built on it.
+    detail: >-
+      Imputation estimators work by fitting a model of what units do when
+      untreated -- unit differences plus period differences -- on the untreated
+      observations only, then predicting what each treated unit would have done
+      and subtracting. The effect is the average of those differences.
+      That makes the fit of the comparison model the load-bearing element. If the
+      untreated cells are not well described by unit and period effects alone,
+      the predicted counterfactual carries error that lands entirely in the
+      estimate.
+    worry_when: >-
+      A residual spread that is large next to the effect you are estimating; the
+      imputed counterfactual then carries most of the uncertainty.
+    references: ["Borusyak, Jaravel & Spiess (2024), Revisiting event-study designs"]
+    see_also: [method.did.bjs_imputation, assumption.parallel_trends, diagnostic.raw_means]
+
+  diagnostic.pre_trend_size:
+    title: How big are the pre-treatment wobbles?
+    short: >-
+      The size of the movements in the pre-treatment period, which is the yardstick
+      the robustness bounds are measured against.
+    detail: >-
+      Instead of testing whether the pre-period is flat, the honest approach asks
+      how far trends could have differed after treatment before the conclusion
+      changes -- and expresses that as a multiple of the differences you can see
+      before treatment. This row reports the yardstick: the largest one-period
+      movement in the pre-treatment coefficients, and how large it could plausibly
+      be given the noise in estimating it.
+      Everything reported in units of "relative magnitudes" is measured against
+      this number, so a misleadingly small yardstick makes the robustness bounds
+      look better than they are.
+    worry_when: >-
+      A pre-period that is flat only because it is imprecisely estimated; a tiny
+      measured wobble with wide intervals makes the bounds look reassuring when
+      they are not.
+    references: ["Rambachan & Roth (2023), A more credible approach to parallel trends"]
+    see_also: [diagnostic.honest_did, diagnostic.pre_trends, assumption.parallel_trends]
+
+  diagnostic.honest_did:
+    title: Robustness to violations of parallel trends
+    short: >-
+      Rather than testing whether trends were parallel, this asks how far from
+      parallel they could have been before your conclusion changes.
+    detail: >-
+      A pre-trend test that fails to reject is weak evidence, because such tests
+      have little power exactly when a violation would matter. The alternative is
+      to allow the trends to differ by some amount after treatment, widen the
+      interval accordingly, and report the largest violation the conclusion can
+      absorb.
+      That number is called a breakdown value. Expressed in relative terms, it
+      says how big a post-treatment violation would have to be compared with the
+      wobbles already visible before treatment. It is a much more useful summary
+      than a yes-or-no test, and it is still an assumption -- about the class of
+      violations considered, not about their absence.
+    worry_when: >-
+      A breakdown value below one, which means the conclusion needs the
+      post-treatment violation to be smaller than the ones you can already see in
+      the pre-period.
+    references: ["Rambachan & Roth (2023)", "Roth (2022), Pretest with caution"]
+    see_also: [probe.honest_did, diagnostic.pre_trend_size, diagnostic.pre_trends]
+
+  # -- regression discontinuity ------------------------------------------------
+
+  diagnostic.rd_plot:
+    title: The picture at the cutoff
+    short: >-
+      Average outcomes in narrow bands of the score, either side of the
+      threshold, with the fitted curve drawn through them.
+    detail: >-
+      This plot is the design. Before any technical choice has been made, it
+      shows whether something happens at the threshold and whether the
+      relationship away from the threshold is smooth enough for a local fit to be
+      believable. The step you can see in the fitted curve at the cutoff is the
+      estimate; nothing else in the analysis adds a jump that is not visible
+      here.
+      In a kink design, where the rule changes the rate rather than the level,
+      you are looking for a bend rather than a step, and the estimate is the
+      change in slope.
+    worry_when: >-
+      The binned averages wander in ways the fitted line does not follow; the
+      step at the cutoff is smaller than the wobble in the bands away from it; or
+      very few observations sit in the bands nearest the threshold.
+    references: ["Calonico, Cattaneo & Titiunik (2015), Optimal data-driven regression discontinuity plots"]
+    see_also: [design.rd, plot.rd.binned_scatter, assumption.continuity, diagnostic.bandwidth_sensitivity]
+
+  plot.rd.binned_scatter:
+    title: The binned scatter, and why the bins are a choice
+    short: >-
+      Individual points are too noisy to read, so they are averaged into bands of
+      the score. The number of bands is a presentation choice; the fitted curve
+      is not.
+    detail: >-
+      Wide bands make the picture smooth and can hide a real feature; narrow ones
+      make it jagged and can invent an apparent jump out of noise. The fitted
+      curve is estimated from the underlying observations rather than from the
+      bands, so it does not move when the binning changes -- but your impression
+      of the plot does.
+      The useful habit is to compare the step at the cutoff with the ordinary
+      band-to-band variation away from it. A step no larger than the scatter
+      elsewhere is not visual evidence of anything, whatever the estimate says.
+    worry_when: >-
+      The visible jump depends on how many bands are drawn; bands that jump around
+      as much away from the cutoff as at it.
+    see_also: [diagnostic.rd_plot, diagnostic.rd_scatter, assumption.continuity]
+
+  diagnostic.manipulation:
+    title: Did units sort across the cutoff?
+    short: >-
+      Count how many units sit just below the threshold and just above it. A
+      cliff between the two means somebody was steering.
+    detail: >-
+      The design works because units just either side of the threshold are
+      otherwise alike -- an accident of a decimal place decided who got the
+      programme. That stops being true if people could see the threshold and move
+      themselves across it, because the ones who managed it are precisely those
+      who wanted the treatment most or had the resources to arrange it.
+      The check is a comparison of how densely packed the units are on each side.
+      A smooth transition does not prove nobody manipulated anything; a visible
+      cliff is strong evidence that somebody did.
+    worry_when: >-
+      Many more units just on the winning side of the cutoff than just below it;
+      scores that pile up on round numbers; a threshold that was public and easy
+      to game.
+    references: ["McCrary (2008)", "Cattaneo, Jansson & Ma (2020), Simple local polynomial density estimators"]
+    see_also: [assumption.no_manipulation, diagnostic.rd_density, method.rd.density_test]
+
+  diagnostic.bandwidth_sensitivity:
+    title: Does the answer depend on the window?
+    short: >-
+      The estimate recomputed using progressively wider and narrower windows
+      around the cutoff.
+    detail: >-
+      Every discontinuity estimate is a choice about how far from the threshold
+      to look. Narrow windows use only the most comparable units and are noisy;
+      wide ones are precise and rely on the fitted curve to describe a longer
+      stretch of the relationship. Automatic selectors trade the two off, and
+      reasonable selectors disagree with each other.
+      A finding that persists across a range of windows is much stronger than one
+      that appears at the selected width and disappears either side. This path is
+      how you tell which you have.
+    worry_when: >-
+      An estimate that changes sign or size sharply between neighbouring windows;
+      a result that exists only at the widest windows, where the local
+      approximation is weakest.
+    see_also: [diagnostic.rd_bandwidth, method.rd.local_linear, assumption.continuity]
+
+  diagnostic.rd.bandwidth_path:
+    title: The estimate at every window width
+    short: >-
+      A line showing where the estimate lands at each window width, with the one
+      actually used marked on it.
+    detail: >-
+      Read this as a path rather than as a collection of separate results. A flat
+      path with the marked point in the middle of it means the window choice was
+      not decisive. A path that slopes steadily means the answer is being set by
+      how much of the data you let in, which is a fact about the fitted curve
+      rather than about the threshold.
+      Sign changes along the path deserve particular attention: they usually
+      indicate that the curve away from the cutoff is doing the work, and the
+      picture at the cutoff is the place to check that suspicion.
+    worry_when: >-
+      A result that exists at one window width and nowhere else; that is a window,
+      not a finding.
+    see_also: [diagnostic.bandwidth_sensitivity, diagnostic.rd_plot, method.rd.local_linear]
+
+  diagnostic.bias_correction:
+    title: Smoothing bias of the local fit
+    short: >-
+      Fitting a curve over a window leaves a predictable error at the edge. This
+      shows how much correcting for it moves the estimate and widens the
+      interval.
+    detail: >-
+      The window width that gives the most accurate estimate is deliberately a
+      little too wide -- it accepts some bias in exchange for a lot less noise.
+      That trade means the leftover bias is about the same size as the standard
+      error, so an interval computed as though there were none is too narrow and
+      sits slightly off-centre.
+      The remedy is to estimate the bias with a more flexible fit, subtract it,
+      and widen the interval to account for having estimated it. The corrected
+      interval is wider on purpose. It is the honest one at a window chosen for
+      accuracy.
+    worry_when: >-
+      A correction larger than one standard error, which means the fitted curve is
+      doing real work inside the window and the answer depends on the shape you
+      assumed.
+    references: ["Calonico, Cattaneo & Titiunik (2014), Robust nonparametric confidence intervals"]
+    see_also: [method.rd.bias_correction, diagnostic.bandwidth_sensitivity, assumption.continuity]
+
+  method.rd.bias_correction:
+    title: Bias correction and the robust interval
+    short: >-
+      Why the wider interval is the one to quote, and why the corrected point
+      estimate is not always the one shown beside it.
+    detail: >-
+      Two things happen here. The point estimate is corrected for the predictable
+      curvature error of a local fit, and the interval is widened to allow for the
+      fact that the correction was itself estimated. Both are needed: correcting
+      the estimate without widening the interval would promise a precision that
+      the correction does not have.
+      The conventional and the robust numbers are reported side by side rather
+      than one replacing the other, because the difference between them is
+      information. When they nearly agree, the window was comfortable. When they
+      do not, the shape of the curve inside the window is carrying the result.
+    worry_when: >-
+      A conventional interval quoted at a window chosen for accuracy; it is
+      narrower than the evidence supports.
+    references: ["Calonico, Cattaneo & Titiunik (2014)"]
+    see_also: [diagnostic.bias_correction, method.rd.local_linear, diagnostic.bandwidth_sensitivity]
+
+  diagnostic.covariate_balance:
+    title: Do the covariates jump at the cutoff too?
+    short: >-
+      Run the same estimate on variables the programme cannot have changed. They
+      should show no jump.
+    detail: >-
+      Age, sex, anything recorded before the threshold was applied: none of these
+      can be affected by crossing the line, so any apparent jump in them is a
+      jump the design has manufactured. It usually means something else changes
+      at the same threshold -- another programme, an administrative boundary, a
+      different data source either side.
+      This is one of the few checks that can catch the continuity assumption
+      failing. A clean result does not establish it: the variables you did not
+      measure could still jump.
+    worry_when: >-
+      A variable the programme cannot have changed jumping at the cutoff; or no
+      covariates supplied at all, in which case nothing has been checked.
+    see_also: [assumption.continuity, diagnostic.rd.covariate_balance, concept.standardised_difference]
+
+  diagnostic.rd.covariate_balance:
+    title: Covariate jumps at the cutoff, drawn
+    short: >-
+      Each pre-existing characteristic's jump at the threshold, expressed on a
+      common scale so variables in different units can be compared.
+    detail: >-
+      Each bar is the estimated discontinuity for one variable, divided by that
+      variable's own spread so that pounds, years and test scores can share an
+      axis. Bars near zero are what the design predicts. The joint test beneath
+      asks whether the whole set is further from zero than chance explains, which
+      is more informative than picking out the largest bar.
+      Where a bar is large, look at that variable directly at the cutoff before
+      concluding anything: a single outlier near the threshold can produce one.
+    worry_when: >-
+      One or more variables clearly displaced from zero, or a joint test that
+      rejects.
+    see_also: [diagnostic.covariate_balance, assumption.continuity, diagnostic.love]
+
+  diagnostic.running_variable_discreteness:
+    title: Is the score continuous near the cutoff?
+    short: >-
+      How many distinct values the score actually takes close to the threshold.
+      A handful means this is a comparison of a few groups.
+    detail: >-
+      The usual analysis treats the score as continuous, so that units get
+      arbitrarily close to the threshold from both sides. Scores that take only
+      whole numbers, or only a few values, break that picture: there is a nearest
+      value below and a nearest value above, and nothing in between.
+      When that happens the honest treatment is different. Standard errors should
+      allow for units sharing a value, and an analysis that treats the units at
+      the two adjacent values as if they had been randomised fits the situation
+      better than a curve fitted through a handful of points.
+    worry_when: >-
+      Only a few distinct values either side of the threshold inside the window,
+      or a large number of units sitting exactly on the cutoff.
+    references: ["Kolesar & Rothe (2018), Inference in regression discontinuity designs with a discrete running variable"]
+    see_also: [diagnostic.rd.discreteness, method.rd.local_randomization, concept.clustering]
+
+  diagnostic.rd.discreteness:
+    title: Where the score actually sits
+    short: >-
+      The distribution of the score across its whole range, with the threshold
+      marked, so you can see how it is spaced and where units pile up.
+    detail: >-
+      Two things are visible here at once. Coarseness: whether the score moves in
+      small steps or large ones, which decides whether a curve fitted through it
+      is describing anything. And heaping: whether units cluster on round numbers,
+      which happens when scores are self-reported, rounded, or assembled from
+      categories.
+      Heaping matters most when the threshold is itself a round number, because
+      the pile sits exactly where the comparison is being made and its members may
+      have been rounded from either side.
+    worry_when: >-
+      Spikes at round values, especially at or adjacent to the cutoff; a score
+      that moves in large steps near the threshold.
+    see_also: [diagnostic.running_variable_discreteness, diagnostic.manipulation, diagnostic.rd_density]
+
+  diagnostic.level_jump_at_kink:
+    title: Is the level continuous at the kink?
+    short: >-
+      A kink design assumes the rule changes the slope and not the level. This
+      fits a step at the same threshold to check.
+    detail: >-
+      Where a benefit formula changes its rate at a threshold, the design reads
+      the change in slope as the effect. That reading requires the level itself to
+      be continuous: if crossing the threshold also delivers a lump sum, or
+      switches on some other entitlement, then a step and a bend are both present
+      and attributing everything to the bend is wrong.
+      The test fits a step in the same window. Finding one does not invalidate the
+      data; it means the threshold does two things, and both should be estimated.
+    worry_when: >-
+      A clear step at the threshold. The rule then changes the level as well as
+      the slope, and the slope change alone is not the whole story.
+    references: ["Card, Lee, Pei & Weber (2015), Inference on causal effects in a generalized regression kink design"]
+    see_also: [diagnostic.rd.level_jump, method.rd.kink, diagnostic.rd_plot]
+
+  diagnostic.rd.level_jump:
+    title: The step at the kink, drawn
+    short: >-
+      The estimated step in the level at the threshold, with its interval, beside
+      the bend the design is about.
+    detail: >-
+      A kink design wants this number to be indistinguishable from zero. Reading
+      it is a matter of size as well as significance: a step that is small
+      relative to the outcome but precisely estimated is a different situation
+      from a large step with a wide interval, and only the first is comfortable.
+      If the step is real, the sensible next move is to run the discontinuity
+      design as well and report both, since the threshold is then changing the
+      level and the rate together.
+    worry_when: >-
+      An interval for the step that sits clearly away from zero.
+    see_also: [diagnostic.level_jump_at_kink, method.rd.kink, method.rd.local_linear]
+
+  diagnostic.rd.first_stage:
+    title: Does crossing the cutoff actually change who is treated?
+    short: >-
+      In a fuzzy design, crossing the threshold makes treatment more likely
+      rather than certain. This is the size of that change, and everything
+      divides by it.
+    detail: >-
+      A sharp design switches the programme on at the threshold; a fuzzy one only
+      makes it more likely, because eligibility is not the same as take-up. The
+      estimate is then the jump in the outcome divided by the jump in take-up,
+      which is fine when the second jump is large and treacherous when it is
+      small.
+      Dividing by a small, uncertain number produces an estimate that can be
+      almost anything and an interval that understates how little is known. When
+      the take-up jump is weak, report the jump in the outcome on its own as
+      well: it is a real quantity that does not require the division.
+    worry_when: >-
+      A take-up jump much smaller than about a tenth, or one that is not clearly
+      different from zero.
+    see_also: [method.rd.fuzzy, diagnostic.first_stage, estimand.late, assumption.continuity]
+
+  probe.rd.placebo_cutoff:
+    title: The same estimator at fake cutoffs
+    short: >-
+      Point the method at thresholds where no rule changes. If it finds jumps
+      there too, it finds jumps anywhere.
+    detail: >-
+      Each fake cutoff uses data from one side of the real one only, so there is
+      no genuine discontinuity to detect. Whatever the estimator reports is
+      therefore a description of how much apparent stepping this data produces on
+      its own -- from curvature, from noise, from the binning of the score.
+      The real estimate should stand out against that background. If half the
+      fake cutoffs produce jumps as large, the design is finding steps wherever
+      you point it, and the one at the real threshold is not distinguishable from
+      them.
+    worry_when: >-
+      Many fake cutoffs producing jumps as large as the real one.
+    see_also: [concept.placebo, diagnostic.rd_plot, diagnostic.bandwidth_sensitivity]
+
+  # -- instrumental variables --------------------------------------------------
+
+  diagnostic.compliers:
+    title: Who the estimate is about
+    short: >-
+      An instrument only moves some people. The estimate describes those people,
+      and this says roughly who and how many they are.
+    detail: >-
+      Divide the sample into three kinds. Some would take the treatment whatever
+      happened. Some would never take it. The rest -- the ones the instrument
+      actually moves -- are the only people the estimate describes. Their share
+      can be worked out from the take-up rates in each group, provided the
+      instrument never pushed anybody in the wrong direction.
+      A small share is not a flaw in the arithmetic, but it does limit the claim.
+      An estimate for eight per cent of the sample is an estimate for eight per
+      cent of the sample, and there is no statistical route from there to
+      everybody else.
+    worry_when: >-
+      A small share of movers, which makes the estimate about a sliver of the
+      sample; or a negative share, which means the encouragement pushed some
+      people the other way and the required assumption is in trouble.
+    references: ["Imbens & Angrist (1994)", "Angrist, Imbens & Rubin (1996)"]
+    see_also: [estimand.late, assumption.monotonicity, diagnostic.compliance, diagnostic.first_stage]
+
+  diagnostic.endogeneity:
+    title: Least squares versus the instrument
+    short: >-
+      The plain regression estimate next to the instrumented one, and what their
+      difference does and does not tell you.
+    detail: >-
+      The two numbers are not competing estimates of the same thing. The plain
+      regression describes an association across everybody; the instrumented
+      figure is a causal effect for the people the instrument moves. They can
+      differ because of confounding, because those people are unusual, or both.
+      A formal test of whether the plain regression would have been enough exists
+      and is reported, but it is only meaningful if the instrument is valid and
+      strong. When the instrument is weak, a large gap between the two numbers is
+      exactly what weak-instrument bias produces, so the gap is not evidence of
+      confounding.
+    worry_when: >-
+      An instrumented estimate several times the size of the plain one alongside
+      a weak first stage; weak instruments, a small violation of the exclusion
+      restriction, and a genuinely different group of movers all look like that.
+    see_also: [diagnostic.first_stage, assumption.exclusion, estimand.late, method.iv.2sls]
+
+  diagnostic.reduced_form:
+    title: Reduced form
+    short: >-
+      The direct relationship between the instrument and the outcome, before any
+      division. It is the part of the design that rests on the least.
+    detail: >-
+      If the instrument was well assigned, its relationship with the outcome is
+      itself a credible causal effect -- of the encouragement, not of the
+      treatment. That makes it the sturdiest number in an instrumental-variables
+      analysis: no division, no weak-instrument problem, no reliance on how many
+      people the instrument moved.
+      A flat reduced form is decisive in a way the ratio is not. If the
+      encouragement did not move the outcome at all, then either the treatment
+      does nothing or the encouragement did not move treatment, and the ratio of
+      two small numbers will not settle which.
+    worry_when: >-
+      A flat reduced form combined with a weak first stage, in which case the
+      ratio can land anywhere; or a reduced form that appears only once a
+      particular control is added.
+    see_also: [estimand.itt, diagnostic.first_stage, assumption.exclusion, method.iv.2sls]
+
+  diagnostic.placebo_reduced_form:
+    title: Placebo reduced forms
+    short: >-
+      Check whether the instrument moves outcomes it has no business moving.
+    detail: >-
+      The design requires the instrument to reach the outcome only through the
+      treatment. That cannot be proved, but it can be caught failing: pick
+      outcomes the treatment could not plausibly affect, and see whether the
+      instrument moves them. If it does, there is a second route out of the
+      instrument, and the exclusion restriction is not holding.
+      Nothing moving is worth reporting and is not proof. It narrows the space of
+      violations rather than closing it.
+    worry_when: >-
+      Any placebo outcome the instrument does move. Exclusion cannot be
+      established, but it can be caught failing.
+    see_also: [assumption.exclusion, concept.placebo, diagnostic.reduced_form]
+
+  # -- synthetic control -------------------------------------------------------
+
+  diagnostic.sc_pre_fit:
+    title: Pre-treatment fit
+    short: >-
+      How closely the weighted combination of comparison places tracked the
+      treated place before the intervention. This is the whole basis of the
+      method.
+    detail: >-
+      A synthetic control is a made-up comparison unit: a weighted blend of other
+      places chosen so that the blend follows the treated place through the years
+      before anything happened. If the blend does that well, it is reasonable to
+      let it stand in for what would have happened afterwards. If it does not,
+      there is no argument left.
+      The fit is reported as the typical distance between the two lines before
+      treatment, compared against how much the treated place's own outcome moves
+      about. When that distance is a large share of the outcome's ordinary
+      variation, much of the gap you see afterwards could simply be the same fit
+      error continuing.
+    worry_when: >-
+      A pre-treatment fit error that is a large share of the treated unit's own
+      variation; a synthetic that cannot reproduce the pre-period is not a
+      counterfactual.
+    references: ["Abadie, Diamond & Hainmueller (2010)", "Abadie (2021), Using synthetic controls"]
+    see_also: [assumption.donor_fit, diagnostic.sc_gap, concept.donor_pool, method.sc.abadie]
+
+  diagnostic.sc_gap:
+    title: Gap before and after the intervention
+    short: >-
+      The distance between the treated place and its synthetic twin, period by
+      period. After the intervention, that distance is the estimate.
+    detail: >-
+      Before the intervention the gap should hover near zero -- that is what the
+      weights were chosen to achieve. Afterwards it is free to move, and the
+      movement is the estimated effect. Reading it as a picture rather than as a
+      single number tells you whether the effect arrived suddenly, built up, or
+      faded.
+      The most informative part is often the last stretch before the
+      intervention. A gap that has already started drifting in the direction of
+      the effect indicates anticipation, a mis-dated intervention, or a fit that
+      was never good, and each of those undermines what follows.
+    worry_when: >-
+      A gap that is already moving in the direction of the effect before the
+      intervention date.
+    see_also: [diagnostic.sc_pre_fit, assumption.no_anticipation, diagnostic.sc_placebo_time]
+
+  diagnostic.sc_weights:
+    title: Donor weights
+    short: >-
+      Which comparison places make up the synthetic twin, and how much of it each
+      one is.
+    detail: >-
+      The method chooses a weighted average of the available comparison units,
+      usually with the weights adding to one and none of them negative, so that
+      the result is a genuine blend rather than an extrapolation. Reading the
+      weights is how you sanity-check the comparison: a synthetic California made
+      mostly of two states is a two-state comparison, and those two states'
+      histories are now your identifying assumption.
+      Sparse weights are normal and not by themselves a problem. Concentration is
+      the thing to notice, because it decides how much of the answer rests on one
+      place's particular circumstances.
+    worry_when: >-
+      One donor carrying more than about half the weight; the analysis is then a
+      two-unit comparison in synthetic-control costume, and that donor's own
+      history around the intervention deserves reading.
+    see_also: [concept.donor_pool, diagnostic.sc_loo, diagnostic.sc_convex_hull]
+
+  diagnostic.sc_time_weights:
+    title: Time weights
+    short: >-
+      Which pre-treatment periods the fit was asked to match most closely.
+    detail: >-
+      Some variants of the method weight the earlier periods rather than treating
+      them all alike, concentrating the match on the stretch of history most
+      informative about the years that follow. That is often sensible, and it has
+      a consequence worth seeing: if nearly all the weight sits on one or two
+      periods, the comparison rests on that slice of history.
+      The fitted level difference reported alongside is the other half of the
+      story. Donors can reproduce the shape of the treated unit's path while
+      sitting systematically above or below it, and some methods allow for that
+      explicitly.
+    worry_when: >-
+      Nearly all the weight on one or two periods; or a large level shift, meaning
+      the donors match the shape but not the level of the treated unit.
+    references: ["Arkhangelsky et al. (2021), Synthetic difference-in-differences"]
+    see_also: [method.sc.synthdid, diagnostic.sc_weights, diagnostic.sc_pre_fit]
+
+  diagnostic.sc_placebo_space:
+    title: Placebo in space
+    short: >-
+      Re-run the whole method pretending each comparison place was the treated
+      one. If many of them show a gap as large, the real one is unremarkable.
+    detail: >-
+      With a single treated unit there is no sampling distribution to appeal to,
+      so the yardstick has to be built by pretending. Each comparison place takes
+      a turn as the treated unit and gets its own gap; the real one is then
+      ranked among them.
+      The statistic is usually the post-intervention gap relative to the
+      pre-intervention fit error, because a place that was fitted badly to begin
+      with will show a large gap afterwards for no interesting reason. Note the
+      arithmetic limit: with seventeen comparison places the smallest attainable
+      p-value is about one in eighteen, which is a property of the design and not
+      a shortcoming of the software.
+    worry_when: >-
+      Several comparison places showing ratios as large as the treated unit's; or
+      a pool so small that no small p-value is attainable however large the
+      effect.
+    references: ["Abadie, Diamond & Hainmueller (2010)"]
+    see_also: [diagnostic.sc_placebo, concept.placebo, concept.donor_pool]
+
+  diagnostic.sc_placebo_time:
+    title: Placebo in time
+    short: >-
+      Move the intervention to an earlier date when nothing happened, refit on
+      the earlier data only, and see whether the method finds an effect anyway.
+    detail: >-
+      This is the cleanest test of whether the method manufactures breaks. Only
+      data from before the real intervention is used, so any apparent effect at
+      the fake date is produced by the fitting rather than by a policy.
+      A large pseudo-effect means either that the pre-period fit is unstable or
+      that the outcome contains breaks of this size routinely, in which case the
+      real one is not distinguishable from them. It needs enough pre-treatment
+      history to be possible at all, which is why it is sometimes unavailable.
+    worry_when: >-
+      A sizeable effect at a date when nothing happened; or too little
+      pre-treatment history for the check to run, leaving nothing that rules this
+      out.
+    see_also: [concept.placebo, diagnostic.sc_gap, diagnostic.sc_pre_fit]
+
+  diagnostic.sc_loo:
+    title: Leave one donor out
+    short: >-
+      Drop each contributing comparison place in turn and refit. The estimate
+      should not depend on any single one.
+    detail: >-
+      Synthetic controls often rest on a few places carrying most of the weight,
+      and those places have their own histories -- a local recession, a different
+      policy, a data revision. Dropping each in turn and refitting shows how much
+      of the estimate is really about the treated unit and how much is about one
+      of its stand-ins.
+      Some movement is expected, since the blend has to be rebuilt each time. What
+      matters is the size of the movement relative to the effect being claimed.
+    worry_when: >-
+      Dropping one donor moving the estimate by a large share of the effect
+      itself; the result then rests on one comparison unit rather than on a
+      synthetic one.
+    see_also: [diagnostic.sc_weights, diagnostic.leave_one_out, concept.donor_pool]
+
+  diagnostic.sc_convex_hull:
+    title: Is the treated unit inside the donor pool?
+    short: >-
+      Whether any blend of the comparison places could actually reproduce the
+      treated place, or whether it sits outside their range entirely.
+    detail: >-
+      A blend with non-negative weights can only land somewhere between the units
+      being blended. If the treated place is more extreme than every comparison
+      place on some characteristic -- richer than all of them, larger than all of
+      them -- then no blend can match it, and the fit will be systematically off
+      in a direction the weights cannot fix.
+      Classic synthetic control refuses to extrapolate and simply fits as best it
+      can. Methods that add a correction term extrapolate deliberately, which is
+      a reasonable response provided the correction is reported and read, not
+      buried.
+    worry_when: >-
+      The treated unit sitting outside the range of the donors on characteristics
+      that matter; better optimisation cannot repair that.
+    references: ["Abadie (2021)", "Ben-Michael, Feller & Rothstein (2021)"]
+    see_also: [assumption.convex_hull, diagnostic.sc_augmentation, concept.donor_pool]
+
+  diagnostic.sc_augmentation:
+    title: Size of the bias correction
+    short: >-
+      How far the correction for imperfect pre-treatment fit moved the answer.
+    detail: >-
+      When no blend of comparison places can match the treated place, the
+      augmented method estimates the leftover imbalance and corrects for it,
+      using a fitted model to bridge the gap. This is a deliberate,
+      well-motivated extrapolation, and its size tells you how much of the final
+      answer comes from the model rather than from the comparison.
+      A small correction means the donors were nearly good enough and the
+      correction is a refinement. A large one means the pool was inadequate and
+      the answer is substantially a model's prediction.
+    worry_when: >-
+      A correction larger than the original estimate; the donors were then far
+      from the treated unit and the outcome model, not the donor pool, is doing
+      the work.
+    references: ["Ben-Michael, Feller & Rothstein (2021), The augmented synthetic control method"]
+    see_also: [method.sc.augmented, diagnostic.sc_convex_hull, diagnostic.sc_pre_fit]
+
+  diagnostic.sc_mc_rank:
+    title: Rank and penalty
+    short: >-
+      How flexible the fitted model of untreated behaviour was allowed to be.
+    detail: >-
+      Matrix completion fills in the outcomes that would have been observed if
+      nobody had been treated, by assuming the panel is driven by a small number
+      of underlying patterns shared across units and periods. The rank is how many
+      such patterns were used, and the penalty is what stopped it using more.
+      A higher rank fits the observed data more closely, including its noise.
+      That is why the pre-treatment fit here is not evidence of anything on its
+      own -- the model was fitted on those very periods. The placebo-in-time check
+      is the honest fit test for this family of methods.
+    worry_when: >-
+      A high rank, which means the model was flexible enough to fit noise; read
+      the placebo-in-time panel rather than the pre-period fit.
+    references: ["Athey et al. (2021), Matrix completion methods for causal panel data models"]
+    see_also: [method.sc.matrix_completion, diagnostic.sc_placebo_time, diagnostic.sc_weights]
+
+  # -- interrupted time series -------------------------------------------------
+
+  diagnostic.its_series:
+    title: The series with the interruption marked
+    short: >-
+      The outcome plotted over time with a line at the date of the change. Read
+      this before anything else.
+    detail: >-
+      An interrupted time series has one group and no comparison, so the entire
+      argument is that the series was going one way and then changed. Whether
+      that is visible here decides how much the modelling can be trusted; a
+      model can always fit a step, and this is where you find out whether there is
+      one to fit.
+      Three things are worth checking. That the visible change sits at the marked
+      date rather than before or after it. That the series had not already
+      turned. And that the step is larger than the ordinary period-to-period
+      movement of the series.
+    worry_when: >-
+      The visible jump is at a different date from the marker; the series already
+      turned before the interruption; the level shift is the size of the ordinary
+      month-to-month wobble.
+    see_also: [design.its, diagnostic.its_pre_period, method.its.segmented]
+
+  diagnostic.its_pre_period:
+    title: Pre-interruption history
+    short: >-
+      How many periods there are before the change, and whether they are enough
+      to establish what was going to happen anyway.
+    detail: >-
+      The counterfactual in this design is the continuation of the earlier trend,
+      so the earlier trend has to be estimable. With six monthly points, one
+      unusual month tilts the whole projected line, and the projection is what the
+      effect is measured against.
+      There is no fixed minimum, but eight to twelve points is a common floor and
+      more is better -- particularly when the series has seasonality, which needs
+      whole cycles rather than points to identify.
+    worry_when: >-
+      Fewer than about eight to twelve pre-period points; or a pre-period so
+      short that a single unusual value tilts the projected line.
+    references: ["Bernal, Cummins & Gasparrini (2017), Interrupted time series regression"]
+    see_also: [diagnostic.its_series, diagnostic.its_counterfactual, design.its]
+
+  diagnostic.its_seasonality:
+    title: Seasonality check
+    short: >-
+      Whether a repeating annual or weekly cycle remains in the series after the
+      model has done its work.
+    detail: >-
+      Admissions rise in winter, sales rise in December, and a policy introduced
+      in January will look effective if the season is not accounted for. The
+      check looks for a cycle left over in what the model could not explain, and
+      it matters most when the interruption falls near a seasonal peak or trough.
+      Over-fitting seasonality has its own cost: terms for twelve months in a
+      short series consume the degrees of freedom the effect needs. The aim is
+      terms the data can actually support.
+    worry_when: >-
+      A cycle surviving in the residuals, particularly one whose peak sits near
+      the interruption; or seasonal terms fitted that the data cannot support.
+    see_also: [diagnostic.its_autocorrelation, assumption.model_form, method.its.segmented]
+
+  diagnostic.its_counterfactual:
+    title: Counterfactual projection
+    short: >-
+      The line the series would have followed if the earlier pattern had simply
+      continued, with a band around it.
+    detail: >-
+      The effect is the distance between what happened and this projected line,
+      so the projection deserves as much scrutiny as the estimate. Reading it is
+      mostly a matter of plausibility: does the line stay inside the range the
+      series has ever occupied, and does the fitted pattern describe the
+      pre-period well enough to be worth extending?
+      The band widens the further out it goes, and it prices in only the
+      uncertainty in the fitted line. It does not price in the risk that the
+      shape itself is wrong, which is usually the larger risk.
+    worry_when: >-
+      A projection that leaves the range the series has ever occupied; a band so
+      wide that any conclusion fits inside it; a pre-period fit that already
+      misses systematically.
+    see_also: [diagnostic.its_pre_period, assumption.model_form, assumption.no_cointerventions]
+
+  diagnostic.its_model_choice:
+    title: Model choice
+    short: >-
+      Which time-series model was fitted, what it was chosen against, and how
+      close the runners-up were.
+    detail: >-
+      Time-series models differ in how they treat the series' memory -- whether
+      today's value depends on yesterday's, on the surprise in yesterday's, or on
+      the trend needing removal before either. Automatic selection picks the model
+      that scores best on a fit criterion, and often several candidates score
+      almost the same.
+      When they do, the choice is close to arbitrary and it can matter for the
+      estimate. The honest report says which was picked, what the alternatives
+      were, and whether the conclusion holds under them too.
+    worry_when: >-
+      Two very different models scoring almost the same; a chosen model that still
+      leaves correlation in the residuals; differencing forced rather than tested.
+    see_also: [method.its.arima, diagnostic.its_autocorrelation, assumption.model_form]
+
+  diagnostic.its_control_shock:
+    title: Concurrent shock check
+    short: >-
+      A second series that the policy did not touch, to see whether the change
+      happened everywhere.
+    detail: >-
+      The weakness of a single interrupted series is that anything else happening
+      at the same time is indistinguishable from the policy. A control series --
+      a neighbouring region, an unaffected condition, an untargeted product --
+      turns that from an assumption into something partly checkable.
+      If the control jumps at the same date in the same direction, the change was
+      not the policy. If the two series were already drifting apart beforehand,
+      the control was not a good stand-in to begin with, and the comparison
+      inherits the drift.
+    worry_when: >-
+      The control jumping at the interruption in the same direction as the
+      treated series, or the two series diverging before the interruption.
+    see_also: [method.its.controlled, assumption.no_cointerventions, diagnostic.its_series]
+
+  # -- treatment that changes over time ----------------------------------------
+
+  diagnostic.person_time:
+    title: Person-time and treatment patterns
+    short: >-
+      How many people, over how many periods, following how many distinct
+      treatment histories.
+    detail: >-
+      Methods for treatment that changes over time learn from people whose
+      treatment changes. If almost everybody is either always treated or never
+      treated, there is very little switching to learn from, and the machinery
+      built for time-varying treatment has nothing much to work with.
+      The count of distinct histories is the honest measure of that. It is also
+      the reason these analyses need more data than they appear to: the effective
+      sample is the number of people whose history differs, not the number of
+      person-period rows.
+    worry_when: >-
+      Almost everybody following one of two patterns; there is then little for a
+      time-varying method to learn.
+    see_also: [design.longitudinal, concept.time_varying_confounding, diagnostic.weights_by_period]
+
+  diagnostic.positivity_by_period:
+    title: Positivity, period by period
+    short: >-
+      Whether, at every time point, people of every kind had a real chance of
+      both receiving and not receiving the treatment.
+    detail: >-
+      Overlap is harder over time than at a single point, because it has to hold
+      at each period and for each history. Once a patient has been on a drug for
+      three periods, almost everybody like them stays on it, and the analysis is
+      then asking what would have happened had they stopped -- a question the data
+      contains no example of.
+      This panel reports the worst period rather than the average, because
+      positivity has to hold everywhere. A single period where treatment is
+      nearly certain contaminates every quantity computed across the whole
+      follow-up.
+    worry_when: >-
+      A period where nearly everybody is certain to be treated, or certain not to
+      be; the weights and simulated histories there are extrapolation rather than
+      comparison.
+    see_also: [assumption.positivity, diagnostic.weights_by_period, diagnostic.regime_support]
+
+  diagnostic.weights_by_period:
+    title: Weights and effective sample size, period by period
+    short: >-
+      How much of the sample survives, in effective terms, as the weights
+      accumulate across periods.
+    detail: >-
+      Weighting for time-varying treatment multiplies one weight per period
+      together, so the product grows more extreme the longer the follow-up. A
+      history that was mildly unusual at each of eight time points can end up
+      with an enormous cumulative weight, and the estimate then rests on a
+      handful of people.
+      Watching the effective sample fall period by period is the clearest early
+      warning this design gives. The point estimate will not show it, and neither
+      will the standard error, which assumes the weighting worked.
+    worry_when: >-
+      The effective sample collapsing as more periods are multiplied in, or one
+      history carrying a large share of the weight.
+    references: ["Cole & Hernán (2008), Constructing inverse probability weights"]
+    see_also: [concept.effective_sample_size, method.long.msm_iptw, diagnostic.positivity_by_period]
+
+  diagnostic.censoring_weights:
+    title: Censoring weights
+    short: >-
+      How people who left the study before the end are accounted for.
+    detail: >-
+      People drop out, and if they drop out for reasons connected to their
+      treatment or their outcome, the ones who remain are a selected group. The
+      standard repair is to model who stays and then let each person who stayed
+      stand in for the similar people who left.
+      That works only if staying is predictable from what was measured. It also
+      has the same failure mode as any weighting: when few people like someone
+      remained, that person's weight becomes large and the estimate leans on
+      them. The range of weights reported here is how you see it happening.
+    worry_when: >-
+      Large censoring weights, meaning a few people who stayed are standing in
+      for many who left; or dropout that is clearly related to treatment.
+    see_also: [concept.selection_bias, diagnostic.differential_attrition, diagnostic.weights_by_period]
+
+  diagnostic.natural_course:
+    title: Natural-course calibration
+    short: >-
+      Simulate the world as it actually was and check that the simulation
+      reproduces the data it was built from.
+    detail: >-
+      Simulation-based methods answer questions by generating fictional worlds
+      from fitted models -- everybody treated, nobody treated, treated under some
+      rule. The one world that can be checked is the one that already happened:
+      let the simulation draw treatment from the fitted model instead of setting
+      it by hand, and the result should look like the observed data.
+      This is the only check on the models these methods depend on. Passing it
+      does not make the intervened worlds correct, since those extrapolate beyond
+      what was observed, but failing it means the machinery is misdescribing even
+      the world it was fitted to.
+    worry_when: >-
+      A simulated natural course that does not resemble the data it came from.
+      Nothing else checks these models.
+    see_also: [method.long.gformula, assumption.model_form, diagnostic.strategy_paths]
+
+  diagnostic.regime_support:
+    title: Support for each strategy in the data
+    short: >-
+      How many people actually followed the treatment strategy you are asking
+      about.
+    detail: >-
+      A question such as "what if everybody had stayed on treatment for five
+      years" is answerable to the extent that somebody did. If almost nobody in
+      the data followed that path, the estimate is the model's opinion about a
+      history it never saw, and the correction terms that are meant to protect
+      against a wrong model are dividing by a very small probability.
+      A low share is not a reason to abandon the question. It is a reason to say
+      plainly that the answer rests on the model rather than on comparable
+      people.
+    worry_when: >-
+      Almost nobody following the strategy being asked about; the estimate is
+      then largely the outcome model's extrapolation.
+    see_also: [assumption.positivity, diagnostic.positivity_by_period, method.long.lmtp]
+
+  diagnostic.strategy_paths:
+    title: Where the strategies separate
+    short: >-
+      The simulated outcome path under each strategy being compared, so you can
+      see when and how they diverge.
+    detail: >-
+      The headline is a difference at the end of follow-up; the paths show how it
+      got there. A gap that widens steadily is a plausible cumulative effect. A
+      gap that is fully present in the first period, before the treatment could
+      have acted, is a sign the models are picking up differences between the
+      people following each strategy rather than the strategies themselves.
+      Both paths come from the same fitted models, so the difference between them
+      is exactly as good as those models are.
+    worry_when: >-
+      A gap that appears in the first period, before the treatment has had time
+      to act.
+    see_also: [diagnostic.natural_course, method.long.gformula, assumption.model_form]
+
+  diagnostic.linear_form:
+    title: Is the working model doing the work?
+    short: >-
+      Whether the answer is being read off the data or produced by the shape the
+      model was told to assume.
+    detail: >-
+      A marginal structural model reports the parameter of a model you chose --
+      commonly, that each additional period of treatment adds the same amount. If
+      that is right, the model is a compact and efficient summary. If it is
+      wrong, the number is the parameter of a wrong model rather than the
+      contrast you wanted, and it will not agree with methods that make no such
+      assumption.
+      Refitting with a separate term for each treatment level is the direct
+      check. When the two disagree, the linear form is carrying the estimate
+      rather than describing the data.
+    worry_when: >-
+      A gap between the model-based number and the version that assumes no shape;
+      or a suspicion that several confounders act together in ways a simple model
+      cannot express.
+    see_also: [assumption.model_form, method.long.msm_iptw, method.long.gformula]
+
+  diagnostic.augmentation_gap:
+    title: How much the correction moved the answer
+    short: >-
+      The distance between the plain model-based estimate and the version with a
+      correction term added.
+    detail: >-
+      Doubly robust methods combine a model of the outcome with a model of the
+      treatment, and are consistent if either one is right. The correction term
+      is the part that makes that guarantee work. Its size measures how much the
+      two models disagree about the same data.
+      A small gap means both models tell the same story and the guarantee is not
+      being exercised. A large one means they do not, and the estimate is
+      relying on the promise that at least one of them is right -- a promise that
+      cannot be checked.
+    worry_when: >-
+      A large gap: the outcome models and the treatment models disagree about the
+      same data, and being right if either is right is doing real work.
+    see_also: [method.obs.aipw, method.long.ltmle, diagnostic.tmle_targeting]
+
+  # -- mediation ---------------------------------------------------------------
+
+  diagnostic.mediation_decomposition:
+    title: Total, direct and indirect
+    short: >-
+      The total effect split into the part that runs through the mediator and the
+      part that does not.
+    detail: >-
+      The split is arithmetic: the two parts add to the total by construction, so
+      their adding up is not evidence that either is right. Both pieces rest on
+      the assumption that nothing unmeasured confounds the mediator and the
+      outcome, which is usually harder to defend than the assumption about the
+      treatment itself -- randomising a programme does not randomise how much of
+      it people take up.
+      The proportion mediated is the most-quoted and least-reliable summary here.
+      It is a ratio of two estimates, it is unstable when the total effect is
+      small, and it is not a share of anything at all when the two parts have
+      opposite signs.
+    worry_when: >-
+      A proportion mediated quoted on its own; a total effect close to zero; two
+      components with opposite signs.
+    see_also: [assumption.sequential_ignorability, assumption.mediator_exchangeability, concept.cross_world, method.med.natural_effects]
+
+  diagnostic.cde_path:
+    title: How much the answer depends on the level you fix
+    short: >-
+      The direct effect computed with the mediator held at each of several
+      values. There is one number per value, not one number.
+    detail: >-
+      A controlled direct effect asks what the treatment would do if the mediator
+      were fixed, by intervention, at a particular level for everybody. That is a
+      well-defined and checkable question -- unlike the natural decomposition, it
+      does not require imagining a world nobody could live in -- but the answer
+      depends on which level you fix.
+      When the path across levels is flat, quoting one number is harmless. When
+      it slopes, the path is the answer, and the level chosen must be one that a
+      policy could actually impose.
+    worry_when: >-
+      A steep path reported as "the direct effect"; the honest answer is then the
+      path itself.
+    see_also: [method.med.controlled_direct, diagnostic.treatment_mediator_interaction, concept.cross_world]
+
+  diagnostic.treatment_mediator_interaction:
+    title: Treatment by mediator interaction
+    short: >-
+      Whether the mediator does the same work whether or not the treatment is on.
+    detail: >-
+      If it does, the decomposition into direct and indirect effects is
+      unambiguous. If it does not -- if the treatment changes how much the
+      mediator matters -- then there are two mirror-image ways of splitting the
+      total, they disagree, and neither is more correct than the other. Which one
+      gets reported becomes an unstated choice.
+      A model fitted without an interaction term assumes the question away rather
+      than answering it, which is why the term is tested rather than omitted.
+    worry_when: >-
+      A strong interaction reported as a single direct effect; or a real
+      interaction forced to zero, so the decomposition depends on which mirror
+      you happened to report.
+    references: ["VanderWeele (2015), Explanation in Causal Inference"]
+    see_also: [diagnostic.cde_path, diagnostic.mediation_decomposition, method.med.natural_effects]
+
+  diagnostic.multiple_mediators:
+    title: Several pathways at once
+    short: >-
+      With more than one mediator, the separate pathway effects do not add up to
+      the total, and the shortfall is meaningful.
+    detail: >-
+      Shifting each mediator on its own and then shifting them together gives
+      three numbers, and the single-mediator effects will generally not sum to
+      the joint one. The difference is what the mediators do jointly -- through
+      interacting with each other, or because one causes another -- and it cannot
+      be assigned to either of them.
+      Pathway effects therefore partition the total only when the mediators
+      neither interact nor cause one another, which is a strong condition and
+      rarely stated when such tables are published.
+    worry_when: >-
+      Path-specific effects presented as if they partitioned the total; a large
+      difference between the sum of the separate effects and the joint one.
+    references: ["VanderWeele & Vansteelandt (2014), Mediation analysis with multiple mediators"]
+    see_also: [assumption.sequential_ignorability, diagnostic.mediation_decomposition, method.med.interventional]
+
+  diagnostic.weighted_balance:
+    title: Balance the weights achieved
+    short: >-
+      Whether, after weighting, the treated and untreated person-periods look
+      alike on the variables the weights were built from.
+    detail: >-
+      Weighting for time-varying treatment is meant to create a pseudo-population
+      in which the treatment decision at each period is unrelated to everything
+      measured up to that point. This table is the check on whether it did: every
+      covariate at every period, compared between the person-periods where
+      treatment was given and those where it was not, after the weights are
+      applied.
+      The check deliberately uses the raw rather than the stabilised weights,
+      because it is the raw ones that define the pseudo-population balance is
+      supposed to hold in. Residual imbalance means the treatment model has not
+      removed the confounding it was there to remove -- which is a modelling
+      failure, and separate from the untestable assumption that everything
+      relevant was measured at all.
+    worry_when: >-
+      Covariates still far apart after weighting, especially ones that strongly
+      predict the outcome.
+    references: ["Jackson (2016), Diagnostics for confounding of time-varying and other joint exposures"]
+    see_also: [concept.standardised_difference, diagnostic.love, diagnostic.weights_by_period, assumption.no_time_varying_confounding]

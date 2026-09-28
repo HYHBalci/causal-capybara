@@ -1,0 +1,33 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://causalcapybara.dev/schemas/capy.comparison.v1.json",
+  "title": "capy.comparison.v1",
+  "type": "object",
+  "required": ["schema", "version", "id", "run_ids"],
+  "properties": {
+    "schema": { "const": "capy.comparison" },
+    "version": { "const": 1 },
+    "id": { "type": "string" },
+    "name": { "type": ["string", "null"] },
+    "run_ids": { "type": "array", "items": { "type": "string" } },
+    "comparability": {
+      "type": "array",
+      "description": "Banners, never silent alignment.",
+      "items": {
+        "type": "object",
+        "required": ["check", "ok"],
+        "properties": {
+          "check": { "type": "string" },
+          "ok": { "type": "boolean" },
+          "detail": { "type": ["string", "null"] },
+          "offending_run_ids": { "type": "array", "items": { "type": "string" } }
+        }
+      }
+    },
+    "rows": { "type": "array", "items": { "type": "object" } },
+    "view": { "enum": ["forest", "table", "diagnostic_overlay", "engine_concordance"] },
+    "artifacts": { "type": "array", "items": { "type": "object" } },
+    "preferred_run_id": { "type": ["string", "null"], "description": "Stored as an explicit user choice, shown as a choice" }
+  },
+  "additionalProperties": true
+}

@@ -1,0 +1,593 @@
+# Grey cards.
+#
+# Methods from the plan's catalogue that this build's Python engine does not
+# implement -- almost always because the authoritative implementation is an R
+# package. They appear in the catalogue anyway, greyed, with what they are for
+# and what can go wrong.
+#
+# Seeing the card is how the product teaches. Hiding a method until we wrap it
+# would make the catalogue feel small and would quietly imply the method does
+# not matter. Every card here says plainly what a user can do today.
+#
+# Ids here must not collide with an implemented adapter; check the METHOD_CARDS
+# in engines/python/capy_py/*.py before adding one.
+
+schema: capy.methods
+version: 1
+
+methods:
+  # -- selection on observables ---------------------------------------------
+  - id: obs.matching.genetic
+    title: >-
+      Genetic matching
+    one_liner: >-
+      Search over distance-metric weights until balance is as good as it can get, instead of
+      trusting one metric.
+    designs: [observational]
+    estimands: [ATT, ATE]
+    roles_required: [treatment, outcome, confounders]
+    diagnostics: [love, ess, n_matched, overlap]
+    probes: [probe.rosenbaum, probe.placebo_outcome]
+    status: reasonable
+    why_recommended: >-
+      Balance is optimised rather than assumed, which matters when a propensity model and a
+      Mahalanobis distance disagree about who is comparable.
+    what_can_go_wrong: >-
+      Slow on large samples, and the search can overfit balance on the covariates you happened
+      to include while leaving others worse.
+    needs_overlap: true
+    engines: { python: false, r: Matching }
+    r_needs: [Matching, rgenoud]
+    references: ["Diamond & Sekhon (2013), Genetic matching for estimating causal effects"]
+    coming: >-
+      Not wrapped yet. Fork a custom R script from the Code tab today; it returns to the same
+      result schema once mapped.
+
+  - id: obs.matching.optimal
+    title: >-
+      Optimal and full matching
+    one_liner: >-
+      Choose the whole set of matches at once to minimise total distance, rather than greedily
+      one treated unit at a time.
+    designs: [observational]
+    estimands: [ATT, ATE]
+    roles_required: [treatment, outcome, confounders]
+    diagnostics: [love, ess, n_matched, cem_strata]
+    probes: [probe.rosenbaum, probe.placebo_outcome]
+    status: recommended
+    why_recommended: >-
+      Greedy nearest-neighbour matching depends on the order units are processed; optimal
+      matching does not, and full matching keeps every unit by forming variable-ratio sets.
+    what_can_go_wrong: >-
+      Full matching can produce very unequal set sizes, so the effective sample size is the
+      number to watch rather than the count of matched units.
+    needs_overlap: true
+    engines: { python: false, r: optmatch }
+    r_needs: [optmatch, MatchIt]
+    references: ["Rosenbaum (1991)", "Hansen (2004), Full matching in an observational study of coaching"]
+    coming: >-
+      Not wrapped yet. Nearest-neighbour and coarsened exact matching are implemented in Python.
+
+  - id: obs.weighting.cbps
+    title: >-
+      Covariate balancing propensity score
+    one_liner: >-
+      Fit the treatment model so that it balances covariates, rather than fitting it to predict
+      treatment and hoping balance follows.
+    designs: [observational]
+    estimands: [ATT, ATE, ATO]
+    roles_required: [treatment, outcome, confounders]
+    diagnostics: [love, ess, overlap, ps_calibration]
+    probes: [probe.trim_curve, probe.cinelli_hazlett]
+    status: recommended
+    why_recommended: >-
+      A propensity model that predicts well can still balance badly. CBPS optimises the thing
+      you actually care about.
+    what_can_go_wrong: >-
+      The just-identified version can be unstable with many covariates; entropy balancing solves
+      a closely related problem and is implemented here in Python.
+    needs_overlap: true
+    engines: { python: false, r: CBPS }
+    r_needs: [CBPS, WeightIt]
+    references: ["Imai & Ratkovic (2014), Covariate balancing propensity score"]
+    coming: >-
+      Not wrapped yet. Entropy balancing is the closest implemented alternative.
+
+  - id: obs.weighting.twang
+    title: >-
+      Boosted propensity scores (twang)
+    one_liner: >-
+      Grow a boosted model for the propensity score, stopping at the iteration that balances
+      covariates best.
+    designs: [observational]
+    estimands: [ATT, ATE]
+    roles_required: [treatment, outcome, confounders]
+    diagnostics: [love, ess, overlap, ps_calibration]
+    probes: [probe.trim_curve]
+    status: reasonable
+    why_recommended: >-
+      Handles non-linearity and interactions in the treatment model without you specifying them.
+    what_can_go_wrong: >-
+      A flexible propensity model fitted in-sample sharpens the overlap picture artificially;
+      the stopping rule is doing a lot of work.
+    needs_overlap: true
+    engines: { python: false, r: twang }
+    r_needs: [twang, gbm]
+    references: ["McCaffrey, Ridgeway & Morral (2004)"]
+    coming: >-
+      Not wrapped. The Python weighting adapter offers forest and gradient-boosting propensity
+      models with out-of-fold predictions.
+
+  - id: obs.superlearner
+    title: >-
+      Super Learner nuisance models
+    one_liner: >-
+      Combine several candidate learners by cross-validated weights instead of betting on one.
+    designs: [observational]
+    estimands: [ATE, ATT]
+    roles_required: [treatment, outcome, confounders]
+    diagnostics: [nuisance_rmse, fold_stability]
+    probes: [probe.cinelli_hazlett]
+    status: reasonable
+    why_recommended: >-
+      Doubly robust estimators only deliver their promise if at least one nuisance model is
+      close to right; an ensemble raises that chance without choosing in advance.
+    what_can_go_wrong: >-
+      More machinery, more ways to leak information across folds, and no protection at all
+      against unmeasured confounding.
+    engines: { python: false, r: SuperLearner }
+    r_needs: [SuperLearner]
+    references: ["van der Laan, Polley & Hubbard (2007)"]
+    coming: >-
+      Not wrapped. The implemented cross-fitted estimators take a single learner per nuisance.
+
+  - id: obs.missing.mice
+    title: >-
+      Multiple imputation compatible with the analysis
+    one_liner: >-
+      Impute the missing values several times, run the analysis in each, and combine -- instead
+      of dropping every row with a gap.
+    designs: [observational, did, longitudinal]
+    estimands: [ATE, ATT]
+    roles_required: [treatment, outcome]
+    diagnostics: [outcome_distribution]
+    probes: [probe.subset]
+    status: recommended
+    why_recommended: >-
+      Complete-case analysis is unbiased only under strong conditions, and this product logs how
+      many rows it costs you on every run. Imputation uses them instead.
+    what_can_go_wrong: >-
+      The imputation model has to be compatible with the analysis model, including its
+      interactions; imputing the outcome and then matching on it is a common and serious error.
+    engines: { python: false, r: mice }
+    r_needs: [mice, MatchThem]
+    references: ["van Buuren (2018), Flexible Imputation of Missing Data"]
+    coming: >-
+      Not wrapped. Today every dropped row appears in the sample flow with its reason.
+
+  # -- difference in differences --------------------------------------------
+  - id: did.chaisemartin
+    title: >-
+      de Chaisemartin & D'Haultfoeuille
+    one_liner: >-
+      An estimator built for panels where treatment switches on and off, which the imputation
+      and cohort estimators assume never happens.
+    designs: [did]
+    estimands: [ATT, cohort_ATT]
+    roles_required: [treatment, outcome, unit, time]
+    diagnostics: [adoption, event_study, pre_trends, panel_balance]
+    probes: [probe.honest_did, probe.placebo_treatment]
+    status: recommended
+    why_recommended: >-
+      The only family here that handles treatment turning back off, and it reports how many
+      two-way fixed-effects weights would have been negative.
+    what_can_go_wrong: >-
+      With few switchers the estimates are imprecise, and the placebo tests it relies on need a
+      decent number of pre-periods.
+    engines: { python: false, r: DIDmultiplegtDYN }
+    r_needs: [DIDmultiplegtDYN]
+    references: ["de Chaisemartin & D'Haultfoeuille (2020), Two-way fixed effects estimators with
+      heterogeneous treatment effects"]
+    coming: >-
+      Not wrapped. The implemented staggered estimators assume treatment is absorbing, and warn
+      when your panel says otherwise.
+
+  - id: did.synthdid_r
+    title: >-
+      Synthetic difference-in-differences (synthdid)
+    one_liner: >-
+      Weight both units and periods, then take a difference-in-differences -- halfway between
+      synthetic control and DiD.
+    designs: [did, synth]
+    estimands: [ATT]
+    roles_required: [treatment, outcome, unit, time]
+    diagnostics: [sc_weights, sc_time_weights, sc_pre_fit, event_study]
+    probes: [probe.leave_one_out, probe.placebo_treatment]
+    status: reasonable
+    why_recommended: >-
+      Relaxes the parallel-trends requirement to hold only for a weighted subset, and the
+      reference implementation carries the authors' own inference.
+    what_can_go_wrong: >-
+      Inference relies on a jackknife or placebo scheme that needs a reasonable number of
+      treated units.
+    engines: { python: false, r: synthdid }
+    r_needs: [synthdid]
+    references: ["Arkhangelsky et al. (2021), Synthetic difference-in-differences"]
+    coming: >-
+      A Python implementation of the same estimator ships as sc.synthdid; this card is the
+      reference R implementation for cross-checking.
+
+  - id: did.matched
+    title: >-
+      Matched difference-in-differences
+    one_liner: >-
+      Match treated to comparison units on pre-period characteristics first, then difference.
+    designs: [did]
+    estimands: [ATT]
+    roles_required: [treatment, outcome, unit, time, confounders]
+    diagnostics: [love, adoption, event_study, pre_trends, n_matched]
+    probes: [probe.placebo_treatment, probe.honest_did]
+    status: reasonable
+    why_recommended: >-
+      When treated and comparison units differ so much that parallel trends is implausible for
+      the full sample, it can hold for a matched subset.
+    what_can_go_wrong: >-
+      Matching on the pre-period outcome invites regression to the mean, which manufactures an
+      effect. Match on levels and trends, and check the pre-period afterwards.
+    engines: { python: false, r: MatchIt }
+    r_needs: [MatchIt, did]
+    references: ["Daw & Hatfield (2018), Matching and regression to the mean in difference-in-differences"]
+    coming: >-
+      Not wrapped as one method. You can match first and estimate the DiD on the matched
+      project.
+
+  # -- regression discontinuity ---------------------------------------------
+  - id: rd.local_randomization
+    title: >-
+      Local randomisation RD
+    one_liner: >-
+      Treat a narrow window around the cutoff as a small randomised experiment rather than
+      fitting a curve through it.
+    designs: [rd]
+    estimands: [LATE, ATE]
+    roles_required: [outcome, running, cutoff]
+    diagnostics: [manipulation, covariate_balance, rd_plot]
+    probes: [probe.placebo_outcome]
+    status: recommended
+    why_recommended: >-
+      The natural approach when the running variable is discrete with few mass points, where
+      local polynomial inference is fragile.
+    what_can_go_wrong: >-
+      The window has to be chosen by a covariate-balance criterion, and the resulting sample is
+      often tiny, so randomisation inference rather than a normal approximation is required.
+    engines: { python: false, r: rdlocrand }
+    r_needs: [rdlocrand]
+    references: ["Cattaneo, Frandsen & Titiunik (2015)"]
+    coming: >-
+      Not wrapped. The implemented RD adapter warns when the running variable is discrete.
+
+  - id: rd.multi_cutoff
+    title: >-
+      Multi-cutoff and geographic RD
+    one_liner: >-
+      Several thresholds, or a boundary on a map, pooled into one design.
+    designs: [rd]
+    estimands: [LATE]
+    roles_required: [outcome, running]
+    diagnostics: [rd_plot, manipulation, covariate_balance, bandwidth_sensitivity]
+    probes: [probe.alternate_spec]
+    status: reasonable
+    why_recommended: >-
+      Pooling cutoffs buys precision, and comparing effects across cutoffs is itself informative
+      about how local the estimate is.
+    what_can_go_wrong: >-
+      Pooling assumes the effect is comparable across cutoffs; geographic designs add spatial
+      confounding that a distance-to-boundary running variable does not remove.
+    engines: { python: false, r: rdmulti }
+    r_needs: [rdmulti]
+    references: ["Cattaneo, Titiunik & Vazquez-Bare (2020)", "Keele & Titiunik (2015), Geographic boundaries"]
+    coming: >-
+      Not wrapped. Run one cutoff at a time and compare the projects.
+
+  # -- synthetic control -----------------------------------------------------
+  - id: sc.scpi
+    title: >-
+      Prediction intervals for synthetic control (scpi)
+    one_liner: >-
+      Confidence intervals for a synthetic control that come from a model of the prediction
+      error rather than from permutation.
+    designs: [synth]
+    estimands: [ATT]
+    roles_required: [outcome, unit, time, treated_unit, event_time]
+    diagnostics: [sc_pre_fit, sc_gap, sc_weights]
+    probes: [probe.leave_one_out]
+    status: recommended
+    why_recommended: >-
+      Placebo inference has a coarse floor on its p-value with a small donor pool. This gives an
+      interval instead of a rank.
+    what_can_go_wrong: >-
+      The intervals rest on a model of the in-sample error and are not exact; they say nothing
+      about whether the pre-period fit was credible in the first place.
+    engines: { python: false, r: scpi }
+    r_needs: [scpi]
+    references: ["Cattaneo, Feng & Titiunik (2021), Prediction intervals for synthetic control methods"]
+    coming: >-
+      Not wrapped. Placebo-in-space and placebo-in-time inference are implemented.
+
+  - id: sc.microsynth
+    title: >-
+      Microsynth (many treated units)
+    one_liner: >-
+      Synthetic control when the treated unit is a neighbourhood or a small area and there are
+      many of them.
+    designs: [synth]
+    estimands: [ATT]
+    roles_required: [outcome, unit, time]
+    diagnostics: [sc_weights, sc_pre_fit, sc_placebo_space]
+    probes: [probe.leave_one_out]
+    status: reasonable
+    why_recommended: >-
+      Built for the case classic synthetic control was not: many small treated units with
+      administrative data.
+    what_can_go_wrong: >-
+      Calibrating on many variables at once can produce weights that fit the past perfectly and
+      predict the future badly.
+    engines: { python: false, r: microsynth }
+    r_needs: [microsynth]
+    references: ["Robbins, Saunders & Kilmer (2017)"]
+    coming: >-
+      Not wrapped.
+
+  # -- instrumental variables -----------------------------------------------
+  - id: iv.shift_share
+    title: >-
+      Shift-share (Bartik) instruments
+    one_liner: >-
+      Combine national shocks with local exposure shares to build an instrument for local
+      changes.
+    designs: [iv]
+    estimands: [LATE, ATE]
+    roles_required: [treatment, outcome, instruments]
+    diagnostics: [first_stage, reduced_form, overid]
+    probes: [probe.placebo_outcome, probe.alternate_spec]
+    status: reasonable
+    why_recommended: >-
+      The workhorse instrument in regional and trade economics, and there is now a settled
+      account of what exactly has to be exogenous.
+    what_can_go_wrong: >-
+      The identifying assumption sits either on the shares or on the shocks, and which one you
+      are claiming changes both the standard errors and the plausibility. Standard errors that
+      ignore the shared shock structure are far too small.
+    engines: { python: false, r: ShiftShareSE }
+    r_needs: [ShiftShareSE]
+    references: ["Goldsmith-Pinkham, Sorkin & Swift (2020)", "Borusyak, Hull & Jaravel (2022)"]
+    coming: >-
+      Not wrapped. Two-stage least squares with your own constructed instrument is implemented.
+
+  - id: iv.mte
+    title: >-
+      Marginal treatment effects
+    one_liner: >-
+      Trace the effect as a function of how reluctant a unit is to be treated, instead of
+      reporting one local average.
+    designs: [iv]
+    estimands: [LATE, ATE, ATT]
+    roles_required: [treatment, outcome, instruments]
+    diagnostics: [first_stage, compliers]
+    probes: [probe.alternate_spec]
+    status: reasonable
+    why_recommended: >-
+      The honest answer to "your LATE is only about compliers" -- it shows the whole curve and
+      makes extrapolation to other estimands explicit rather than implicit.
+    what_can_go_wrong: >-
+      Identifying the curve away from the support of the instrument requires functional form,
+      and the extrapolated ends can be almost entirely assumption.
+    engines: { python: false, r: ivmte }
+    r_needs: [ivmte]
+    references: ["Heckman & Vytlacil (2005)", "Mogstad, Santos & Torgovitsky (2018)"]
+    coming: >-
+      Not wrapped.
+
+  # -- time series -----------------------------------------------------------
+  - id: its.causal_impact
+    title: >-
+      Bayesian structural time series (CausalImpact)
+    one_liner: >-
+      Model the counterfactual series with a structural time-series model and control series,
+      and report a posterior rather than an interval.
+    designs: [its, synth]
+    estimands: [ATT]
+    roles_required: [outcome, time, event_time]
+    diagnostics: [its_series, its_counterfactual, its_seasonality, its_autocorrelation]
+    probes: [probe.placebo_treatment]
+    status: reasonable
+    why_recommended: >-
+      Handles trend, seasonality and control series in one model, and the posterior over the
+      cumulative effect is easier to read than a sequence of coefficients.
+    what_can_go_wrong: >-
+      The counterfactual is still a model. Priors matter, and control series that were
+      themselves affected by the intervention quietly absorb the effect.
+    engines: { python: false, r: CausalImpact }
+    r_needs: [CausalImpact, bsts]
+    references: ["Brodersen et al. (2015), Inferring causal impact using Bayesian structural time-series"]
+    coming: >-
+      Not wrapped. Segmented regression with HAC errors, seasonality and control series is
+      implemented, as is an ARIMA intervention model.
+
+  # -- longitudinal and survival --------------------------------------------
+  - id: long.lmtp
+    title: >-
+      Longitudinal modified treatment policies (lmtp)
+    one_liner: >-
+      Estimate the effect of shifting a continuous or multi-valued treatment, rather than of
+      setting everyone to one value.
+    designs: [longitudinal]
+    estimands: [ATE]
+    roles_required: [treatment, outcome, unit, time]
+    diagnostics: [positivity_by_period, weights_by_period, natural_course, regime_support]
+    probes: [probe.subset]
+    status: recommended
+    why_recommended: >-
+      "Treat everyone" is often not a policy anyone could implement. A modified treatment policy
+      -- shift the dose down by ten percent for those above a threshold -- is, and it usually
+      satisfies positivity far better.
+    what_can_go_wrong: >-
+      The machinery is heavy and the estimator is sensitive to the density estimation it depends
+      on.
+    engines: { python: false, r: lmtp }
+    r_needs: [lmtp]
+    references: ["Diaz, Williams, Hoffman & Schenck (2021)"]
+    coming: >-
+      Not wrapped. The g-formula, marginal structural models and a sequential doubly robust
+      estimator are implemented for binary regimes.
+
+  - id: long.ltmle_survival
+    title: >-
+      Longitudinal TMLE for survival outcomes
+    one_liner: >-
+      Time-to-event outcomes with time-varying treatment and censoring, targeted at each time.
+    designs: [longitudinal]
+    estimands: [ATE, ATT]
+    roles_required: [treatment, outcome, unit, time]
+    diagnostics: [positivity_by_period, censoring_weights, natural_course]
+    probes: [probe.subset]
+    status: recommended
+    why_recommended: >-
+      Survival outcomes with informative censoring are the standard epidemiological case, and
+      treating them as a binary outcome at a fixed horizon throws away information and can bias.
+    what_can_go_wrong: >-
+      Positivity failures accumulate over time; by the end of follow-up the effective sample can
+      be a handful of person-periods.
+    engines: { python: false, r: ltmle }
+    r_needs: [ltmle, survival]
+    references: ["van der Laan & Gruber (2012)", "Schomaker et al. (2019)"]
+    coming: >-
+      Not wrapped. Binary and continuous end-of-follow-up outcomes are implemented.
+
+  - id: long.g_estimation
+    title: >-
+      G-estimation of structural nested models
+    one_liner: >-
+      Estimate the effect of a treatment regime by finding the parameter that removes the
+      association between treatment and the blipped-down outcome.
+    designs: [longitudinal]
+    estimands: [ATE, ATT]
+    roles_required: [treatment, outcome, unit, time]
+    diagnostics: [temporal_ordering, positivity_by_period]
+    probes: [probe.subset]
+    status: reasonable
+    why_recommended: >-
+      More robust to positivity violations than weighting, because it does not divide by a
+      treatment probability.
+    what_can_go_wrong: >-
+      Requires a correctly specified blip function, and the estimating equations can have
+      multiple roots.
+    engines: { python: false, r: null }
+    r_needs: []
+    references: ["Robins (1994)", "Vansteelandt & Joffe (2014)"]
+    coming: >-
+      Not implemented in either engine here. The card exists so the method is not invisible.
+
+  # -- partial identification and transport ---------------------------------
+  - id: bounds.manski
+    title: >-
+      Manski bounds
+    one_liner: >-
+      Report the range the effect must lie in given only what the data can support, without
+      assuming away the missing counterfactual.
+    designs: [observational, rct, iv]
+    estimands: [ATE, ATT]
+    roles_required: [treatment, outcome]
+    diagnostics: [outcome_distribution]
+    probes: []
+    status: reasonable
+    why_recommended: >-
+      The honest floor. When the point estimate rests on assumptions nobody can defend, an
+      interval that rests on almost none is worth more than a number that rests on many.
+    what_can_go_wrong: >-
+      The bounds are often wide enough to include zero, which is informative and unpopular.
+      Narrowing them means adding assumptions, and those should be stated.
+    engines: { python: false, r: null }
+    r_needs: []
+    references: ["Manski (1990), Nonparametric bounds on treatment effects"]
+    coming: >-
+      Not implemented. Designed for: the spec and result schema already allow an interval with
+      no point estimate.
+
+  - id: transport.generalize
+    title: >-
+      Transportability and generalisability
+    one_liner: >-
+      Take an effect estimated in one population and ask what it would be in another with a
+      different mix of characteristics.
+    designs: [rct, observational]
+    estimands: [ATE]
+    roles_required: [treatment, outcome, confounders]
+    diagnostics: [overlap, love]
+    probes: [probe.subset]
+    status: reasonable
+    why_recommended: >-
+      The question every trial faces: the effect was measured on volunteers in eight sites, and
+      the policy is national.
+    what_can_go_wrong: >-
+      Requires that the effect modifiers are measured in both populations and that the target
+      population overlaps the study one. Where it does not, the transported estimate is
+      extrapolation with extra steps.
+    engines: { python: false, r: generalize }
+    r_needs: [generalize]
+    references: ["Stuart et al. (2011)", "Bareinboim & Pearl (2016), Causal inference and the data-fusion problem"]
+    coming: >-
+      Not implemented. The roles needed for it already exist in the spec.
+
+  - id: interference.exposure
+    title: >-
+      Interference and spillovers
+    one_liner: >-
+      When one unit's treatment affects another's outcome, estimate the direct and spillover
+      effects separately instead of pretending neither exists.
+    designs: [rct, observational, did]
+    estimands: [ATE, ATT]
+    roles_required: [treatment, outcome, cluster]
+    diagnostics: [cluster_structure]
+    probes: [probe.placebo_outcome]
+    status: reasonable
+    why_recommended: >-
+      SUTVA is assumed everywhere in this catalogue and is false in most of the settings policy
+      analysts care about. Partial interference designs at least make the assumption explicit.
+    what_can_go_wrong: >-
+      Requires an exposure mapping -- who is exposed to whom -- and that mapping is itself a
+      strong assumption that is easy to get wrong and easy to hide.
+    engines: { python: false, r: null }
+    r_needs: []
+    references: ["Hudgens & Halloran (2008)", "Aronow & Samii (2017)"]
+    coming: >-
+      Not implemented. Advanced, and easy to misuse.
+
+  # -- causal discovery, deliberately gated ---------------------------------
+  - id: discovery.structure_learning
+    title: >-
+      Structure learning (causal discovery)
+    one_liner: >-
+      Search for a graph consistent with the data. It does not recover the true causal structure
+      from observational data without extra assumptions.
+    designs: [observational]
+    estimands: []
+    roles_required: []
+    diagnostics: []
+    probes: []
+    status: disrecommended
+    why_recommended: >-
+      null
+    what_can_go_wrong: >-
+      Discovery algorithms return an equivalence class of graphs, not a graph, and the class is
+      usually large. Different algorithms on the same data return different answers, and none of
+      them can see a confounder you did not measure.
+    disrecommend_when: >-
+      Always, as a substitute for a design. It is a hypothesis generator behind a gate, and
+      anything it produces lands as a candidate graph you must accept.
+    engines: { python: false, r: pcalg }
+    r_needs: [pcalg]
+    references: ["Spirtes, Glymour & Scheines (2000)", "Peters, Janzing & Scholkopf (2017)"]
+    coming: >-
+      Gated behind Advanced and not implemented in this build. Causal Capybara leads with
+      design-based inference on purpose.

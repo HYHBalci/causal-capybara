@@ -1,0 +1,93 @@
+# Causal Capybara -- R engine pins
+#
+# One line per package: name==version  # why it is here.
+#
+# HONEST STATUS: these versions were chosen as plausible current CRAN releases
+# on a machine that has R 4.4.3 but almost none of these packages installed.
+# They have NOT been resolved against a real dependency solve. CI must refresh
+# this file on a clean machine (see .github/workflows) before any release, and
+# the app records the lock hash on every result so a number can always be traced
+# to the stack that produced it.
+#
+# Regenerate with, from a clean library:
+#   Rscript -e 'writeLines(paste0(rownames(installed.packages()), "==",
+#                                 installed.packages()[,"Version"]))'
+
+# --- core: the engine will not start without these -------------------------
+jsonlite==2.0.0            # the wire format between the sidecar and R
+data.table==1.16.4         # fast reads and grouped operations
+arrow==17.0.0.1            # the parquet data handle; falls back to CSV when absent
+
+# --- inference plumbing used by the base-R adapters -------------------------
+sandwich==3.1.1            # robust and clustered variance estimators
+lmtest==0.9.40             # coefficient tests against those variances
+survival==3.8.3            # time-to-event outcomes
+
+# --- observational workhorse (plan 7.2) ------------------------------------
+MatchIt==4.7.2             # the reference matching implementation
+optmatch==0.10.8           # optimal and full matching
+cem==1.1.31                # coarsened exact matching
+WeightIt==1.3.2            # propensity, entropy and balancing weights
+cobalt==4.6.0              # Love plots and balance tables, the field's standard
+ebal==0.1.8                # entropy balancing
+CBPS==0.23                 # covariate balancing propensity score
+PSweight==2.1.1            # augmented weighting and doubly robust estimation
+marginaleffects==0.24.0    # g-computation contrasts from a fitted model
+twang==2.6                 # boosted propensity scores
+SuperLearner==2.0.40       # ensemble nuisance models
+sensemakr==0.1.6           # Cinelli-Hazlett sensitivity
+EValue==4.1.3              # VanderWeele-Ding E-values
+rbounds==2.0               # Rosenbaum bounds for matched designs
+mice==3.16.0               # multiple imputation
+MatchThem==1.2.1           # matching and weighting inside imputed datasets
+
+# --- policy panel: difference in differences (plan 7.3) --------------------
+fixest==0.12.1             # fast fixed effects, Sun-Abraham
+did==2.1.2                 # Callaway-Sant'Anna group-time effects
+didimputation==0.3.0       # Borusyak-Jaravel-Spiess imputation
+did2s==1.0.2               # Gardner two-stage
+etwfe==0.5.0               # Wooldridge-Mundlak extended TWFE
+DRDID==1.0.4               # Sant'Anna-Zhao doubly robust DiD
+bacondecomp==0.1.1         # Goodman-Bacon decomposition
+HonestDiD==0.2.6           # Rambachan-Roth sensitivity to parallel trends
+DIDmultiplegtDYN==2.0.0    # de Chaisemartin-D'Haultfoeuille, on-and-off treatment
+synthdid==0.0.9            # synthetic difference-in-differences
+
+# --- regression discontinuity (plan 7.5) -----------------------------------
+rdrobust==2.2.0            # the authoritative RD implementation
+rddensity==2.5             # manipulation testing at the cutoff
+rdlocrand==1.0.4           # local randomisation inference
+rdmulti==1.1               # multiple cutoffs and geographic RD
+
+# --- synthetic control (plan 7.6) ------------------------------------------
+Synth==1.1.8               # Abadie-Diamond-Hainmueller
+tidysynth==0.2.0           # a tidy interface with placebo machinery
+SCtools==0.3.2.1           # placebo and inference helpers
+gsynth==1.2.1              # generalised synthetic control
+augsynth==0.2.0            # augmented synthetic control
+scpi==2.2.7                # prediction intervals
+microsynth==2.0.44         # many small treated units
+
+# --- instrumental variables (plan 7.7) -------------------------------------
+ivreg==0.6.5               # 2SLS with diagnostics
+AER==1.2.14                # classic IV and companion datasets
+ivmodel==1.9.1             # weak-instrument-robust inference
+ivDiag==1.0.6              # effective F and AR sets
+ShiftShareSE==1.1.0        # shift-share standard errors
+
+# --- causal machine learning (plan 7.10) -----------------------------------
+grf==2.6.1                 # honest causal forests
+DoubleML==1.0.0            # double machine learning
+policytree==1.2.4          # policy learning over estimated effects
+
+# --- longitudinal and mediation (plan 7.8, 7.9) ----------------------------
+ltmle==1.3.0.2             # longitudinal targeted learning
+lmtp==1.4.0                # modified treatment policies
+ipw==1.2.1                 # inverse probability of treatment weights
+gfoRmula==1.1.0            # the parametric g-formula
+CMAverse==0.1.0            # causal mediation across estimators
+mediation==4.5.0           # natural direct and indirect effects
+
+# --- time series (plan 7.4) -------------------------------------------------
+nlme==3.1.166              # generalised least squares with correlated errors
+CausalImpact==1.3.0        # Bayesian structural time series

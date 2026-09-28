@@ -1,0 +1,46 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://causalcapybara.dev/schemas/capy.dag.v1.json",
+  "title": "capy.dag.v1",
+  "description": "A graph records assumptions. It does not prove causality.",
+  "type": "object",
+  "required": ["schema", "version", "id", "nodes", "edges"],
+  "properties": {
+    "schema": { "const": "capy.dag" },
+    "version": { "const": 1 },
+    "id": { "type": "string" },
+    "name": { "type": ["string", "null"] },
+    "nodes": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["id"],
+        "properties": {
+          "id": { "type": "string" },
+          "variable": { "type": ["string", "null"], "description": "Dataset column, null for a latent node" },
+          "label": { "type": ["string", "null"] },
+          "role": { "enum": ["treatment", "outcome", "confounder", "mediator", "instrument", "collider", "latent", "other", "running", "unit", "time"] },
+          "latent": { "type": "boolean", "default": false },
+          "x": { "type": ["number", "null"] },
+          "y": { "type": ["number", "null"] }
+        }
+      }
+    },
+    "edges": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["from", "to"],
+        "properties": {
+          "from": { "type": "string" },
+          "to": { "type": "string" },
+          "kind": { "enum": ["directed", "bidirected"], "default": "directed" },
+          "note": { "type": ["string", "null"] }
+        }
+      }
+    },
+    "selected_adjustment_set": { "type": ["array", "null"], "items": { "type": "string" } },
+    "caption": { "type": ["string", "null"], "default": "This graph is an assumption you are making." }
+  },
+  "additionalProperties": true
+}

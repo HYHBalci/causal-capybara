@@ -1,0 +1,128 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://causalcapybara.dev/schemas/capy.spec.v1.json",
+  "title": "capy.spec.v1",
+  "description": "The language-neutral study specification. The GUI edits this; R and Python adapters consume it.",
+  "type": "object",
+  "required": ["schema", "version", "id", "design"],
+  "properties": {
+    "schema": { "const": "capy.spec" },
+    "version": { "const": 1 },
+    "id": { "type": "string" },
+    "title": { "type": "string" },
+    "created": { "type": "string" },
+    "modified": { "type": "string" },
+    "question": {
+      "type": "object",
+      "description": "Structured fields, never a blob of English.",
+      "properties": {
+        "treatment": { "type": ["string", "null"] },
+        "outcome": { "type": ["string", "null"] },
+        "population": { "type": ["string", "null"], "description": "Human label for the population/sample filter" },
+        "comparison": { "type": ["string", "null"] },
+        "text": { "type": ["string", "null"], "description": "Rendered sentence, derived, never authoritative" }
+      },
+      "additionalProperties": true
+    },
+    "design": {
+      "enum": ["undecided", "rct", "observational", "did", "rd", "iv", "synth", "its", "mediation", "longitudinal"]
+    },
+    "estimand": {
+      "enum": [null, "ATE", "ATT", "ATC", "ATO", "LATE", "CACE", "LATET", "ITT", "cohort_ATT", "CATE", "GATE", "dose_response"]
+    },
+    "roles": {
+      "type": "object",
+      "properties": {
+        "treatment": { "type": ["string", "null"] },
+        "outcome": { "type": ["string", "null"] },
+        "unit": { "type": ["string", "null"] },
+        "time": { "type": ["string", "null"] },
+        "confounders": { "type": "array", "items": { "type": "string" } },
+        "instruments": { "type": "array", "items": { "type": "string" } },
+        "running": { "type": ["string", "null"] },
+        "cutoff": { "type": ["number", "null"] },
+        "cluster": { "type": ["string", "null"] },
+        "weight": { "type": ["string", "null"] },
+        "mediator": { "type": "array", "items": { "type": "string" } },
+        "forbidden": { "type": "array", "items": { "type": "string" }, "description": "Variables the user or the guardrail marked post-treatment / collider" },
+        "treated_unit": { "type": ["string", "null"], "description": "Synthetic control: the one treated unit" },
+        "donor_pool": { "type": "array", "items": { "type": "string" } },
+        "event_time": { "type": ["number", "string", "null"], "description": "ITS / SC intervention time" },
+        "control_series": { "type": "array", "items": { "type": "string" } },
+        "cohort": { "type": ["string", "null"], "description": "DiD: first-treated period variable, if precomputed" },
+        "strata": { "type": "array", "items": { "type": "string" } },
+        "effect_modifiers": { "type": "array", "items": { "type": "string" } }
+      },
+      "additionalProperties": true
+    },
+    "assumptions": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["id", "status"],
+        "properties": {
+          "id": { "type": "string" },
+          "status": { "enum": ["assumed", "supported", "weakened", "untested", "not_applicable"] },
+          "note": { "type": ["string", "null"] },
+          "user_override": { "type": "boolean" }
+        }
+      }
+    },
+    "methods": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["method_id"],
+        "properties": {
+          "method_id": { "type": "string" },
+          "engine": { "enum": ["r", "python", "both"] },
+          "options": { "type": "object" },
+          "included": { "type": "boolean", "default": true },
+          "acknowledged_disrecommended": { "type": "boolean", "default": false }
+        }
+      }
+    },
+    "sample": {
+      "type": "object",
+      "properties": {
+        "t1": { "type": ["number", "string", "null"] },
+        "t2": { "type": ["number", "string", "null"] },
+        "subset_expr": { "type": ["string", "null"] },
+        "drops": {
+          "type": "array",
+          "description": "Explicit, logged sample edits. No silent drops, ever.",
+          "items": {
+            "type": "object",
+            "required": ["reason"],
+            "properties": {
+              "reason": { "type": "string" },
+              "n_dropped": { "type": ["integer", "null"] },
+              "approved": { "type": "boolean" }
+            }
+          }
+        }
+      }
+    },
+    "seed": { "type": ["integer", "null"] },
+    "dag_id": { "type": ["string", "null"] },
+    "profile_viewed": { "enum": ["beginner", "standard", "advanced"] },
+    "diagnostics_viewed": {
+      "type": "array",
+      "description": "Provenance for the see-it-before-you-estimate rule.",
+      "items": { "type": "string" }
+    },
+    "provenance": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["event"],
+        "properties": {
+          "event": { "type": "string" },
+          "at": { "type": ["string", "null"] },
+          "detail": { "type": ["object", "null"] }
+        }
+      }
+    }
+  },
+  "additionalProperties": true
+}

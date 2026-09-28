@@ -1,0 +1,1129 @@
+/* Layout and component styles. Tokens live in theme.css. */
+
+/* Four named rows. The job bar renders nothing when idle, and auto-placement
+   would then shuffle the status bar up into its row, leaving the bottom row
+   empty -- so every screen but "estimating" had a dead strip under the status
+   bar. Placing each row explicitly keeps the status bar on the bottom edge
+   whether or not there is a job, and collapses the job row when there is not. */
+.app {
+  display: grid;
+  grid-template-rows: var(--menu-h) auto minmax(0, 1fr) auto var(--status-h);
+  /* One column, and it is the window's width -- not the widest row's. Left as
+     the implicit `auto` track, the grid sized itself to whatever the menu bar
+     asked for, which with a long project name in it was 1034px. On a 1024- or
+     900-wide window every row was then drawn 1034px wide and the `clip` below
+     quietly cut the right-hand end off: the inspector, the engine lights and
+     the theme switch were not merely cramped, they were gone, with no scrollbar
+     to reveal them. */
+  grid-template-columns: minmax(0, 1fr);
+  grid-template-areas: 'menu' 'workspace' 'body' 'jobs' 'status';
+  height: 100%;
+  /* `clip`, not `hidden`: a hidden box is still a scroll container, and the
+     browser scrolls one to reveal a newly focused child. Clicking a tab slid
+     the whole app up and took the status bar off the bottom edge with it. */
+  overflow: clip;
+}
+.menubar { grid-area: menu; }
+.app-body { grid-area: body; }
+.jobbar { grid-area: jobs; }
+.statusbar { grid-area: status; }
+.workspace-bar { grid-area: workspace; }
+.app-body.full-width { grid-template-columns: minmax(0, 1fr); }
+.app-body.full-width > .canvas { grid-column: 1; }
+
+.app-body {
+  display: grid;
+  /* Both side panes size their own track. A fixed first track meant the
+     project list could be widened only into the canvas, not away from it. */
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  min-height: 0;
+  /* Contain each pane's overflow here rather than letting it reach the frame. */
+  overflow: hidden;
+  background: var(--paper);
+}
+
+/* The navigator and the inspector are draggable, and a pane that has been
+   dragged -- or that is simply showing its default -- carries its width in a
+   `style` attribute written by React. An inline `width` beats any stylesheet
+   rule no matter how the selector is written, which is why the two rules that
+   used to live here (`.nav { width: 190px }` and `.inspector { width: 264px }`)
+   had never once applied. `max-width` is not a competing declaration: it is a
+   ceiling applied after the width is chosen, from any origin, so it wins.
+
+   A ceiling rather than a fixed width also keeps the divider useful. On a wide
+   screen the cap is above the pane's natural size and dragging behaves exactly
+   as before; on a small one the cap comes down and the canvas -- the thing the
+   reader is actually working in -- keeps at least three fifths of the window.
+   The unit is vw because these two panes are the window's furniture: they sit
+   directly in the frame, and vw is the frame. */
+.nav { max-width: 18vw; }
+.inspector { max-width: 24vw; }
+
+/* Below this the menu bar is the widest thing in the window, so it sheds what
+   it can: the wordmark keeps its capybara and drops the words, the keyboard
+   hint next to the search glyph goes, and the project name -- which the
+   navigator is already showing two rows down -- shrinks and then leaves. */
+@media (max-width: 1180px) {
+  .brand { flex: none; max-width: 22px; overflow: hidden; white-space: nowrap; margin-right: 6px; }
+  .menubar .btn.ghost .tiny { display: none; }
+  .project-pill { max-width: 130px; }
+}
+@media (max-width: 1000px) {
+  .project-pill { display: none; }
+}
+
+/* ------------------------------------------------------------- boot */
+
+.boot { display: grid; place-items: center; height: 100%; background: var(--paper-sunken); }
+.boot-card { padding: 36px 40px; max-width: 560px; }
+.boot-card h1 { margin: 0; font-size: 25px; letter-spacing: -0.035em; }
+
+/* --------------------------------------------------------- menu bar */
+
+.menubar {
+  gap: 4px;
+  padding: 0 14px;
+  background: color-mix(in srgb, var(--paper-raised) 86%, transparent);
+  backdrop-filter: blur(20px) saturate(160%);
+  -webkit-backdrop-filter: blur(20px) saturate(160%);
+  box-shadow: 0 1px 0 var(--rule), var(--shadow-1);
+  height: var(--menu-h);
+  position: relative;
+  z-index: 50;
+}
+.brand {
+  display: inline-flex; align-items: center; gap: 8px;
+  font-weight: 700; font-size: 13px; margin-right: 12px; color: var(--ink);
+  letter-spacing: -0.025em;
+}
+/* Flexbox was allowed to squeeze the drawing itself, so when the wordmark is
+   clipped on a narrow window the capybara went first and left two clipped
+   letters behind. It is the half worth keeping. */
+.brand .mark { color: var(--teal); flex: none; }
+/* Back and forward. Sized to the menu row and quiet until they can be used. */
+.histnav { display: inline-flex; align-items: center; gap: 3px; margin-right: 10px; }
+.histnav-btn {
+  display: inline-grid; place-items: center; width: 28px; height: 26px;
+  border: none; background: transparent; border-radius: var(--r-sm);
+  color: var(--ink-soft); cursor: pointer; padding: 0;
+}
+.histnav-btn:hover:not(:disabled) { background: var(--paper-hover); color: var(--ink); }
+.histnav-btn:active:not(:disabled) { background: var(--teal-soft); color: var(--teal-text); }
+.histnav-btn:disabled { color: var(--rule-strong); cursor: default; }
+.histnav-btn:focus-visible { outline: 2px solid var(--teal); outline-offset: 1px; }
+
+.menu { position: relative; }
+.menu-btn {
+  border: none; background: transparent; padding: 5px 10px; border-radius: var(--r);
+  cursor: pointer; font-size: var(--t-ui); color: var(--ink-soft);
+}
+.menu-btn:hover, .menu-btn.open { background: var(--paper-hover); color: var(--ink); }
+.menu-pop {
+  position: absolute; top: calc(100% + 7px); left: 0; min-width: 250px; z-index: 60;
+  padding: 6px; box-shadow: var(--shadow-pop);
+}
+.menu-item {
+  display: flex; width: 100%; align-items: center; gap: 12px; padding: 7px 10px;
+  border: none; background: transparent; border-radius: var(--r-sm); cursor: pointer;
+  font-size: 12.5px; text-align: left; color: var(--ink);
+}
+.menu-item:hover:not(:disabled) { background: var(--teal-soft); }
+.menu-item:disabled { color: var(--faint); cursor: not-allowed; }
+.menu-sep { height: 1px; background: var(--rule); margin: 4px 6px; }
+
+.project-pill {
+  padding: 4px 10px; border-radius: 999px; background: var(--paper-sunken);
+  font-size: var(--t-small); font-weight: 600; max-width: 220px; overflow: hidden;
+  text-overflow: ellipsis; white-space: nowrap;
+}
+/* `flex: none` because this is a control with words in it and flexbox was
+   happy to squeeze it down to a stub on a narrow window. The gap to its left
+   gives way first. */
+.profile-picker {
+  border: 1px solid var(--rule); border-radius: var(--r); padding: 4px 7px;
+  background: var(--paper-raised); font-size: var(--t-small); flex: none;
+}
+.engine-badges {
+  display: inline-flex; gap: 8px; align-items: center; border: 1px solid var(--rule);
+  border-radius: 999px; padding: 4px 10px; background: var(--paper-raised); cursor: pointer;
+  font-size: var(--t-small);
+}
+.engine-badge { display: inline-flex; align-items: center; gap: 4px; }
+
+/* --------------------------------------------------------- navigator */
+
+.nav {
+  position: relative;
+  width: var(--nav-w);
+  flex: none;
+  background: color-mix(in srgb, var(--paper-sunken) 92%, transparent);
+  border-right: 1px solid var(--rule);
+  min-height: 0;
+}
+.nav-head {
+  display: flex; align-items: center; gap: 8px; padding: 12px 12px 10px;
+}
+.nav-project {
+  font-weight: 700; font-size: var(--t-ui); letter-spacing: -0.01em; overflow: hidden; text-overflow: ellipsis;
+  white-space: nowrap; flex: 1;
+}
+.nav-group { padding: 7px 8px 3px; }
+.nav-group-head {
+  display: flex; align-items: center; gap: 7px; width: 100%; padding: 6px 8px;
+  border: none; background: transparent; cursor: pointer; color: var(--muted);
+  font-size: var(--t-micro); font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase;
+}
+.nav-group-head:hover { color: var(--muted); }
+.nav-caret { font-size: 9px; width: 8px; }
+.nav-count {
+  margin-left: auto; background: var(--paper-hover); border-radius: 8px; padding: 0 5px;
+  font-size: 10px; letter-spacing: 0;
+}
+.nav-items { list-style: none; margin: 0; padding: 0 0 5px; }
+.nav-item {
+  display: flex; align-items: center; gap: 8px; width: 100%; padding: 7px 9px 7px 18px;
+  border: none; border-radius: var(--r); background: transparent; cursor: pointer; text-align: left; font-size: var(--t-ui);
+  color: var(--ink-soft);
+}
+.nav-item:hover { background: var(--paper-hover); color: var(--ink); }
+.nav-item.active { background: var(--teal-soft); color: var(--teal-text); font-weight: 650; }
+.nav-item-label { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; flex: 1; }
+.nav-empty { padding: 7px 9px 7px 18px; }
+.nav-foot { padding: 12px; border-top: 1px solid var(--rule); }
+
+/* ---------------------------------------------------- question strip */
+
+.qstrip {
+  display: flex; align-items: center; gap: 12px; padding: 10px 20px;
+  border-bottom: 1px solid var(--rule); background: var(--paper-raised);
+  min-height: var(--strip-h); flex: none;
+}
+.qstrip.empty { color: var(--muted); }
+.qstrip-line { display: flex; flex-wrap: wrap; align-items: center; gap: 5px; flex: 1; }
+.qstrip-meta { display: flex; align-items: center; gap: 6px; }
+.qslot-wrap { display: inline-flex; align-items: center; gap: 5px; position: relative; }
+.qslot-prefix { color: var(--muted); font-size: 14px; }
+.qslot {
+  font-size: var(--t-section); border-radius: var(--r);
+}
+.qslot.text, .qslot.value {
+  border: 1px dashed var(--rule-strong); background: var(--paper-sunken); padding: 5px 10px;
+  min-width: 120px; max-width: 52ch; color: var(--ink);
+  /* Grow with the words. The `size` attribute is the fallback where this is unsupported. */
+  field-sizing: content;
+}
+.qslot.value { min-width: 76px; }
+.qslot.text.filled, .qslot.value.filled {
+  border-style: solid; border-color: var(--teal); background: var(--paper-raised);
+}
+.qslot.col { position: relative; }
+.qslot-btn {
+  border: 1px dashed var(--rule-strong); background: var(--paper-sunken); border-radius: var(--r);
+  padding: 5px 10px; font-size: var(--t-section); cursor: pointer; color: var(--muted);
+  display: inline-flex; align-items: center; gap: 5px;
+}
+.qslot.filled .qslot-btn {
+  border-style: solid; border-color: var(--teal); color: var(--teal-text);
+  background: var(--teal-soft); font-weight: 600;
+}
+.qslot.over .qslot-btn { border-color: var(--teal); background: var(--teal-soft); }
+.qslot-caret { font-size: 9px; opacity: 0.7; }
+.qslot-menu {
+  position: absolute; top: calc(100% + 4px); left: 0; z-index: 70; width: 270px;
+  padding: 6px; box-shadow: var(--shadow-2);
+}
+.qslot-filter { width: 100%; margin-bottom: 5px; }
+.qslot-options { max-height: 260px; }
+.qslot-option {
+  display: flex; align-items: center; gap: 7px; width: 100%; padding: 4px 6px;
+  border: none; background: transparent; cursor: pointer; border-radius: var(--r-sm);
+  text-align: left; font-size: 12.5px; color: var(--ink);
+}
+.qslot-option:hover { background: var(--paper-hover); }
+.qslot-option.on { background: var(--teal-soft); color: var(--teal-text); }
+
+.kind-icon { width: 9px; height: 9px; border-radius: 2px; flex: none; background: var(--faint); }
+.kind-icon.binary { background: var(--teal); border-radius: 50%; }
+.kind-icon.continuous { background: var(--dusk); }
+.kind-icon.categorical { background: var(--plum); border-radius: 2px; }
+.kind-icon.datetime { background: var(--moss); transform: rotate(45deg); }
+.kind-icon.id { background: var(--stone); border-radius: 50%; }
+.kind-icon.text { background: var(--clay); }
+
+/* --------------------------------------------------------- mini map */
+
+.minimap {
+  display: flex; gap: 6px; padding: 8px 20px; border-bottom: 1px solid var(--rule);
+  background: var(--paper-sunken); overflow-x: auto; flex: none;
+}
+.minimap-step {
+  display: inline-flex; align-items: center; gap: 7px; padding: 5px 11px; border-radius: 999px;
+  border: 1px solid transparent; background: transparent; cursor: pointer;
+  font-size: var(--t-small); color: var(--muted); white-space: nowrap;
+}
+.minimap-step:hover { background: var(--paper-hover); }
+.minimap-step.current { background: var(--paper-raised); border-color: var(--rule); color: var(--teal-text); font-weight: 650; box-shadow: var(--shadow-1); }
+.minimap-step.done { color: var(--moss-text); }
+.minimap-mark {
+  width: 18px; height: 18px; border-radius: 50%; display: grid; place-items: center;
+  font-size: 10px; background: var(--paper-hover); color: inherit;
+}
+.minimap-step.done .minimap-mark { background: var(--moss-soft); }
+.minimap-tick { font-size: 10px; color: var(--moss-text); margin-left: 1px; }
+.minimap-step.current .minimap-tick { color: var(--teal-text); }
+
+/* ----------------------------------------------------------- canvas */
+
+/* The canvas is a query container, so the screens inside it can react to the
+   room they have rather than to the size of the window. They are not the same
+   number: with both side panes open, a 1440px window gives the canvas 908px
+   and a 1024px window gives it under 600. Every width rule below that governs
+   content -- rather than the frame itself -- is written against this container,
+   which is why those rules now fire at all. Contained on the inline axis only,
+   and the track it sits in is `minmax(0, 1fr)`, so its width never depended on
+   its contents in the first place. */
+.canvas {
+  /* Always the middle track. The screens that hide both side panes -- the
+     catalogue, Settings, the engine screen -- leave the canvas as the only
+     child of the frame, and auto-placement then dropped it into the first
+     track, which is sized to its contents. A contained element reports no
+     intrinsic width, so the canvas measured zero and those three screens went
+     blank. Naming the track is the whole fix. */
+  grid-column: 2;
+  min-width: 0; overflow: hidden; background: var(--paper);
+  container: canvas / inline-size;
+}
+/* Basis 0, not auto. With `auto`, the body's natural height -- sixty thousand
+   pixels for a virtualised data sheet -- became its flex basis, and the column
+   shrank the strip and the step bar above it to make room, squashing the step
+   bar to a third of its height on the Data view. */
+.canvas-body { flex: 1 1 0; min-height: 0; }
+.canvas-pad { padding: 22px 26px; }
+.canvas-head { margin-bottom: 18px; }
+.canvas-head h2 { margin: 0 0 4px; font-size: var(--t-title); font-weight: 700; letter-spacing: -0.03em; line-height: 1.2; }
+.pad { padding: 16px; }
+
+.empty-state {
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  gap: 10px; height: 100%; text-align: center; padding: 40px;
+}
+.empty-state h2 { margin: 0; font-size: var(--t-title); letter-spacing: -0.025em; }
+.empty-art { color: var(--rule-strong); }
+
+/* ---------------------------------------------------------- welcome */
+
+.welcome { padding: 48px max(32px, calc((100% - 1160px) / 2)) 72px; }
+.welcome-head { max-width: 780px; margin-bottom: 38px; }
+.welcome-eyebrow { display: block; color: var(--teal-text); font-size: var(--t-small); font-weight: 700; letter-spacing: .06em; text-transform: uppercase; margin-bottom: 12px; }
+.welcome-head h1 { margin: 0; font-size: clamp(36px, 4vw, 52px); line-height: 1.08; letter-spacing: -0.055em; font-weight: 720; }
+.welcome-tag { margin: 6px 0 0; color: var(--teal-text); font-weight: 620; }
+.welcome-lede { margin: 16px 0 0; color: var(--ink-soft); font-size: var(--t-section); line-height: 1.62; max-width: 640px; }
+.welcome-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 300px), 1fr)); gap: 18px; }
+.welcome-card { min-width: 0; padding: 24px; }
+.welcome-card h2 { margin: 0 0 14px; font-size: var(--t-section); letter-spacing: -0.02em; }
+.welcome-card h3 { margin: 0 0 8px; font-size: 13px; }
+.welcome-sep { height: 1px; background: var(--rule); margin: 16px 0; }
+.recent-list { list-style: none; margin: 0; padding: 0; }
+.recent-item {
+  min-width: 0;
+  display: flex; flex-direction: column; gap: 2px; width: 100%; padding: 9px 10px;
+  border: none; background: transparent; border-radius: var(--r); cursor: pointer; text-align: left;
+}
+.recent-item:hover { background: var(--paper-hover); }
+.recent-name { font-weight: 600; font-size: 12.5px; }
+.recent-path { max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.welcome-examples { margin-top: 42px; }
+.welcome-examples h2 { font-size: var(--t-title); letter-spacing: -0.025em; margin: 0 0 6px; }
+.welcome-examples-head { align-items: flex-start; justify-content: space-between; gap: 16px; }
+.welcome-examples-head .hint { margin: 0; max-width: 680px; line-height: 1.45; }
+.example-tools {
+  display: flex; align-items: center; gap: 10px; margin-top: 16px; padding: 12px;
+  border: 1px solid var(--rule); border-radius: var(--r-lg); background: var(--paper-raised);
+}
+.example-tools input[type='search'] {
+  flex: 1 1 300px; min-width: 180px; padding: 5px 8px; border: 1px solid var(--rule-strong);
+  border-radius: var(--r); background: var(--paper-raised);
+}
+.example-tools input[type='search']:focus { border-color: var(--teal); outline: none; }
+.example-tools select { min-width: 130px; }
+.example-grid {
+  display: grid; grid-template-columns: repeat(auto-fill, minmax(238px, 1fr)); gap: 12px; margin-top: 12px;
+}
+/* The first thing a newcomer sees. Three doors, not a naming field. */
+.welcome-starters { margin: 4px 0 30px; }
+.welcome-starters-head { justify-content: space-between; align-items: baseline; gap: 12px; }
+.welcome-starters-head h2 { margin: 0; font-size: var(--t-title); letter-spacing: -0.01em; }
+.welcome-starters > .hint { margin: 8px 0 18px; max-width: 85ch; }
+.starter .hint { margin: 0; }
+.starter-row { display: grid; grid-template-columns: repeat(auto-fit, minmax(232px, 1fr)); gap: 16px; }
+.starter {
+  display: flex; flex-direction: column; gap: 9px; align-items: flex-start;
+  padding: 20px; text-align: left; cursor: pointer;
+  border: 1px solid var(--rule); background: var(--paper-raised);
+  transition: border-color .18s ease, box-shadow .18s ease, transform .18s ease;
+}
+.starter:hover { box-shadow: var(--shadow-2); transform: translateY(-2px); border-color: var(--teal); }
+.starter:focus-visible { outline: 2px solid var(--teal); outline-offset: 2px; }
+.starter-design {
+  font-size: var(--t-micro); text-transform: uppercase; letter-spacing: 0.08em;
+  font-weight: 650; color: var(--teal-text);
+}
+.starter-title { font-size: var(--t-section); font-weight: 680; line-height: var(--lh-tight); letter-spacing: -0.02em; }
+.starter-teaches { color: var(--muted); }
+.starter-go { margin-top: auto; padding-top: 6px; color: var(--teal-text); font-weight: 600; }
+
+.example-tile {
+  display: flex; flex-direction: column; gap: 7px; padding: 18px; text-align: left; cursor: pointer;
+  border: 1px solid var(--rule); min-height: 218px;
+  transition: border-color .18s ease, box-shadow .18s ease, transform .18s ease;
+}
+.example-tile:hover { border-color: var(--teal); box-shadow: var(--shadow-2); transform: translateY(-2px); }
+/* Study tiles are not one big button: downloading and opening are different acts. */
+.study-tile { cursor: default; }
+.study-tile:hover { transform: none; }
+.study-tile .example-meta:last-child { margin-top: auto; padding-top: 8px; }
+.study-tile .btn { font-size: 11px; }
+.study-tile .example-citation a { color: inherit; }
+
+.example-kicker { justify-content: space-between; align-items: flex-start; gap: 6px; margin-bottom: 2px; }
+.example-kicker .chip { font-size: 9.5px; padding: 1px 5px; }
+.example-design {
+  font-size: 10px; font-weight: 700; letter-spacing: 0.09em; text-transform: uppercase; color: var(--teal-text);
+}
+.example-title { font-weight: 680; font-size: var(--t-section); letter-spacing: -0.015em; }
+.example-blurb { margin: 0; font-size: var(--t-ui); color: var(--muted); line-height: 1.5; }
+.example-teaches { margin: 0; font-size: 11.5px; color: var(--ink-soft); font-style: italic; }
+.example-citation { margin: 4px 0 0; padding-top: 6px; border-top: 1px solid var(--rule); color: var(--faint); font-size: 10.5px; }
+.example-meta { margin-top: auto; gap: 6px; padding-top: 5px; }
+.example-open { color: var(--teal-text); font-weight: 600; }
+.example-empty { min-height: 180px; margin-top: 12px; border: 1px dashed var(--rule-strong); border-radius: var(--r-lg); }
+.welcome-foot { margin-top: 34px; }
+
+@container canvas (max-width: 700px) {
+  .welcome { padding: 28px 20px 50px; }
+  .welcome-examples-head, .example-tools { align-items: stretch; flex-direction: column; }
+  .example-tools input[type='search'] { flex-basis: auto; }
+  .canvas-pad, .board-left, .board-right { padding: 18px; }
+  .qstrip, .minimap { padding-inline: 14px; }
+  .hero { margin-inline: 18px; }
+  .dash-running { margin-inline: 18px; }
+  .tabs { padding-inline: 18px; }
+}
+@container canvas (max-width: 540px) {
+  .method-list, .diag-grid, .sample-flows, .zone-grid { grid-template-columns: minmax(0, 1fr); }
+}
+
+/* -------------------------------------------------------- data sheet */
+
+.datasheet { min-height: 0; }
+/* Both rails are draggable and so carry an inline width, and both were
+   `flex: none` -- unable to give a pixel back. Around a 566px canvas that left
+   the data itself 34px: a column and a half of a spreadsheet. The share is
+   capped as a percentage of the row the three panes share, so the table always
+   keeps at least 44% of it, and on a wide screen the caps sit above the
+   defaults and the dividers still drag freely. */
+.var-rail {
+  position: relative;
+  width: 236px; flex: none; max-width: 26%;
+  border-right: 1px solid var(--rule); background: var(--paper-sunken); min-height: 0;
+}
+.var-rail-head { display: flex; gap: 6px; padding: 9px; border-bottom: 1px solid var(--rule); }
+.var-rail-head input, .var-rail-head select { font-size: 11.5px; padding: 3px 5px; }
+.var-item {
+  display: flex; align-items: center; gap: 8px; width: calc(100% - 12px); margin: 2px 6px; padding: 6px 8px;
+  border: none; border-radius: var(--r); background: transparent; cursor: grab; text-align: left; font-size: var(--t-ui);
+  color: var(--ink-soft);
+}
+.var-item:hover { background: var(--paper-hover); }
+.var-item.active { background: var(--teal-soft); color: var(--teal-text); font-weight: 620; }
+.var-name { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.var-rail-foot { padding: 8px 12px; border-top: 1px solid var(--rule); }
+.var-detail {
+  position: relative;
+  width: 296px; flex: none; max-width: 30%;
+  border-left: 1px solid var(--rule); background: var(--paper-raised);
+}
+.var-title { margin: 0 0 8px; font-size: var(--t-section); font-weight: 680; display: flex; align-items: center; gap: 8px; }
+
+.sheet { min-height: 0; }
+.sheet-head { padding: 8px 14px; gap: 10px; border-bottom: 1px solid var(--rule); background: var(--paper-raised); }
+.sheet-viewport { background: var(--paper-raised); }
+/* The sheet's three panes stretch to the full height and scroll inside
+   themselves. `.row` centres its children, and a sheet whose virtual height is
+   sixty thousand pixels was centred too: it overflowed the window above and
+   below, covering the question strip, instead of scrolling in its own box. */
+.datasheet-body { display: flex; align-items: stretch; flex: 1 1 auto; min-height: 0; min-width: 0; }
+
+/* Fixed geometry. The virtual scroller assumes every row is exactly ROW_H and
+   the header exactly HEAD_H, so nothing in here may grow with its content. */
+.sheet-table { border-collapse: separate; border-spacing: 0; font-size: 12px; width: max-content; }
+.sheet-table th {
+  position: sticky; top: 0; height: 28px; box-sizing: border-box; background: var(--paper-sunken);
+  border-bottom: 1px solid var(--rule); z-index: 2; padding: 0; white-space: nowrap; text-align: left;
+}
+.sheet-corner { z-index: 3; }
+.sheet-col-wrap { display: inline-flex; align-items: center; height: 27px; padding: 0 4px 0 9px; gap: 2px; }
+.sheet-col {
+  display: inline-flex; align-items: center; gap: 5px; padding: 0 4px 0 0; border: none;
+  background: transparent; font: inherit; font-weight: 600; color: var(--muted); cursor: pointer; height: 100%;
+}
+.sheet-col:hover { color: var(--teal-text); }
+/* Sorting is its own small button beside the name. It used to be the header
+   cell's padding, which the name button filled entirely, so nothing sorted. */
+.sheet-sort {
+  border: none; background: transparent; color: var(--faint); cursor: pointer; font: inherit;
+  font-size: 11px; padding: 0 5px; height: 100%; border-radius: var(--r-sm); opacity: 0.55;
+}
+.sheet-sort:hover, .sheet-sort.on { opacity: 1; color: var(--teal-text); background: var(--teal-soft); }
+.sheet-table td {
+  height: 24px; box-sizing: border-box; padding: 0 9px; line-height: 22px;
+  border-bottom: 1px solid var(--rule); white-space: nowrap;
+  max-width: 260px; overflow: hidden; text-overflow: ellipsis;
+}
+.sheet-table tr.sheet-spacer td { border-bottom: none; padding: 0; height: auto; line-height: 0; }
+.sheet-table td.n { text-align: right; font-variant-numeric: tabular-nums; }
+.sheet-rownum {
+  color: var(--faint); text-align: right; font-size: 11px; background: var(--paper-sunken);
+  position: sticky; left: 0; z-index: 1;
+}
+
+.health-panel {
+  position: relative; flex: none;
+  border-top: 1px solid var(--rule); background: var(--paper-raised); max-height: 42%; min-height: 150px;
+}
+.health-head { padding: 8px 14px; gap: 8px; border-bottom: 1px solid var(--rule); }
+.health-body { padding: 14px; }
+.health-stats { gap: 10px; }
+.stat {
+  border: 1px solid var(--rule); border-radius: var(--r); padding: 10px 14px; min-width: 96px;
+  background: var(--paper-sunken);
+}
+.stat.warn { border-color: var(--ochre); background: var(--ochre-soft); }
+.stat.bad { border-color: var(--crimson); background: var(--crimson-soft); }
+.stat.ok { border-color: color-mix(in srgb, var(--moss) 40%, transparent); }
+.stat-value { font-size: 20px; font-weight: 700; letter-spacing: -0.025em; }
+.stat-label { font-size: 10.5px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.06em; }
+.health-reopen { margin: 6px 10px; align-self: flex-start; }
+
+/* ------------------------------------------------------ design cards */
+
+.design-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(268px, 1fr)); gap: 16px; }
+.design-card { display: flex; flex-direction: column; overflow: hidden; }
+.design-card.selected { border-color: var(--teal); box-shadow: 0 0 0 2px var(--teal-soft), var(--shadow-2); }
+.design-card-main {
+  display: flex; flex-direction: column; gap: 9px; padding: 20px; border: none; background: transparent;
+  cursor: pointer; text-align: left; flex: 1;
+}
+.design-card-main:hover { background: var(--paper-hover); }
+.design-schematic {
+  display: grid; place-items: center; height: 62px; color: var(--muted); margin-bottom: 2px;
+}
+.design-title { font-weight: 690; font-size: var(--t-section); letter-spacing: -0.02em; }
+.design-sentence { margin: 0; font-size: var(--t-ui); color: var(--muted); line-height: 1.5; }
+.design-hint { margin: 0; font-size: 11.5px; color: var(--teal-text); }
+.design-card-foot {
+  display: flex; align-items: center; gap: 8px; padding: 11px 18px; border-top: 1px solid var(--rule);
+  background: var(--paper-sunken);
+}
+.catalogue-row {
+  display: flex; align-items: center; gap: 12px; width: 100%; margin-top: 18px; padding: 16px 18px;
+  cursor: pointer; text-align: left; border: 1px dashed var(--rule-strong); border-radius: var(--r-lg); background: var(--paper-raised);
+}
+.catalogue-row:hover { border-color: var(--teal); }
+
+/* ----------------------------------------------------- design board */
+
+.board-split { position: relative; display: grid; grid-template-columns: minmax(0, 1.25fr) minmax(300px, 0.85fr); height: 100%; min-height: 0; }
+@media (max-width: 1100px) { .board-split { grid-template-columns: 1fr; } }
+.board-left { padding: 22px 26px; }
+.board-right { padding: 22px 24px; border-left: 1px solid var(--rule); background: var(--paper-sunken); }
+.board-caption { margin: 2px 0 0; font-size: 12.5px; color: var(--muted); max-width: 620px; }
+.board-notice { margin-bottom: 12px; }
+.board-figure {
+  display: grid; place-items: center; padding: 16px; margin-bottom: 18px; color: var(--muted);
+  background: var(--paper-raised); border-radius: var(--r-lg); border: 1px solid var(--rule);
+}
+.zone-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 14px; }
+.zone { position: relative; }
+.zone-head { gap: 6px; margin-bottom: 4px; }
+.zone-label { font-size: 12px; font-weight: 600; color: var(--ink-soft); }
+.zone-chips { min-height: 22px; }
+.zone-single { min-height: 22px; display: flex; align-items: center; }
+.zone-value { width: 100%; }
+.zone-help { margin: 5px 0 0; }
+.zone-picker {
+  position: absolute; top: 100%; left: 0; right: 0; z-index: 40; margin-top: 3px; padding: 5px;
+  box-shadow: var(--shadow-2);
+}
+.estimand-block { margin-top: 24px; }
+.estimand-list { display: flex; flex-direction: column; gap: 2px; margin-top: 6px; }
+.estimand-row {
+  display: flex; align-items: flex-start; gap: 10px; padding: 10px 12px; border-radius: var(--r);
+  cursor: pointer; border: 1px solid transparent;
+}
+.estimand-row:hover { background: var(--paper-hover); }
+.estimand-row.on { background: var(--teal-soft); border-color: color-mix(in srgb, var(--teal) 45%, transparent); }
+.estimand-row.off { opacity: 0.5; cursor: not-allowed; }
+.estimand-sentence { font-size: 12.5px; }
+.board-actions { margin-top: 24px; }
+
+.sketch { }
+.sketch-head { gap: 6px; margin-bottom: 6px; }
+.sketch-summary { margin: 0 0 10px; font-size: 12.5px; color: var(--ink-soft); line-height: 1.45; }
+.sketch-empty { padding: 18px; text-align: center; gap: 6px; justify-content: center; }
+.sketch-values { margin-top: 10px; }
+
+.artifact { margin: 0 0 14px; }
+.artifact-title { font-size: 11.5px; font-weight: 650; color: var(--muted); margin-bottom: 3px; }
+.artifact-caption { margin: 4px 0 0; font-size: 11.5px; color: var(--muted); line-height: 1.4; }
+.explain-chip { margin-top: 3px; }
+.vega-host { width: 100%; }
+.vega-host canvas { max-width: 100%; }
+
+/* ------------------------------------------------------- diagnose */
+
+.diagnose-split { position: relative; display: grid; grid-template-columns: minmax(0, 1.35fr) minmax(260px, 0.75fr); gap: 14px; }
+@media (max-width: 1100px) { .diagnose-split { grid-template-columns: 1fr; } }
+.assumption-preview { margin: 4px 0 0; padding-left: 18px; font-size: 12.5px; }
+.assumption-preview li { margin-bottom: 3px; }
+
+/* ------------------------------------------------------ method cards */
+
+.run-bar {
+  display: flex; align-items: center; gap: 12px; padding: 13px 16px; margin-bottom: 18px;
+  position: sticky; top: 0; z-index: 20;
+  background: color-mix(in srgb, var(--paper-raised) 94%, transparent);
+  backdrop-filter: blur(16px) saturate(150%); -webkit-backdrop-filter: blur(16px) saturate(150%);
+}
+.method-section { margin-bottom: 26px; }
+.method-list { display: grid; grid-template-columns: repeat(auto-fill, minmax(400px, 1fr)); gap: 16px; margin-top: 10px; }
+.method-card { padding: 19px 21px; display: flex; flex-direction: column; gap: 8px; }
+.method-card.included { border-color: var(--teal); box-shadow: 0 0 0 2px var(--teal-soft), var(--shadow-2); }
+.method-card.tone-unsuitable { opacity: 0.78; background: var(--paper-sunken); }
+.method-head { align-items: flex-start; gap: 10px; }
+.method-title { margin: 0; font-size: var(--t-section); font-weight: 690; letter-spacing: -0.02em; }
+.method-one-liner { margin: 3px 0 0; font-size: var(--t-ui); color: var(--muted); line-height: 1.5; }
+.method-engines { display: flex; gap: 5px; flex: none; }
+.engine-pill {
+  display: inline-flex; align-items: center; gap: 3px; font-size: 10.5px; padding: 1px 6px;
+  border-radius: 9px; background: var(--paper-sunken); color: var(--muted);
+}
+.method-why, .method-against, .method-risk { margin: 0; font-size: 12px; line-height: 1.42; display: flex; gap: 6px; }
+.method-why { color: var(--moss-text); }
+.method-against { color: var(--ochre-text); }
+.method-risk { color: var(--ink-soft); }
+.why-mark { font-weight: 700; flex: none; }
+.method-options { margin-top: 4px; }
+.option-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(190px, 1fr)); gap: 8px; margin-top: 8px; }
+.option-row { display: flex; gap: 7px; align-items: flex-start; font-size: 12px; }
+.method-foot { margin-top: auto; padding-top: 12px; gap: 10px; }
+
+/* ------------------------------------------------------- dashboard */
+
+/* Only the content area scrolls. The hero and the tab strip keep their size,
+   so a tall forest plot cannot push the rest of the app out of its row. */
+.dashboard { min-height: 0; overflow: hidden; }
+.dashboard > .hero,
+.dashboard > .tabs,
+.dashboard > .dash-running { flex: none; }
+.dashboard > .scroll { flex: 1 1 0; min-height: 0; }
+/* Compact on purpose: the same band sits above every tab, and at its old size
+   the table below it started under the fold of a 900px window. */
+.hero { position: relative; margin: 16px 26px 0; padding: 18px 22px; }
+.hero-question { font-size: var(--t-section); font-weight: 650; letter-spacing: -0.02em; line-height: 1.35; }
+.hero-estimand {
+  border: none; background: transparent; padding: 0; margin: 3px 0 8px; cursor: pointer;
+  color: var(--teal-text); font-size: 12.5px; text-align: left;
+}
+.hero-forest { margin: 2px 0 4px; }
+.hero-single { display: flex; align-items: baseline; gap: 12px; flex-wrap: wrap; }
+.hero-number { font-size: clamp(30px, 3.5vw, 38px); font-weight: 720; letter-spacing: -0.05em; line-height: 1.1; }
+.hero-ci { font-size: 13px; color: var(--muted); }
+.hero-spread { margin: 2px 0 6px; font-size: 12.5px; color: var(--ink-soft); line-height: 1.45; }
+.hero-actions { gap: 8px; margin-top: 6px; }
+.dash-running { margin: 10px 26px 0; align-items: center; }
+.interpret { padding: 18px 20px; margin-top: 14px; width: 100%; }
+.interpret-text { font-size: 13.5px; line-height: 1.62; margin: 6px 0; }
+
+.tabs { gap: 4px; padding: 12px 26px 0; border-bottom: 1px solid var(--rule); }
+.tabbtn {
+  border: none; background: transparent; padding: 8px 13px; border-radius: var(--r) var(--r) 0 0;
+  cursor: pointer; font-size: var(--t-ui); color: var(--muted); border-bottom: 2px solid transparent;
+}
+.tabbtn:hover { color: var(--ink); background: var(--paper-hover); }
+.tabbtn.on { color: var(--teal-text); border-bottom-color: var(--teal); font-weight: 680; background: var(--teal-soft); }
+
+.runpicker { position: relative; }
+/* Placed by useAnchoredMenu against the window, not the button: position, the
+   side it opens on and its height all arrive as inline style. */
+.runpicker-menu { z-index: 50; padding: 5px; box-shadow: var(--shadow-2); }
+.runpicker-row {
+  display: flex; align-items: center; gap: 7px; padding: 4px 6px; border-radius: var(--r-sm);
+  font-size: 12.5px; cursor: pointer;
+}
+.runpicker-row:hover { background: var(--paper-hover); }
+
+.row-failed td { color: var(--crimson-text); }
+.hatched td {
+  background: repeating-linear-gradient(45deg, transparent, transparent 5px,
+    color-mix(in srgb, var(--ochre) 12%, transparent) 5px, color-mix(in srgb, var(--ochre) 12%, transparent) 10px);
+}
+
+.diag-gallery section { margin-bottom: 18px; }
+.diag-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(330px, 1fr)); gap: 16px; margin-top: 10px; }
+.diag-card { padding: 17px 19px; display: flex; flex-direction: column; gap: 8px; }
+.diag-card.expanded { grid-column: 1 / -1; }
+.diag-card.status-weakens { border-color: var(--ochre); }
+.diag-head {
+  display: flex; align-items: center; gap: 8px; width: 100%; border: none; background: transparent;
+  cursor: pointer; padding: 0; text-align: left;
+}
+.diag-title { font-size: var(--t-ui); font-weight: 680; }
+.diag-status {
+  font-size: 10px; text-transform: uppercase; letter-spacing: 0.06em; font-weight: 700;
+  padding: 1px 6px; border-radius: 8px; background: var(--paper-sunken); color: var(--muted); flex: none;
+}
+.diag-status.weakens { background: var(--ochre-soft); color: var(--ochre-text); }
+.diag-status.supports { background: var(--moss-soft); color: var(--moss-text); }
+.diag-summary { margin: 0; font-size: 12px; color: var(--ink-soft); line-height: 1.45; }
+.diag-worry { margin: 4px 0 0; font-size: 11.5px; color: var(--muted); line-height: 1.42; }
+
+/* A wide table scrolls inside its own box; it never widens the page. */
+.table-scroll { overflow-x: auto; max-width: 100%; }
+.table-scroll > table.grid { min-width: 100%; }
+
+.ledger td { vertical-align: top; }
+.ledger-status {
+  font-size: 11px; padding: 1px 7px; border-radius: 9px; background: var(--paper-sunken); color: var(--muted);
+  white-space: nowrap;
+}
+.ledger-status.weakened { background: var(--ochre-soft); color: var(--ochre-text); }
+.ledger-status.supported { background: var(--moss-soft); color: var(--moss-text); }
+.ledger-status.untested { background: var(--paper-sunken); color: var(--faint); }
+.ledger-status.assumed { background: var(--dusk-soft); color: var(--dusk-text); }
+.ledger-status.not_applicable { background: transparent; color: var(--faint); border: 1px dashed var(--rule-strong); }
+
+/* The legend above the ledger: a beginner should be able to read a cell
+   without going looking for what the word means. */
+.ledger-intro { max-width: 74ch; margin-bottom: 14px; }
+.ledger-intro > p { margin: 0 0 6px; }
+.ledger-legend { margin: 12px 0 0; padding: 14px 16px; display: grid; gap: 8px;
+  background: var(--paper-sunken); border: 1px solid var(--rule); border-radius: var(--r); }
+.ledger-legend-row { display: grid; grid-template-columns: 132px 1fr; gap: 10px; align-items: baseline; }
+.ledger-legend-row dt { margin: 0; }
+.ledger-legend-row dd { margin: 0; color: var(--ink-soft); }
+@container canvas (max-width: 620px) {
+  .ledger-legend-row { grid-template-columns: 1fr; gap: 2px; }
+}
+
+.ledger-mini { list-style: none; margin: 4px 0 8px; padding: 0; }
+.ledger-mini li { display: flex; align-items: center; gap: 7px; padding: 2px 0; font-size: 12px; }
+
+/* One assumption, wherever it appears: a status pill and a name, both of which
+   open the explanation. The pill is a real button, so it takes focus and Enter. */
+.assumption-list { list-style: none; margin: 4px 0 8px; padding: 0; display: flex; flex-direction: column; gap: 8px; }
+.assumption-list.compact { gap: 4px; }
+.assumption-item { display: flex; align-items: flex-start; gap: 8px; }
+.assumption-item > .ledger-status { flex: none; margin-top: 1px; min-width: 96px; justify-content: center; display: inline-flex; }
+.assumption-body { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.assumption-name {
+  border: none; background: transparent; padding: 0; font: inherit; font-size: 12.5px; color: var(--ink);
+  text-align: left; cursor: pointer; line-height: 1.35;
+  text-decoration: underline; text-decoration-style: dotted; text-decoration-color: var(--rule-strong);
+  text-underline-offset: 3px;
+}
+.assumption-name:hover { color: var(--teal-text); text-decoration-color: var(--teal); }
+.assumption-short { margin: 0; font-size: 11.5px; color: var(--muted); line-height: 1.4; max-width: 58ch; }
+.assumption-note { margin: 0; font-size: 11.5px; color: var(--ink-soft); line-height: 1.4; max-width: 58ch; }
+.ledger-status.clickable { cursor: pointer; font: inherit; font-size: 11px; border: 1px solid transparent; line-height: 1.4; }
+.ledger-status.clickable:hover { border-color: currentColor; }
+.ledger-status.clickable:focus-visible { outline: 2px solid var(--teal); outline-offset: 1px; }
+
+.sample-flows { display: grid; grid-template-columns: repeat(auto-fill, minmax(340px, 1fr)); gap: 12px; }
+.consort { list-style: none; margin: 8px 0; padding: 0; }
+.consort li {
+  display: flex; align-items: flex-start; gap: 10px; padding: 7px 0; border-bottom: 1px solid var(--rule);
+}
+.consort li.dropped { background: color-mix(in srgb, var(--ochre) 7%, transparent); }
+.consort-n { font-size: 15px; font-weight: 650; min-width: 62px; }
+.consort-step { font-size: 12.5px; font-weight: 600; }
+.consort-drop { color: var(--ochre-text); font-weight: 650; font-size: 12.5px; }
+
+.probe-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 14px; }
+.probe-card { padding: 16px 18px; display: flex; flex-direction: column; gap: 7px; }
+.probe-title { font-weight: 620; font-size: 12.5px; }
+.probe-verdict { margin: 4px 0; font-size: 12.5px; color: var(--ink-soft); line-height: 1.45; }
+
+.code-block {
+  background: var(--paper-sunken); border: 1px solid var(--rule); border-radius: var(--r);
+  padding: 11px 13px; margin: 8px 0; white-space: pre; overflow: auto; max-height: 60vh;
+}
+.classic-block {
+  background: var(--paper-sunken); border: 1px solid var(--rule); border-radius: var(--r);
+  padding: 10px 12px; margin: 6px 0; white-space: pre-wrap; overflow: auto; max-height: 420px;
+  font-size: 11.5px; line-height: 1.5;
+}
+.classic-block.error { border-color: var(--crimson); }
+.provenance { margin-top: 10px; }
+.event-log { list-style: none; margin: 6px 0; padding: 0; font-size: 12px; }
+.event-log li { display: flex; gap: 10px; padding: 2px 0; border-bottom: 1px solid var(--rule); }
+
+/* --------------------------------------------------------- compare */
+
+.compare-summary { margin: 3px 0 0; font-size: 12.5px; color: var(--ink-soft); max-width: 760px; line-height: 1.5; }
+
+/* --------------------------------------------------------- engines */
+
+.engine-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 18px; }
+.stack-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 14px; margin-top: 12px; }
+.stack-card { display: flex; flex-direction: column; gap: 5px; }
+.install-plan { max-width: 560px; width: 100%; }
+
+/* ------------------------------------------------------------- sim */
+
+.sim-split { position: relative; display: grid; grid-template-columns: minmax(300px, 0.8fr) minmax(0, 1.2fr); gap: 14px; }
+@media (max-width: 1100px) { .sim-split { grid-template-columns: 1fr; } }
+
+/* ---------------------------------------------------------- report */
+
+/* Bound both panes to the available canvas height. A long outline used to
+   stretch the export card far below the window and scroll the preview away. */
+.report-view { display: flex; flex-direction: column; flex: 1 1 0; min-height: 0; overflow: auto; }
+.report-view > .canvas-head, .report-picker { flex: none; }
+.report-view > .canvas-head { flex-wrap: wrap; }
+.report-split {
+  position: relative; display: grid; flex: 1 1 0; min-height: 320px;
+  grid-template-columns: minmax(240px, 0.8fr) minmax(0, 1.2fr);
+  grid-template-rows: minmax(0, 1fr); gap: 14px;
+}
+.report-outline-pane, .report-export { min-width: 0; min-height: 0; overflow: auto; }
+.report-export > * { flex-shrink: 0; }
+.report-export > .report-preview {
+  flex: 1 1 160px; min-height: 160px; max-height: none;
+  white-space: pre-wrap; overflow-wrap: anywhere; overflow: auto;
+}
+@media (max-width: 1100px) {
+  .report-split { flex: none; grid-template-columns: 1fr; grid-template-rows: minmax(120px, 180px) minmax(360px, 60vh); }
+}
+.report-outline { margin: 6px 0; padding-left: 20px; font-size: 12.5px; }
+.report-outline li { display: flex; align-items: center; gap: 8px; padding: 3px 0; }
+.report-outline li.stale { color: var(--ochre-text); }
+.report-kind {
+  font-size: 10px; text-transform: uppercase; letter-spacing: 0.06em; color: var(--faint);
+  min-width: 100px;
+}
+
+/* ------------------------------------------------------------- dag */
+
+/* The side panel took a fixed 320px whatever the window was, which on a
+   laptop left the graph itself the smaller half. It can give ground now:
+   the graph is the thing being read. */
+.dag-split { position: relative; display: grid; grid-template-columns: minmax(0, 1fr) minmax(240px, 0.35fr); height: 100%; min-height: 0; }
+@media (max-width: 1100px) { .dag-split { grid-template-columns: 1fr; } }
+.dag-canvas-wrap { padding: 18px 20px; min-height: 0; }
+.dag-toolbar { gap: 6px; margin-bottom: 8px; }
+.dag-canvas { position: relative; flex: 1; min-height: 0; overflow: hidden; }
+.dag-svg { width: 100%; height: 100%; display: block; }
+/* The graph takes keyboard focus now that it can be panned and zoomed
+   from the keyboard, so it needs to show that it has it. */
+.dag-svg:focus-visible { outline: 2px solid var(--teal); outline-offset: -2px; }
+.dag-node { cursor: grab; }
+.dag-node.selected ellipse { filter: drop-shadow(0 0 3px var(--teal)); }
+.dag-node.bad ellipse { fill: var(--crimson-soft); }
+.dag-edge { cursor: pointer; }
+.dag-edge:hover line { stroke: var(--crimson); }
+.dag-caption {
+  position: absolute; bottom: 8px; left: 12px; margin: 0; font-size: 11.5px; color: var(--muted);
+  font-style: italic;
+}
+.dag-side { padding: 18px 20px; border-left: 1px solid var(--rule); background: var(--paper-sunken); }
+.dag-side section { margin-bottom: 12px; }
+.adjust-sets { list-style: none; margin: 6px 0; padding: 0; }
+.adjust-sets li {
+  display: flex; align-items: center; gap: 8px; padding: 5px 0; border-bottom: 1px solid var(--rule);
+  font-size: 12px;
+}
+
+/* ------------------------------------------------------- inspector */
+
+.inspector {
+  position: relative;
+  width: var(--insp-w); flex: none; border-left: 1px solid var(--rule);
+  background: color-mix(in srgb, var(--paper-raised) 94%, transparent); min-height: 0;
+}
+.inspector-head {
+  display: flex; align-items: center; justify-content: space-between; padding: 11px 14px;
+  border-bottom: 1px solid var(--rule);
+}
+.inspector-tab {
+  writing-mode: vertical-rl; border: none; border-left: 1px solid var(--rule);
+  background: var(--paper-sunken); cursor: pointer; padding: 12px 5px; font-size: 11px;
+  color: var(--muted); letter-spacing: 0.06em;
+}
+.kv { display: grid; grid-template-columns: auto 1fr; gap: 5px 12px; margin: 8px 0 14px; font-size: var(--t-small); }
+.kv dt { color: var(--muted); }
+.kv dd { margin: 0; overflow-wrap: anywhere; }
+.linky {
+  border: none; background: transparent; padding: 0; color: var(--teal-text); cursor: pointer;
+  font: inherit; text-align: left; text-decoration: underline; text-decoration-style: dotted;
+  text-underline-offset: 2px;
+}
+.warn { color: var(--ochre-text); }
+.next-steps { list-style: none; margin: 4px 0; padding: 0; }
+.next-step {
+  display: flex; align-items: center; gap: 9px; width: 100%; padding: 7px 8px; border: none;
+  background: transparent; cursor: pointer; text-align: left; font-size: var(--t-ui); color: var(--ink-soft);
+  border-radius: var(--r);
+}
+.next-step:hover { background: var(--paper-hover); }
+.next-step.done { color: var(--moss-text); }
+.next-mark { width: 12px; text-align: center; }
+.explain-title { margin: 14px 0 6px; font-size: var(--t-section); font-weight: 700; letter-spacing: -0.02em; }
+.explain-short { margin: 0 0 8px; font-size: 13px; color: var(--ink); line-height: 1.5; }
+.explain-detail { margin: 0 0 8px; font-size: 12.5px; color: var(--ink-soft); line-height: 1.55; }
+.explain-list { margin: 4px 0; padding-left: 18px; font-size: 12px; }
+
+/* ------------------------------------------------------- job bar */
+
+.jobbar {
+  position: relative;
+  display: flex; flex-direction: column; gap: 8px; padding: 10px 18px;
+  min-height: 0;
+  border-top: 1px solid color-mix(in srgb, var(--teal) 30%, transparent);
+  background: var(--teal-soft);
+  max-height: 40vh;
+}
+/* A column flex stretches its children, so the "Results" button spanned the
+   whole width with its label marooned in the middle. Everything that is not
+   the list now lives in a row of its own. */
+.jobbar-head { display: flex; align-items: center; gap: 8px; font-size: 12.5px; }
+.jobbar-title { font-weight: 620; }
+.jobbar-list {
+  list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 3px;
+  overflow-y: auto; min-height: 0;
+}
+.jobbar-item {
+  display: grid;
+  grid-template-columns: minmax(140px, 1fr) minmax(0, 1.1fr) 130px 34px auto;
+  align-items: center; gap: 10px; font-size: 12px;
+}
+.jobbar-name { font-weight: 550; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.jobbar-msg { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.jobbar-pct { text-align: right; color: var(--muted); }
+/* The track was --paper-raised on --teal-soft: #232120 on #123033 in the dark
+   theme, which is all but invisible. Tint it from the accent instead, so it
+   holds in both. */
+.jobbar-track {
+  display: block; width: 100%; height: 5px; border-radius: 3px; overflow: hidden;
+  background: color-mix(in srgb, var(--teal) 22%, transparent);
+}
+.jobbar-fill {
+  display: block; height: 100%; background: var(--teal); border-radius: 3px;
+  transition: width 200ms ease;
+}
+/* Before the engine reports anything there is no fraction to draw, and a bar
+   pinned at zero looks stuck. */
+.jobbar-fill.waiting { width: 35%; animation: jobbar-sweep 1.15s ease-in-out infinite; }
+@keyframes jobbar-sweep {
+  0% { transform: translateX(-100%); }
+  100% { transform: translateX(285%); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .jobbar-fill.waiting { animation: none; width: 100%; opacity: 0.35; }
+}
+@media (max-width: 1000px) {
+  .jobbar-item { grid-template-columns: minmax(120px, 1fr) 90px auto; }
+  .jobbar-msg, .jobbar-pct { display: none; }
+}
+
+.estimating-list {
+  list-style: none; margin: 10px 0 0; padding: 0; width: min(600px, 100%);
+  display: flex; flex-direction: column; gap: 6px; text-align: left;
+}
+.estimating-item {
+  display: flex; align-items: center; gap: 10px; padding: 8px 12px; font-size: 12.5px;
+  border: 1px solid var(--rule); border-radius: var(--r); background: var(--paper-raised);
+}
+.estimating-item .jobbar-track { flex: none; width: 130px; }
+.empty-state h2 .spinner { display: inline-block; vertical-align: middle; width: 14px; height: 14px; }
+
+/* ----------------------------------------------------- status bar */
+
+.statusbar {
+  gap: 10px; padding: 0 16px; font-size: var(--t-small); color: var(--muted);
+  background: var(--paper-raised); border-top: 1px solid var(--rule);
+  height: var(--status-h); min-height: var(--status-h); overflow: hidden;
+  white-space: nowrap;
+}
+/* On a narrow window the left-hand facts run out of room before the busy
+   indicators on the right, which are the ones you need while waiting. */
+.statusbar > span:not(.spacer) { overflow: hidden; text-overflow: ellipsis; }
+.status-sep { color: var(--rule-strong); }
+.status-provisional { color: var(--ochre-text); font-weight: 600; }
+button.status-provisional {
+  border: none; background: transparent; padding: 0; font: inherit; font-weight: 600;
+  color: var(--ochre-text); cursor: pointer;
+  text-decoration: underline; text-decoration-style: dotted; text-underline-offset: 2px;
+}
+button.status-provisional:hover { color: var(--ink); }
+
+/* ------------------------------------------------------ provisional */
+
+.provisional-notice { margin-top: 8px; align-items: stretch; }
+.provisional-action {
+  gap: 10px; align-items: center; padding: 8px 10px; border-radius: var(--r);
+  background: color-mix(in srgb, var(--paper-raised) 70%, transparent);
+  border: 1px solid color-mix(in srgb, var(--ochre) 30%, transparent);
+}
+.provisional-action .btn { flex: none; }
+.provisional-also { font-weight: 600; }
+.provisional-review-cta { margin-top: 2px; }
+.provisional-review-cta.compact .btn { font-size: 11.5px; padding: 3px 9px; }
+.provisional-reviewed { gap: 7px; flex-wrap: wrap; }
+
+@container canvas (max-width: 560px) {
+  .provisional-action { flex-direction: column; align-items: stretch; }
+}
+
+/* --------------------------------------------------------- toasts */
+
+/* Above the status bar, and above the job bar when there is one -- its height
+   is published by the JobBar as --jobbar-h. Toasts used to land on top of it. */
+.toasts {
+  position: fixed; right: 16px; z-index: 200; display: flex; flex-direction: column;
+  bottom: calc(var(--status-h) + var(--jobbar-h, 0px) + 14px);
+  gap: 8px; max-width: 400px;
+}
+.toast {
+  display: flex; gap: 12px; align-items: flex-start; padding: 14px 16px; border-radius: var(--r-lg);
+  background: var(--paper-raised); border: 1px solid var(--rule); box-shadow: var(--shadow-pop);
+  font-size: var(--t-ui);
+}
+.toast.success { border-left: 3px solid var(--moss); }
+.toast.warning { border-left: 3px solid var(--ochre); }
+.toast.error { border-left: 3px solid var(--crimson); }
+.toast.info { border-left: 3px solid var(--teal); }
+
+/* -------------------------------------------------------- palette */
+
+.palette-scrim {
+  position: fixed; inset: 0; z-index: 300;
+  /* The one colour in here that was not a token, and it was a daylight grey:
+     at night it barely darkened the page it was meant to push back. */
+  background: light-dark(rgba(20, 30, 42, 0.38), rgba(0, 0, 0, 0.68));
+  display: grid; place-items: start center; padding-top: 12vh; backdrop-filter: blur(5px);
+}
+.palette { width: min(640px, 92vw); box-shadow: var(--shadow-pop); overflow: hidden; border-radius: var(--r-lg); }
+.palette-input {
+  width: 100%; border: none; border-bottom: 1px solid var(--rule); padding: 17px 20px;
+  font-size: var(--t-section); background: transparent; border-radius: 0;
+}
+.palette-input:focus { outline: none; border-color: var(--teal); }
+/* Windows display scaling shrinks the window in CSS pixels: a 1366x768 laptop
+   at 150% is 512 CSS px tall, and a list with a fixed 400px ceiling, plus the
+   search box and the 12vh drop above it, did not fit inside that. */
+.palette-list { max-height: min(400px, 45vh); }
+.palette-item {
+  display: flex; gap: 12px; align-items: flex-start; width: 100%; padding: 10px 20px; border: none;
+  background: transparent; cursor: pointer; text-align: left;
+}
+.palette-item.on { background: var(--teal-soft); }
+.palette-group {
+  font-size: 10px; text-transform: uppercase; letter-spacing: 0.07em; color: var(--faint);
+  min-width: 62px; padding-top: 2px;
+}
+.palette-title { display: block; font-size: var(--t-ui); font-weight: 600; }
+.palette-sub { display: block; font-size: 11.5px; color: var(--muted); }
+
+.engine-choice {
+  gap: 7px; flex-wrap: wrap; margin-top: 6px; padding: 7px 9px;
+  background: var(--teal-soft); border-radius: var(--r); font-size: 12px;
+}
+.engine-choice label { font-weight: 600; }
+.engine-choice .hint { flex-basis: 100%; }
+
+/* ---------------------------------------------------------- crash */
+
+.crash { display: grid; place-items: center; height: 100%; padding: 24px; background: var(--paper-sunken); }
+.crash-card { max-width: 660px; padding: 32px 36px; }
+.crash-card h1 { margin: 0 0 10px; font-size: var(--t-title); letter-spacing: -0.01em; }
+.crash-card p { margin: 0 0 10px; max-width: 62ch; }
+.crash-card code { font-family: var(--font-mono); font-size: 0.94em; }
+.crash-detail {
+  margin: 10px 0 0; padding: 10px 12px; border-radius: var(--r);
+  background: var(--paper-sunken); border: 1px solid var(--rule);
+  font-family: var(--font-mono); font-size: var(--t-small); line-height: 1.5;
+  white-space: pre-wrap; word-break: break-word; max-height: 220px; overflow: auto;
+}
+.crash-card details { margin-top: 10px; }
+.crash-card summary { cursor: pointer; font-size: var(--t-ui); color: var(--ink-soft); }
+
+
+/* ------------------------------------------------------- resize handles */
+
+/* A wide invisible strip to grab, with a hairline that appears only when it is
+   wanted. Dividers should be findable without being furniture. */
+.resizer {
+  position: absolute;
+  z-index: 30;
+  background: transparent;
+  touch-action: none;
+}
+.resizer::after {
+  content: '';
+  position: absolute;
+  background: var(--teal);
+  opacity: 0;
+  transition: opacity 110ms ease;
+}
+.resizer-x::after { top: 0; bottom: 0; left: 50%; width: 2px; transform: translateX(-50%); }
+.resizer-y::after { left: 0; right: 0; top: 50%; height: 2px; transform: translateY(-50%); }
+.resizer:hover::after, .resizer.dragging::after { opacity: 0.85; }
+.resizer:focus-visible { outline: none; }
+.resizer:focus-visible::after { opacity: 1; }
+/* A dragged divider keeps its line while the pointer roams. */
+.resizer.dragging { z-index: 40; }
+
+@media (prefers-reduced-motion: reduce) {
+  .resizer::after { transition: none; }
+}
+
+/* A hero band given an explicit height scrolls rather than spilling. */
+.hero[style*='height'] { overflow: auto; }
+
+/* Keep the reading surfaces usable when the desktop window is narrow or zoomed. */
+@media (max-width: 760px) {
+  .menubar .engine-badges, .menubar .profile-picker { display: none; }
+  .menubar { gap: 0; padding-inline: 4px; }
+  .menu-btn { padding-inline: 5px; }
+  .histnav { margin-right: 2px; }
+  .workspace-bar { flex-wrap: wrap; gap: 4px; }
+  .workspace-save { font-size: 11px; }
+  .welcome-starters-head { flex-wrap: wrap; }
+  .welcome { padding: 24px 18px 40px; }
+}
+/* Press feedback is immediate, while hover motion stays small and reversible. */
+.menu-btn:active, .histnav-btn:active:not(:disabled), .nav-item:active,
+.minimap-step:active, .tabbtn:active, .next-step:active,
+.starter:active, .example-tile:not(.study-tile):active {
+  transform: scale(0.975);
+  transition: transform 80ms ease-out;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .spinner { animation: none; }
+  .starter:hover, .example-tile:hover,
+  .menu-btn:active, .histnav-btn:active:not(:disabled), .nav-item:active,
+  .minimap-step:active, .tabbtn:active, .next-step:active,
+  .starter:active, .example-tile:not(.study-tile):active { transform: none; }
+  .starter, .example-tile, .jobbar-fill, .resizer::after { transition-duration: 0.01ms; }
+}
+@media (prefers-reduced-transparency: reduce) {
+  .menubar, .run-bar, .nav, .inspector { background: var(--paper-raised); backdrop-filter: none; -webkit-backdrop-filter: none; }
+  .palette-scrim { backdrop-filter: none; }
+}
+@media (prefers-contrast: more) {
+  .menubar, .run-bar, .nav, .inspector { background: var(--paper-raised); backdrop-filter: none; -webkit-backdrop-filter: none; }
+  .nav-item.active, .minimap-step.current, .tabbtn.on { outline: 1px solid var(--teal); outline-offset: -1px; }
+  .starter, .example-tile, .design-card, .method-card { border-color: var(--rule-strong); }
+}

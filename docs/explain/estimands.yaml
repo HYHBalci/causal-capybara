@@ -1,0 +1,218 @@
+# Estimands, one click deeper than the sentence on the radio button.
+#
+# The point of these entries is to answer "which number do I actually want?"
+# before anyone chooses an estimator.
+
+schema: capy.explain
+version: 1
+
+entries:
+  estimand.ate:
+    title: Average treatment effect (ATE)
+    short: >-
+      If everyone in the population had been treated, compared with nobody being
+      treated, how would the average outcome differ?
+    detail: >-
+      The most natural quantity and often the hardest to identify. It requires
+      the comparison to be credible for every kind of unit, including those who
+      would never realistically be treated, so it leans hardest on overlap.
+      Where the treated and untreated groups barely resemble each other, the ATE
+      is estimated partly by extrapolation, and an effect on the overlap
+      population may be the more honest target.
+    math: "E[Y(1) - Y(0)]"
+    common_mistake: >-
+      Reporting an ATE from a design that only identifies a local effect -- an
+      instrument, or a cutoff -- where the answer is about a specific subgroup.
+    see_also: [estimand.att, estimand.ato, assumption.positivity]
+
+  estimand.att:
+    title: Average treatment effect on the treated (ATT)
+    short: >-
+      Among the units that actually got the programme, how much did it change
+      their outcome compared with what would have happened without it?
+    detail: >-
+      Usually the policy-relevant number for an existing programme: it describes
+      the people the programme actually reached. It also asks less of the data
+      than the ATE, because you only need comparison units that resemble the
+      treated, not the other way round.
+      It is the default for matching and for difference-in-differences, and it is
+      what the sample flow is quietly protecting: if matching drops a fifth of
+      the treated units, the ATT is now for the four fifths that remained, and
+      that is a different population.
+    math: "E[Y(1) - Y(0) | D = 1]"
+    common_mistake: >-
+      Reading the ATT as what the programme would do if it were expanded. The
+      people it did not reach may be quite different.
+    see_also: [estimand.ate, estimand.atc, concept.consort]
+
+  estimand.atc:
+    title: Average treatment effect on the controls (ATC)
+    short: >-
+      For the units that did not get the programme, what would it have done to
+      them?
+    detail: >-
+      This is the expansion question: if you extended an existing programme to
+      the people currently outside it, what could you expect? It requires the
+      comparison to be credible in the opposite direction -- treated units that
+      resemble the untreated -- which is often the thinner side of the overlap.
+    math: "E[Y(1) - Y(0) | D = 0]"
+    common_mistake: >-
+      Estimating it when there is no treated unit resembling most of the
+      untreated group. The number then comes from the outcome model, not the data.
+    see_also: [estimand.att, assumption.positivity]
+
+  estimand.ato:
+    title: Overlap-weighted effect (ATO)
+    short: >-
+      The effect for the units where treated and untreated genuinely overlap,
+      weighted so that the comparison is as stable as it can be.
+    detail: >-
+      Overlap weights put most weight where the probability of treatment is near
+      a half -- the units for whom the comparison is best supported -- and almost
+      none where treatment was nearly certain either way. The result has the
+      smallest variance among weighted estimators and never has an exploding
+      weight.
+      The price is that the population is defined by the data rather than by
+      policy. It is an excellent stability check and an awkward headline: "the
+      effect among the people where comparison was possible" is honest, but it is
+      not a group a minister can point at.
+    math: "weights: (1 - e) for treated, e for untreated"
+    common_mistake: >-
+      Presenting it as the ATE because it looked better behaved.
+    references: ["Li, Morgan & Zaslavsky (2018), Balancing covariates via propensity score weighting"]
+    see_also: [assumption.positivity, diagnostic.ess, estimand.ate]
+
+  estimand.late:
+    title: Local average treatment effect (LATE)
+    short: >-
+      The effect for the units whose treatment status was actually changed by the
+      instrument, or who sit at the cutoff. Not for everyone.
+    detail: >-
+      In an instrumental-variables design the compliers are the people the
+      instrument moved -- and you cannot identify who they are, only their
+      average effect. In a regression discontinuity the analogous group is units
+      at the threshold.
+      Different instruments move different people and therefore identify
+      different numbers. Two studies with different instruments can both be right
+      and still disagree, which is a feature of the estimand rather than a
+      contradiction.
+    math: "E[Y(1) - Y(0) | complier]"
+    common_mistake: >-
+      Describing a LATE as the effect of the programme. It is the effect for a
+      subgroup defined by an instrument you chose.
+    references: ["Imbens & Angrist (1994)", "Mogstad & Torgovitsky (2018)"]
+    see_also: [assumption.monotonicity, assumption.exclusion, design.iv, design.rd]
+
+  estimand.cace:
+    title: Complier average causal effect (CACE)
+    short: >-
+      In a randomised encouragement design, the effect among the people who took
+      the treatment because they were offered it.
+    detail: >-
+      The LATE by another name, in the setting where the instrument is random
+      assignment. It scales the intention-to-treat effect by the share of people
+      whose behaviour the offer changed.
+      Both numbers are correct and they answer different questions. If the policy
+      you are evaluating can only make an offer, the ITT is the effect of the
+      policy. The CACE is the effect of the treatment on the people who accept
+      it, which is what a clinician wants to know.
+    math: "ITT_Y / ITT_D"
+    common_mistake: >-
+      Reporting the CACE as what a rollout would achieve. Rollout achieves the
+      ITT unless take-up changes.
+    see_also: [estimand.itt, assumption.monotonicity, method.rct.cace]
+
+  estimand.latet:
+    title: Local effect on the treated (LATET)
+    short: >-
+      The complier effect restricted to those who actually took the treatment.
+    detail: >-
+      Relevant when the instrument encourages rather than assigns, and you want
+      the effect among treated compliers rather than all compliers. It coincides
+      with the LATE under one-sided noncompliance, where nobody takes the
+      treatment without the encouragement.
+    see_also: [estimand.late, estimand.cace]
+
+  estimand.itt:
+    title: Intention to treat (ITT)
+    short: >-
+      The effect of being offered the programme, whether or not people took it
+      up. Usually the number a policy can deliver.
+    detail: >-
+      It preserves the randomisation exactly, so it is the estimate that needs no
+      extra assumptions. It is also diluted by noncompliance: an effective
+      treatment with 30% take-up shows a small ITT, and that small number is the
+      correct description of the policy as implemented.
+      Reporting both the ITT and the complier effect, and saying which question
+      each answers, is almost always better than choosing one.
+    math: "E[Y | Z = 1] - E[Y | Z = 0]"
+    common_mistake: >-
+      Concluding a treatment does not work from a diluted ITT, when the problem
+      was take-up.
+    see_also: [estimand.cace, design.rct, assumption.randomisation]
+
+  estimand.cohort_att:
+    title: Group-time effect, ATT(g,t)
+    short: >-
+      One effect for each adopting cohort in each period, before any averaging.
+    detail: >-
+      The building block of modern difference-in-differences. Instead of one
+      coefficient, you get a matrix: what the 2014 adopters experienced in 2015,
+      in 2016, and so on. Everything else -- an overall effect, an event study, a
+      per-cohort summary -- is an explicit average of these with weights you can
+      see.
+      That explicitness is the point. Two-way fixed effects also produces a
+      weighted average, but with weights nobody chose and which can be negative.
+    math: "ATT(g,t) = E[Y_t(g) - Y_t(0) | G = g]"
+    references: ["Callaway & Sant'Anna (2021)"]
+    see_also: [design.did, method.did.callaway_santanna, diagnostic.event_study]
+
+  estimand.cate:
+    title: Conditional average treatment effect (CATE)
+    short: >-
+      The effect as a function of characteristics: who benefits, and by how much.
+    detail: >-
+      The most useful and most abused quantity in the catalogue. A flexible model
+      will always produce varying predictions, including from noise, so the
+      question is never "is there heterogeneity" but "is this ranking real".
+      Two checks make it credible. Calibration asks whether the units predicted to
+      benefit most actually did. The rank-weighted effect asks whether treating in
+      the model's recommended order beats treating at random, and gives a
+      standard error for the answer.
+      Honest splitting -- choosing where the subgroups are on different rows from
+      the ones that estimate their effects -- is what stops the estimate being
+      optimistic by construction.
+    common_mistake: >-
+      Presenting a CATE histogram as evidence of heterogeneity. Its spread is
+      partly the model's own noise.
+    references: ["Athey & Imbens (2016)", "Chernozhukov et al. (2018), Generic machine learning inference"]
+    see_also: [diagnostic.cate_calibration, diagnostic.rate, concept.honest_splitting]
+
+  estimand.gate:
+    title: Group average treatment effect (GATE)
+    short: >-
+      The effect within groups you named before you looked.
+    detail: >-
+      Pre-specification is what separates a group effect from a fishing
+      expedition. With a handful of groups defined in advance -- by age band, by
+      region, by baseline severity -- the estimates are interpretable and the
+      multiplicity correction is manageable.
+      Groups discovered in the data are a different object, and belong to the
+      CATE machinery with its calibration checks, not to a table of subgroup
+      p-values.
+    see_also: [estimand.cate, concept.multiplicity]
+
+  estimand.dose_response:
+    title: Dose-response
+    short: >-
+      How the outcome changes as the level of a continuous treatment changes.
+    detail: >-
+      A single linear coefficient assumes the tenth unit of a dose does what the
+      first did, which is rarely true: effects saturate, and sometimes reverse.
+      A dose-response curve estimates the whole function, with the positivity
+      requirement now applying at every dose level -- and it usually fails at the
+      extremes, where few units received that much.
+    common_mistake: >-
+      Reading a linear coefficient on a continuous treatment as the effect of
+      doubling the dose.
+    see_also: [assumption.positivity, assumption.consistency]

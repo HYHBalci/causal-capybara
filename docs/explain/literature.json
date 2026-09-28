@@ -1,0 +1,1278 @@
+[
+  {
+    "id": "hernan2020",
+    "match": [
+      "hernan",
+      "robins",
+      "2020"
+    ],
+    "citation": "Hernán, M. A., & Robins, J. M. (2020). Causal Inference: What If. Chapman & Hall/CRC.",
+    "url": "https://miguelhernan.org/whatifbook",
+    "topic": "Foundations"
+  },
+  {
+    "id": "rosenbaum1983",
+    "match": [
+      "rosenbaum",
+      "rubin",
+      "1983"
+    ],
+    "citation": "Rosenbaum, P. R., & Rubin, D. B. (1983). The central role of the propensity score in observational studies for causal effects. Biometrika, 70(1), 41–55.",
+    "url": "https://doi.org/10.1093/biomet/70.1.41",
+    "topic": "Observational studies"
+  },
+  {
+    "id": "bang2005",
+    "match": [
+      "bang",
+      "robins",
+      "2005"
+    ],
+    "citation": "Bang, H., & Robins, J. M. (2005). Doubly robust estimation in missing data and causal inference models. Biometrics, 61(4), 962–973.",
+    "url": "https://doi.org/10.1111/j.1541-0420.2005.00377.x",
+    "topic": "Observational studies"
+  },
+  {
+    "id": "callaway2021",
+    "match": [
+      "callaway",
+      "2021"
+    ],
+    "citation": "Callaway, B., & Sant’Anna, P. H. C. (2021). Difference-in-differences with multiple time periods. Journal of Econometrics, 225(2), 200–230.",
+    "url": "https://doi.org/10.1016/j.jeconom.2020.12.001",
+    "topic": "Difference-in-differences"
+  },
+  {
+    "id": "santanna2020",
+    "match": [
+      "sant",
+      "zhao",
+      "2020"
+    ],
+    "citation": "Sant’Anna, P. H. C., & Zhao, J. (2020). Doubly robust difference-in-differences estimators. Journal of Econometrics, 219(1), 101–122.",
+    "url": "https://doi.org/10.1016/j.jeconom.2020.06.003",
+    "topic": "Difference-in-differences"
+  },
+  {
+    "id": "abadie2005",
+    "match": [
+      "abadie",
+      "2005"
+    ],
+    "citation": "Abadie, A. (2005). Semiparametric difference-in-differences estimators. Review of Economic Studies, 72(1), 1–19.",
+    "url": "https://doi.org/10.1111/0034-6527.00321",
+    "topic": "Difference-in-differences"
+  },
+  {
+    "id": "sun2021",
+    "match": [
+      "sun",
+      "abraham",
+      "2021"
+    ],
+    "citation": "Sun, L., & Abraham, S. (2021). Estimating dynamic treatment effects in event studies with heterogeneous treatment effects. Journal of Econometrics, 225(2), 175–199.",
+    "url": "https://doi.org/10.1016/j.jeconom.2020.09.006",
+    "topic": "Difference-in-differences"
+  },
+  {
+    "id": "bacon2021",
+    "match": [
+      "goodman",
+      "bacon",
+      "2021"
+    ],
+    "citation": "Goodman-Bacon, A. (2021). Difference-in-differences with variation in treatment timing. Journal of Econometrics, 225(2), 254–277.",
+    "url": "https://doi.org/10.1016/j.jeconom.2021.03.014",
+    "topic": "Difference-in-differences"
+  },
+  {
+    "id": "chaisemartin2020",
+    "match": [
+      "chaisemartin",
+      "2020"
+    ],
+    "citation": "de Chaisemartin, C., & D’Haultfœuille, X. (2020). Two-way fixed effects estimators with heterogeneous treatment effects. American Economic Review, 110(9), 2964–2996.",
+    "url": "https://doi.org/10.1257/aer.20181169",
+    "topic": "Difference-in-differences"
+  },
+  {
+    "id": "roth2023",
+    "match": [
+      "roth",
+      "bilinski",
+      "2023"
+    ],
+    "citation": "Roth, J., Sant’Anna, P. H. C., Bilinski, A., & Poe, J. (2023). What’s trending in difference-in-differences? A synthesis of the recent econometrics literature. Journal of Econometrics, 235(2), 2218–2244.",
+    "url": "https://doi.org/10.1016/j.jeconom.2023.03.008",
+    "topic": "Difference-in-differences"
+  },
+  {
+    "id": "calonico2014",
+    "match": [
+      "calonico",
+      "cattaneo",
+      "titiunik",
+      "2014"
+    ],
+    "citation": "Calonico, S., Cattaneo, M. D., & Titiunik, R. (2014). Robust nonparametric confidence intervals for regression-discontinuity designs. Econometrica, 82(6), 2295–2326.",
+    "url": "https://doi.org/10.3982/ECTA11757",
+    "topic": "Regression discontinuity"
+  },
+  {
+    "id": "angrist1996",
+    "match": [
+      "angrist",
+      "imbens",
+      "rubin",
+      "1996"
+    ],
+    "citation": "Angrist, J. D., Imbens, G. W., & Rubin, D. B. (1996). Identification of causal effects using instrumental variables. Journal of the American Statistical Association, 91(434), 444–455.",
+    "url": "https://doi.org/10.1080/01621459.1996.10476902",
+    "topic": "Instrumental variables"
+  },
+  {
+    "id": "abadie2010",
+    "match": [
+      "abadie",
+      "diamond",
+      "hainmueller",
+      "2010"
+    ],
+    "citation": "Abadie, A., Diamond, A., & Hainmueller, J. (2010). Synthetic control methods for comparative case studies: Estimating the effect of California’s tobacco control program. Journal of the American Statistical Association, 105(490), 493–505.",
+    "url": "https://doi.org/10.1198/jasa.2009.ap08746",
+    "topic": "Synthetic control"
+  },
+  {
+    "id": "bernal2017",
+    "match": [
+      "bernal",
+      "2017"
+    ],
+    "citation": "Lopez Bernal, J., Cummins, S., & Gasparrini, A. (2017). Interrupted time series regression for the evaluation of public health interventions: A tutorial. International Journal of Epidemiology, 46(1), 348–355.",
+    "url": "https://doi.org/10.1093/ije/dyw098",
+    "topic": "Interrupted time series"
+  },
+  {
+    "id": "chernozhukov2018",
+    "match": [
+      "chernozhukov",
+      "2018",
+      "double"
+    ],
+    "citation": "Chernozhukov, V., Chetverikov, D., Demirer, M., Duflo, E., Hansen, C., Newey, W., & Robins, J. (2018). Double/debiased machine learning for treatment and structural parameters. The Econometrics Journal, 21(1), C1–C68.",
+    "url": "https://doi.org/10.1111/ectj.12097",
+    "topic": "Causal machine learning"
+  },
+  {
+    "id": "10.1257/000282803321455188",
+    "match": [],
+    "aliases": [
+      "Abadie & Gardeazabal (2003), The Economic Costs of Conflict: A Case Study of the Basque Country",
+      "Abadie, A.; Gardeazabal, J. (2003). The Economic Costs of Conflict: A Case Study of the Basque Country. American Economic Review, 93(1), 113-132."
+    ],
+    "citation": "Abadie, A.; Gardeazabal, J. (2003). The Economic Costs of Conflict: A Case Study of the Basque Country. American Economic Review, 93(1), 113-132.",
+    "url": "https://doi.org/10.1257/000282803321455188",
+    "topic": "Additional methodology",
+    "metadata_source": "https://api.crossref.org/works/10.1257/000282803321455188"
+  },
+  {
+    "id": "10.1257/jel.20191450",
+    "match": [],
+    "aliases": [
+      "Abadie (2021), Using Synthetic Controls: Feasibility, Data Requirements, and Methodological Aspects",
+      "Abadie, A. (2021). Using Synthetic Controls: Feasibility, Data Requirements, and Methodological Aspects. Journal of Economic Literature, 59(2), 391-425."
+    ],
+    "citation": "Abadie, A. (2021). Using Synthetic Controls: Feasibility, Data Requirements, and Methodological Aspects. Journal of Economic Literature, 59(2), 391-425.",
+    "url": "https://doi.org/10.1257/jel.20191450",
+    "topic": "Additional methodology",
+    "metadata_source": "https://api.crossref.org/works/10.1257/jel.20191450"
+  },
+  {
+    "id": "10.1111/ajps.12116",
+    "match": [],
+    "aliases": [
+      "Abadie, Diamond & Hainmueller (2015), Comparative politics and the synthetic control method",
+      "Abadie, A.; Diamond, A.; Hainmueller, J. (2015). Comparative Politics and the Synthetic Control Method. American Journal of Political Science, 59(2), 495-510."
+    ],
+    "citation": "Abadie, A.; Diamond, A.; Hainmueller, J. (2015). Comparative Politics and the Synthetic Control Method. American Journal of Political Science, 59(2), 495-510.",
+    "url": "https://doi.org/10.1111/ajps.12116",
+    "topic": "Additional methodology",
+    "metadata_source": "https://api.crossref.org/works/10.1111/ajps.12116"
+  },
+  {
+    "id": "10.1080/01621459.2021.1971535",
+    "match": [],
+    "aliases": [
+      "Abadie & L'Hour (2021), A Penalized Synthetic Control Estimator for Disaggregated Data",
+      "Abadie, A.; L’Hour, J. (2021). A Penalized Synthetic Control Estimator for Disaggregated Data. Journal of the American Statistical Association, 116(536), 1817-1834."
+    ],
+    "citation": "Abadie, A.; L’Hour, J. (2021). A Penalized Synthetic Control Estimator for Disaggregated Data. Journal of the American Statistical Association, 116(536), 1817-1834.",
+    "url": "https://doi.org/10.1080/01621459.2021.1971535",
+    "topic": "Additional methodology",
+    "metadata_source": "https://api.crossref.org/works/10.1080/01621459.2021.1971535"
+  },
+  {
+    "id": "10.2307/2987510",
+    "match": [],
+    "aliases": [
+      "Altman (1985), Comparability of randomised groups",
+      "Altman, D. G. (1985). Comparability of Randomised Groups. The Statistician, 34(1), 125."
+    ],
+    "citation": "Altman, D. G. (1985). Comparability of Randomised Groups. The Statistician, 34(1), 125.",
+    "url": "https://doi.org/10.2307/2987510",
+    "topic": "Additional methodology",
+    "metadata_source": "https://api.crossref.org/works/10.2307/2987510"
+  },
+  {
+    "id": "10.1086/426036",
+    "match": [],
+    "aliases": [
+      "Altonji, Elder & Taber (2005), Selection on observed and unobserved variables",
+      "Altonji, J. G.; Elder, T. E.; Taber, C. R. (2005). Selection on Observed and Unobserved Variables: Assessing the Effectiveness of Catholic Schools. Journal of Political Economy, 113(1), 151-184."
+    ],
+    "citation": "Altonji, J. G.; Elder, T. E.; Taber, C. R. (2005). Selection on Observed and Unobserved Variables: Assessing the Effectiveness of Catholic Schools. Journal of Political Economy, 113(1), 151-184.",
+    "url": "https://doi.org/10.1086/426036",
+    "topic": "Additional methodology",
+    "metadata_source": "https://api.crossref.org/works/10.1086/426036"
+  },
+  {
+    "id": "10.1214/aoms/1177730090",
+    "match": [],
+    "aliases": [
+      "Anderson & Rubin (1949), Estimation of the parameters of a single equation",
+      "Anderson, T. W.; Rubin, H. (1949). Estimation of the Parameters of a Single Equation in a Complete System of Stochastic Equations. The Annals of Mathematical Statistics, 20(1), 46-63."
+    ],
+    "citation": "Anderson, T. W.; Rubin, H. (1949). Estimation of the Parameters of a Single Equation in a Complete System of Stochastic Equations. The Annals of Mathematical Statistics, 20(1), 46-63.",
+    "url": "https://doi.org/10.1214/aoms/1177730090",
+    "topic": "Additional methodology",
+    "metadata_source": "https://api.crossref.org/works/10.1214/aoms/1177730090"
+  },
+  {
+    "id": "10.3982/ecta15732",
+    "match": [],
+    "aliases": [
+      "Athey & Wager (2021), Policy learning with observational data",
+      "Athey, S.; Wager, S. (2021). Policy Learning With Observational Data. Econometrica, 89(1), 133-161."
+    ],
+    "citation": "Athey, S.; Wager, S. (2021). Policy Learning With Observational Data. Econometrica, 89(1), 133-161.",
+    "url": "https://doi.org/10.3982/ecta15732",
+    "topic": "Additional methodology",
+    "metadata_source": "https://api.crossref.org/works/10.3982/ecta15732"
+  },
+  {
+    "id": "10.1080/01621459.2021.1891924",
+    "match": [],
+    "aliases": [
+      "Athey et al. (2021), Matrix completion methods for causal panel data models",
+      "Athey, Bayati, Doudchenko, Imbens & Khosravi (2021), Matrix Completion Methods for Causal Panel Data Models",
+      "Athey, S.; Bayati, M.; Doudchenko, N.; Imbens, G.; Khosravi, K. (2021). Matrix Completion Methods for Causal Panel Data Models. Journal of the American Statistical Association, 116(536), 1716-1730."
+    ],
+    "citation": "Athey, S.; Bayati, M.; Doudchenko, N.; Imbens, G.; Khosravi, K. (2021). Matrix Completion Methods for Causal Panel Data Models. Journal of the American Statistical Association, 116(536), 1716-1730.",
+    "url": "https://doi.org/10.1080/01621459.2021.1891924",
+    "topic": "Additional methodology",
+    "metadata_source": "https://api.crossref.org/works/10.1080/01621459.2021.1891924"
+  },
+  {
+    "id": "10.1214/18-aos1709",
+    "match": [],
+    "aliases": [
+      "Athey, Tibshirani & Wager (2019), Generalized random forests",
+      "Athey, S.; Tibshirani, J.; Wager, S. (2019). Generalized random forests. The Annals of Statistics, 47(2)."
+    ],
+    "citation": "Athey, S.; Tibshirani, J.; Wager, S. (2019). Generalized random forests. The Annals of Statistics, 47(2).",
+    "url": "https://doi.org/10.1214/18-aos1709",
+    "topic": "Additional methodology",
+    "metadata_source": "https://api.crossref.org/works/10.1214/18-aos1709"
+  },
+  {
+    "id": "10.1002/sim.3697",
+    "match": [],
+    "aliases": [
+      "Austin (2009), Balance diagnostics for comparing the distribution of baseline covariates",
+      "Austin, P. C. (2009). Balance diagnostics for comparing the distribution of baseline covariates between treatment groups in propensity‐score matched samples. Statistics in Medicine, 28(25), 3083-3107."
+    ],
+    "citation": "Austin, P. C. (2009). Balance diagnostics for comparing the distribution of baseline covariates between treatment groups in propensity‐score matched samples. Statistics in Medicine, 28(25), 3083-3107.",
+    "url": "https://doi.org/10.1002/sim.3697",
+    "topic": "Additional methodology",
+    "metadata_source": "https://api.crossref.org/works/10.1002/sim.3697"
+  },
+  {
+    "id": "10.1073/pnas.1510507113",
+    "match": [],
+    "aliases": [
+      "Bareinboim & Pearl (2016), Causal inference and the data-fusion problem",
+      "Bareinboim, E.; Pearl, J. (2016). Causal inference and the data-fusion problem. Proceedings of the National Academy of Sciences, 113(27), 7345-7352."
+    ],
+    "citation": "Bareinboim, E.; Pearl, J. (2016). Causal inference and the data-fusion problem. Proceedings of the National Academy of Sciences, 113(27), 7345-7352.",
+    "url": "https://doi.org/10.1073/pnas.1510507113",
+    "topic": "Additional methodology",
+    "metadata_source": "https://api.crossref.org/works/10.1073/pnas.1510507113"
+  },
+  {
+    "id": "10.1177/1536867x0300300101",
+    "match": [],
+    "aliases": [
+      "Baum, Schaffer & Stillman (2003), Instrumental variables and GMM: estimation and testing",
+      "Baum, C. F.; Schaffer, M. E.; Stillman, S. (2003). Instrumental Variables and GMM: Estimation and Testing. The Stata Journal: Promoting communications on statistics and Stata, 3(1), 1-31."
+    ],
+    "citation": "Baum, C. F.; Schaffer, M. E.; Stillman, S. (2003). Instrumental Variables and GMM: Estimation and Testing. The Stata Journal: Promoting communications on statistics and Stata, 3(1), 1-31.",
+    "url": "https://doi.org/10.1177/1536867x0300300101",
+    "topic": "Additional methodology",
+    "metadata_source": "https://api.crossref.org/works/10.1177/1536867x0300300101"
+  },
+  {
+    "id": "10.1162/003355304772839588",
+    "match": [],
+    "aliases": [
+      "Bertrand, Duflo & Mullainathan (2004), How much should we trust differences-in-differences estimates?",
+      "Bertrand, Duflo and Mullainathan (2004), How Much Should We Trust Differences-in-Differences Estimates?",
+      "Bertrand, M.; Duflo, E.; Mullainathan, S. (2004). How Much Should We Trust Differences-In-Differences Estimates?. The Quarterly Journal of Economics, 119(1), 249-275."
+    ],
+    "citation": "Bertrand, M.; Duflo, E.; Mullainathan, S. (2004). How Much Should We Trust Differences-In-Differences Estimates?. The Quarterly Journal of Economics, 119(1), 249-275.",
+    "url": "https://doi.org/10.1162/003355304772839588",
+    "topic": "Additional methodology",
+    "metadata_source": "https://api.crossref.org/works/10.1162/003355304772839588"
+  },
+  {
+    "id": "10.1177/0193841x8400800205",
+    "match": [],
+    "aliases": [
+      "Bloom (1984), Accounting for No-Shows in Experimental Evaluation Designs",
+      "Bloom, H. S. (1984). Accounting for No-Shows in Experimental Evaluation Designs. Evaluation Review, 8(2), 225-246."
+    ],
+    "citation": "Bloom, H. S. (1984). Accounting for No-Shows in Experimental Evaluation Designs. Evaluation Review, 8(2), 225-246.",
+    "url": "https://doi.org/10.1177/0193841x8400800205",
+    "topic": "Additional methodology",
+    "metadata_source": "https://api.crossref.org/works/10.1177/0193841x8400800205"
+  },
+  {
+    "id": "10.1093/restud/rdae007",
+    "match": [],
+    "aliases": [
+      "Borusyak, Jaravel and Spiess (2024), Revisiting event-study designs: robust and efficient estimation",
+      "Borusyak, K.; Jaravel, X.; Spiess, J. (2024). Revisiting Event-Study Designs: Robust and Efficient Estimation. Review of Economic Studies, 91(6), 3253-3285."
+    ],
+    "citation": "Borusyak, K.; Jaravel, X.; Spiess, J. (2024). Revisiting Event-Study Designs: Robust and Efficient Estimation. Review of Economic Studies, 91(6), 3253-3285.",
+    "url": "https://doi.org/10.1093/restud/rdae007",
+    "topic": "Additional methodology",
+    "metadata_source": "https://api.crossref.org/works/10.1093/restud/rdae007"
+  },
+  {
+    "id": "10.1080/01621459.1975.10480264",
+    "match": [],
+    "aliases": [
+      "Box & Tiao (1975), Intervention analysis with applications to economic and environmental problems",
+      "Box, G. E. P.; Tiao, G. C. (1975). Intervention Analysis with Applications to Economic and Environmental Problems. Journal of the American Statistical Association, 70(349), 70-79."
+    ],
+    "citation": "Box, G. E. P.; Tiao, G. C. (1975). Intervention Analysis with Applications to Economic and Environmental Problems. Journal of the American Statistical Association, 70(349), 70-79.",
+    "url": "https://doi.org/10.1080/01621459.1975.10480264",
+    "topic": "Additional methodology",
+    "metadata_source": "https://api.crossref.org/works/10.1080/01621459.1975.10480264"
+  },
+  {
+    "id": "10.1214/14-aoas788",
+    "match": [],
+    "aliases": [
+      "Brodersen et al. (2015), Inferring causal impact using Bayesian structural time-series",
+      "Brodersen, Gallusser, Koehler, Remy & Scott (2015), Inferring causal impact using Bayesian structural time-series models",
+      "Brodersen, K. H.; Gallusser, F.; Koehler, J.; Remy, N.; Scott, S. L. (2015). Inferring causal impact using Bayesian structural time-series models. The Annals of Applied Statistics, 9(1)."
+    ],
+    "citation": "Brodersen, K. H.; Gallusser, F.; Koehler, J.; Remy, N.; Scott, S. L. (2015). Inferring causal impact using Bayesian structural time-series models. The Annals of Applied Statistics, 9(1).",
+    "url": "https://doi.org/10.1214/14-aoas788",
+    "topic": "Additional methodology",
+    "metadata_source": "https://api.crossref.org/works/10.1214/14-aoas788"
+  },
+  {
+    "id": "10.1080/01621459.2015.1017578",
+    "match": [],
+    "aliases": [
+      "Calonico, Cattaneo & Titiunik (2015), Optimal data-driven regression discontinuity plots",
+      "Calonico, S.; Cattaneo, M. D.; Titiunik, R. (2015). Optimal Data-Driven Regression Discontinuity Plots. Journal of the American Statistical Association, 110(512), 1753-1769."
+    ],
+    "citation": "Calonico, S.; Cattaneo, M. D.; Titiunik, R. (2015). Optimal Data-Driven Regression Discontinuity Plots. Journal of the American Statistical Association, 110(512), 1753-1769.",
+    "url": "https://doi.org/10.1080/01621459.2015.1017578",
+    "topic": "Additional methodology",
+    "metadata_source": "https://api.crossref.org/works/10.1080/01621459.2015.1017578"
+  },
+  {
+    "id": "10.1162/rest_a_00760",
+    "match": [],
+    "aliases": [
+      "Calonico, Cattaneo, Farrell & Titiunik (2019), Regression discontinuity designs using covariates",
+      "Calonico, S.; Cattaneo, M. D.; Farrell, M. H.; Titiunik, R. (2019). Regression Discontinuity Designs Using Covariates. The Review of Economics and Statistics, 101(3), 442-451."
+    ],
+    "citation": "Calonico, S.; Cattaneo, M. D.; Farrell, M. H.; Titiunik, R. (2019). Regression Discontinuity Designs Using Covariates. The Review of Economics and Statistics, 101(3), 442-451.",
+    "url": "https://doi.org/10.1162/rest_a_00760",
+    "topic": "Additional methodology",
+    "metadata_source": "https://api.crossref.org/works/10.1162/rest_a_00760"
+  },
+  {
+    "id": "10.1080/01621459.2021.1979561",
+    "match": [],
+    "aliases": [
+      "Cattaneo, Feng & Titiunik (2021), Prediction intervals for synthetic control methods",
+      "Cattaneo, M. D.; Feng, Y.; Titiunik, R. (2021). Prediction Intervals for Synthetic Control Methods. Journal of the American Statistical Association, 116(536), 1865-1880."
+    ],
+    "citation": "Cattaneo, M. D.; Feng, Y.; Titiunik, R. (2021). Prediction Intervals for Synthetic Control Methods. Journal of the American Statistical Association, 116(536), 1865-1880.",
+    "url": "https://doi.org/10.1080/01621459.2021.1979561",
+    "topic": "Additional methodology",
+    "metadata_source": "https://api.crossref.org/works/10.1080/01621459.2021.1979561"
+  },
+  {
+    "id": "10.1080/01621459.2019.1635480",
+    "match": [],
+    "aliases": [
+      "Cattaneo, Jansson & Ma (2020), Simple local polynomial density estimators",
+      "Cattaneo, M. D.; Jansson, M.; Ma, X. (2020). Simple Local Polynomial Density Estimators. Journal of the American Statistical Association, 115(531), 1449-1455."
+    ],
+    "citation": "Cattaneo, M. D.; Jansson, M.; Ma, X. (2020). Simple Local Polynomial Density Estimators. Journal of the American Statistical Association, 115(531), 1449-1455.",
+    "url": "https://doi.org/10.1080/01621459.2019.1635480",
+    "topic": "Additional methodology",
+    "metadata_source": "https://api.crossref.org/works/10.1080/01621459.2019.1635480"
+  },
+  {
+    "id": "10.1002/1097-0258(20001130)19:22<3127::aid-sim784>3.0.co;2-m",
+    "match": [],
+    "aliases": [
+      "Chinn (2000), A simple method for converting an odds ratio to effect size",
+      "Chinn, S. (2000). A simple method for converting an odds ratio to effect size for use in meta-analysis. Statistics in Medicine, 19(22), 3127-3131."
+    ],
+    "citation": "Chinn, S. (2000). A simple method for converting an odds ratio to effect size for use in meta-analysis. Statistics in Medicine, 19(22), 3127-3131.",
+    "url": "https://doi.org/10.1002/1097-0258(20001130)19:22<3127::aid-sim784>3.0.co;2-m",
+    "topic": "Additional methodology",
+    "metadata_source": "https://api.crossref.org/works/10.1002/1097-0258(20001130)19:22<3127::aid-sim784>3.0.co;2-m"
+  },
+  {
+    "id": "10.1111/rssb.12348",
+    "match": [],
+    "aliases": [
+      "Cinelli & Hazlett (2020), Making sense of sensitivity: extending omitted variable bias, JRSS-B 82(1)",
+      "Cinelli, C.; Hazlett, C. (2020). Making Sense of Sensitivity: Extending Omitted Variable Bias. Journal of the Royal Statistical Society Series B: Statistical Methodology, 82(1), 39-67."
+    ],
+    "citation": "Cinelli, C.; Hazlett, C. (2020). Making Sense of Sensitivity: Extending Omitted Variable Bias. Journal of the Royal Statistical Society Series B: Statistical Methodology, 82(1), 39-67.",
+    "url": "https://doi.org/10.1111/rssb.12348",
+    "topic": "Additional methodology",
+    "metadata_source": "https://api.crossref.org/works/10.1111/rssb.12348"
+  },
+  {
+    "id": "10.2139/ssrn.3588978",
+    "match": [],
+    "aliases": [
+      "Cinelli, Ferwerda & Hazlett (2020), sensemakr: sensitivity analysis tools for OLS",
+      "Cinelli, C.; Ferwerda, J.; Hazlett, C. (2020). Sensemakr: Sensitivity Analysis Tools for OLS in R and Stata."
+    ],
+    "citation": "Cinelli, C.; Ferwerda, J.; Hazlett, C. (2020). Sensemakr: Sensitivity Analysis Tools for OLS in R and Stata.",
+    "url": "https://doi.org/10.2139/ssrn.3588978",
+    "topic": "Additional methodology",
+    "metadata_source": "https://api.crossref.org/works/10.2139/ssrn.3588978"
+  },
+  {
+    "id": "10.1093/aje/kwn164",
+    "match": [],
+    "aliases": [
+      "Cole & Hernan (2008), Constructing inverse probability weights for marginal structural models",
+      "Cole & Hernán (2008), Constructing inverse probability weights",
+      "Cole, S. R.; Hernan, M. A. (2008). Constructing Inverse Probability Weights for Marginal Structural Models. American Journal of Epidemiology, 168(6), 656-664."
+    ],
+    "citation": "Cole, S. R.; Hernan, M. A. (2008). Constructing Inverse Probability Weights for Marginal Structural Models. American Journal of Epidemiology, 168(6), 656-664.",
+    "url": "https://doi.org/10.1093/aje/kwn164",
+    "topic": "Additional methodology",
+    "metadata_source": "https://api.crossref.org/works/10.1093/aje/kwn164"
+  },
+  {
+    "id": "10.1093/biomet/asn055",
+    "match": [],
+    "aliases": [
+      "Crump, Hotz, Imbens & Mitnik (2009), Dealing with limited overlap in estimation of average treatment effects, Biometrika 96(1)",
+      "Crump, R. K.; Hotz, V. J.; Imbens, G. W.; Mitnik, O. A. (2009). Dealing with limited overlap in estimation of average treatment effects. Biometrika, 96(1), 187-199."
+    ],
+    "citation": "Crump, R. K.; Hotz, V. J.; Imbens, G. W.; Mitnik, O. A. (2009). Dealing with limited overlap in estimation of average treatment effects. Biometrika, 96(1), 187-199.",
+    "url": "https://doi.org/10.1093/biomet/asn055",
+    "topic": "Additional methodology",
+    "metadata_source": "https://api.crossref.org/works/10.1093/biomet/asn055"
+  },
+  {
+    "id": "10.1002/sim.5686",
+    "match": [],
+    "aliases": [
+      "Daniel et al. (2013), Methods for dealing with time-dependent confounding",
+      "Daniel, R.; Cousens, S.; De Stavola, B.; Kenward, M. G.; Sterne, J. A. C. (2013). Methods for dealing with time‐dependent confounding. Statistics in Medicine, 32(9), 1584-1618."
+    ],
+    "citation": "Daniel, R.; Cousens, S.; De Stavola, B.; Kenward, M. G.; Sterne, J. A. C. (2013). Methods for dealing with time‐dependent confounding. Statistics in Medicine, 32(9), 1584-1618.",
+    "url": "https://doi.org/10.1002/sim.5686",
+    "topic": "Additional methodology",
+    "metadata_source": "https://api.crossref.org/works/10.1002/sim.5686"
+  },
+  {
+    "id": "10.1111/1475-6773.12993",
+    "match": [],
+    "aliases": [
+      "Daw & Hatfield (2018), Matching and regression to the mean in difference-in-differences",
+      "Daw, J. R.; Hatfield, L. A. (2018). Matching and Regression to the Mean in Difference‐in‐Differences Analysis. Health Services Research, 53(6), 4138-4156."
+    ],
+    "citation": "Daw, J. R.; Hatfield, L. A. (2018). Matching and Regression to the Mean in Difference‐in‐Differences Analysis. Health Services Research, 53(6), 4138-4156.",
+    "url": "https://doi.org/10.1111/1475-6773.12993",
+    "topic": "Additional methodology",
+    "metadata_source": "https://api.crossref.org/works/10.1111/1475-6773.12993"
+  },
+  {
+    "id": "10.1162/rest_a_00318",
+    "match": [],
+    "aliases": [
+      "Diamond & Sekhon (2013), Genetic matching for estimating causal effects",
+      "Diamond, A.; Sekhon, J. S. (2013). Genetic Matching for Estimating Causal Effects: A General Multivariate Matching Method for Achieving Balance in Observational Studies. Review of Economics and Statistics, 95(3), 932-945."
+    ],
+    "citation": "Diamond, A.; Sekhon, J. S. (2013). Genetic Matching for Estimating Causal Effects: A General Multivariate Matching Method for Achieving Balance in Observational Studies. Review of Economics and Statistics, 95(3), 932-945.",
+    "url": "https://doi.org/10.1162/rest_a_00318",
+    "topic": "Additional methodology",
+    "metadata_source": "https://api.crossref.org/works/10.1162/rest_a_00318"
+  },
+  {
+    "id": "10.3386/w22791",
+    "match": [],
+    "aliases": [
+      "Doudchenko & Imbens (2016), Balancing, Regression, Difference-in-Differences and Synthetic Control Methods: A Synthesis",
+      "Doudchenko, N.; Imbens, G. (2016). Balancing, Regression, Difference-In-Differences and Synthetic Control Methods: A Synthesis."
+    ],
+    "citation": "Doudchenko, N.; Imbens, G. (2016). Balancing, Regression, Difference-In-Differences and Synthetic Control Methods: A Synthesis.",
+    "url": "https://doi.org/10.3386/w22791",
+    "topic": "Additional methodology",
+    "metadata_source": "https://api.crossref.org/works/10.3386/w22791"
+  },
+  {
+    "id": "10.1162/003465398557825",
+    "match": [],
+    "aliases": [
+      "Driscoll & Kraay (1998), Consistent covariance matrix estimation with spatially dependent panel data",
+      "Driscoll, J. C.; Kraay, A. C. (1998). Consistent Covariance Matrix Estimation with Spatially Dependent Panel Data. Review of Economics and Statistics, 80(4), 549-560."
+    ],
+    "citation": "Driscoll, J. C.; Kraay, A. C. (1998). Consistent Covariance Matrix Estimation with Spatially Dependent Panel Data. Review of Economics and Statistics, 80(4), 549-560.",
+    "url": "https://doi.org/10.1162/003465398557825",
+    "topic": "Additional methodology",
+    "metadata_source": "https://api.crossref.org/works/10.1162/003465398557825"
+  },
+  {
+    "id": "10.2307/2277749",
+    "match": [],
+    "aliases": [
+      "Fisher (1935), The Design of Experiments",
+      "Hotelling, H.; Fisher, R. A. (1935). The Design of Experiments.. Journal of the American Statistical Association, 30(192), 771."
+    ],
+    "citation": "Hotelling, H.; Fisher, R. A. (1935). The Design of Experiments.. Journal of the American Statistical Association, 30(192), 771.",
+    "url": "https://doi.org/10.2307/2277749",
+    "topic": "Additional methodology",
+    "metadata_source": "https://api.crossref.org/works/10.2307/2277749"
+  },
+  {
+    "id": "10.1016/j.aam.2006.12.003",
+    "match": [],
+    "aliases": [
+      "Freedman (2008), On Regression Adjustments to Experimental Data",
+      "Freedman, D. A. (2008). On regression adjustments to experimental data. Advances in Applied Mathematics, 40(2), 180-193."
+    ],
+    "citation": "Freedman, D. A. (2008). On regression adjustments to experimental data. Advances in Applied Mathematics, 40(2), 180-193.",
+    "url": "https://doi.org/10.1016/j.aam.2006.12.003",
+    "topic": "Additional methodology",
+    "metadata_source": "https://api.crossref.org/works/10.1016/j.aam.2006.12.003"
+  },
+  {
+    "id": "10.2307/1912683",
+    "match": [],
+    "aliases": [
+      "Fuller (1977), Some properties of a modification of the limited information estimator",
+      "Fuller, W. A. (1977). Some Properties of a Modification of the Limited Information Estimator. Econometrica, 45(4), 939."
+    ],
+    "citation": "Fuller, W. A. (1977). Some Properties of a Modification of the Limited Information Estimator. Econometrica, 45(4), 939.",
+    "url": "https://doi.org/10.2307/1912683",
+    "topic": "Additional methodology",
+    "metadata_source": "https://api.crossref.org/works/10.2307/1912683"
+  },
+  {
+    "id": "10.2202/1557-4679.1260",
+    "match": [],
+    "aliases": [
+      "Gruber & van der Laan (2010), A targeted maximum likelihood estimator of a causal effect on a bounded continuous outcome",
+      "Gruber, S.; van der Laan, M. J. (2010). A Targeted Maximum Likelihood Estimator of a Causal Effect on a Bounded Continuous Outcome. The International Journal of Biostatistics, 6(1)."
+    ],
+    "citation": "Gruber, S.; van der Laan, M. J. (2010). A Targeted Maximum Likelihood Estimator of a Causal Effect on a Bounded Continuous Outcome. The International Journal of Biostatistics, 6(1).",
+    "url": "https://doi.org/10.2202/1557-4679.1260",
+    "topic": "Additional methodology",
+    "metadata_source": "https://api.crossref.org/works/10.2202/1557-4679.1260"
+  },
+  {
+    "id": "10.1111/1468-0262.00183",
+    "match": [],
+    "aliases": [
+      "Hahn, Todd & van der Klaauw (2001), Identification and estimation of treatment effects with a regression-discontinuity design",
+      "Hahn, J.; Todd, P.; Klaauw, W. (2001). Identification and Estimation of Treatment Effects with a Regression-Discontinuity Design. Econometrica, 69(1), 201-209."
+    ],
+    "citation": "Hahn, J.; Todd, P.; Klaauw, W. (2001). Identification and Estimation of Treatment Effects with a Regression-Discontinuity Design. Econometrica, 69(1), 201-209.",
+    "url": "https://doi.org/10.1111/1468-0262.00183",
+    "topic": "Additional methodology",
+    "metadata_source": "https://api.crossref.org/works/10.1111/1468-0262.00183"
+  },
+  {
+    "id": "10.1093/pan/mpr025",
+    "match": [],
+    "aliases": [
+      "Hainmueller (2012), Entropy balancing for causal effects",
+      "Hainmueller, J. (2012). Entropy Balancing for Causal Effects: A Multivariate Reweighting Method to Produce Balanced Samples in Observational Studies. Political Analysis, 20(1), 25-46."
+    ],
+    "citation": "Hainmueller, J. (2012). Entropy Balancing for Causal Effects: A Multivariate Reweighting Method to Produce Balanced Samples in Observational Studies. Political Analysis, 20(1), 25-46.",
+    "url": "https://doi.org/10.1093/pan/mpr025",
+    "topic": "Additional methodology",
+    "metadata_source": "https://api.crossref.org/works/10.1093/pan/mpr025"
+  },
+  {
+    "id": "10.2307/1912775",
+    "match": [],
+    "aliases": [
+      "Hansen (1982), Large sample properties of generalized method of moments estimators",
+      "Hansen, L. P. (1982). Large Sample Properties of Generalized Method of Moments Estimators. Econometrica, 50(4), 1029."
+    ],
+    "citation": "Hansen, L. P. (1982). Large Sample Properties of Generalized Method of Moments Estimators. Econometrica, 50(4), 1029.",
+    "url": "https://doi.org/10.2307/1912775",
+    "topic": "Additional methodology",
+    "metadata_source": "https://api.crossref.org/works/10.2307/1912775"
+  },
+  {
+    "id": "10.1198/016214504000000647",
+    "match": [],
+    "aliases": [
+      "Hansen (2004), Full matching in an observational study of coaching",
+      "Hansen, B. B. (2004). Full Matching in an Observational Study of Coaching for the SAT. Journal of the American Statistical Association, 99(467), 609-618."
+    ],
+    "citation": "Hansen, B. B. (2004). Full Matching in an Observational Study of Coaching for the SAT. Journal of the American Statistical Association, 99(467), 609-618.",
+    "url": "https://doi.org/10.1198/016214504000000647",
+    "topic": "Additional methodology",
+    "metadata_source": "https://api.crossref.org/works/10.1198/016214504000000647"
+  },
+  {
+    "id": "10.1093/aje/kwv254",
+    "match": [],
+    "aliases": [
+      "Hernán & Robins (2016), Using big data to emulate a target trial",
+      "Hernán, M. A.; Robins, J. M. (2016). Using Big Data to Emulate a Target Trial When a Randomized Trial Is Not Available: Table 1.. American Journal of Epidemiology, 183(8), 758-764."
+    ],
+    "citation": "Hernán, M. A.; Robins, J. M. (2016). Using Big Data to Emulate a Target Trial When a Randomized Trial Is Not Available: Table 1.. American Journal of Epidemiology, 183(8), 758-764.",
+    "url": "https://doi.org/10.1093/aje/kwv254",
+    "topic": "Additional methodology",
+    "metadata_source": "https://api.crossref.org/works/10.1093/aje/kwv254"
+  },
+  {
+    "id": "10.1198/016214508000000292",
+    "match": [],
+    "aliases": [
+      "Hudgens & Halloran (2008), Toward causal inference with interference",
+      "Hudgens, M. G.; Halloran, M. E. (2008). Toward Causal Inference With Interference. Journal of the American Statistical Association, 103(482), 832-842."
+    ],
+    "citation": "Hudgens, M. G.; Halloran, M. E. (2008). Toward Causal Inference With Interference. Journal of the American Statistical Association, 103(482), 832-842.",
+    "url": "https://doi.org/10.1198/016214508000000292",
+    "topic": "Additional methodology",
+    "metadata_source": "https://api.crossref.org/works/10.1198/016214508000000292"
+  },
+  {
+    "id": "10.1093/pan/mpr013",
+    "match": [],
+    "aliases": [
+      "Iacus, King & Porro (2012), Causal inference without balance checking",
+      "Iacus, S. M.; King, G.; Porro, G. (2012). Causal Inference without Balance Checking: Coarsened Exact Matching. Political Analysis, 20(1), 1-24."
+    ],
+    "citation": "Iacus, S. M.; King, G.; Porro, G. (2012). Causal Inference without Balance Checking: Coarsened Exact Matching. Political Analysis, 20(1), 1-24.",
+    "url": "https://doi.org/10.1093/pan/mpr013",
+    "topic": "Additional methodology",
+    "metadata_source": "https://api.crossref.org/works/10.1093/pan/mpr013"
+  },
+  {
+    "id": "10.1111/rssb.12027",
+    "match": [],
+    "aliases": [
+      "Imai & Ratkovic (2014), Covariate balancing propensity score",
+      "Imai, K.; Ratkovic, M. (2014). Covariate Balancing Propensity Score. Journal of the Royal Statistical Society Series B: Statistical Methodology, 76(1), 243-263."
+    ],
+    "citation": "Imai, K.; Ratkovic, M. (2014). Covariate Balancing Propensity Score. Journal of the Royal Statistical Society Series B: Statistical Methodology, 76(1), 243-263.",
+    "url": "https://doi.org/10.1111/rssb.12027",
+    "topic": "Additional methodology",
+    "metadata_source": "https://api.crossref.org/works/10.1111/rssb.12027"
+  },
+  {
+    "id": "10.2307/2951620",
+    "match": [],
+    "aliases": [
+      "Imbens & Angrist (1994), Identification and estimation of local average treatment effects",
+      "Imbens and Angrist (1994), Identification and Estimation of Local Average Treatment Effects",
+      "Imbens, G. W.; Angrist, J. D. (1994). Identification and Estimation of Local Average Treatment Effects. Econometrica, 62(2), 467."
+    ],
+    "citation": "Imbens, G. W.; Angrist, J. D. (1994). Identification and Estimation of Local Average Treatment Effects. Econometrica, 62(2), 467.",
+    "url": "https://doi.org/10.2307/2951620",
+    "topic": "Additional methodology",
+    "metadata_source": "https://api.crossref.org/works/10.2307/2951620"
+  },
+  {
+    "id": "10.1016/j.jeconom.2007.05.001",
+    "match": [],
+    "aliases": [
+      "Imbens & Lemieux (2008), Regression discontinuity designs: a guide to practice",
+      "Imbens, G. W.; Lemieux, T. (2008). Regression discontinuity designs: A guide to practice. Journal of Econometrics, 142(2), 615-635."
+    ],
+    "citation": "Imbens, G. W.; Lemieux, T. (2008). Regression discontinuity designs: A guide to practice. Journal of Econometrics, 142(2), 615-635.",
+    "url": "https://doi.org/10.1016/j.jeconom.2007.05.001",
+    "topic": "Additional methodology",
+    "metadata_source": "https://api.crossref.org/works/10.1016/j.jeconom.2007.05.001"
+  },
+  {
+    "id": "10.1257/000282803321946921",
+    "match": [],
+    "aliases": [
+      "Imbens (2003), Sensitivity to exogeneity assumptions in program evaluation",
+      "Imbens, G. W. (2003). Sensitivity to Exogeneity Assumptions in Program Evaluation. American Economic Review, 93(2), 126-132."
+    ],
+    "citation": "Imbens, G. W. (2003). Sensitivity to Exogeneity Assumptions in Program Evaluation. American Economic Review, 93(2), 126-132.",
+    "url": "https://doi.org/10.1257/000282803321946921",
+    "topic": "Additional methodology",
+    "metadata_source": "https://api.crossref.org/works/10.1257/000282803321946921"
+  },
+  {
+    "id": "10.1162/rest_a_00552",
+    "match": [],
+    "aliases": [
+      "Imbens and Kolesar (2016), Robust Standard Errors in Small Samples",
+      "Imbens, G. W.; Kolesár, M. (2016). Robust Standard Errors in Small Samples: Some Practical Advice. Review of Economics and Statistics, 98(4), 701-712."
+    ],
+    "citation": "Imbens, G. W.; Kolesár, M. (2016). Robust Standard Errors in Small Samples: Some Practical Advice. Review of Economics and Statistics, 98(4), 701-712.",
+    "url": "https://doi.org/10.1162/rest_a_00552",
+    "topic": "Additional methodology",
+    "metadata_source": "https://api.crossref.org/works/10.1162/rest_a_00552"
+  },
+  {
+    "id": "10.1097/ede.0000000000000547",
+    "match": [],
+    "aliases": [
+      "Jackson (2016), Diagnostics for confounding of time-varying and other joint exposures",
+      "Jackson, J. W. (2016). Diagnostics for Confounding of Time-varying and Other Joint Exposures. Epidemiology, 27(6), 859-869."
+    ],
+    "citation": "Jackson, J. W. (2016). Diagnostics for Confounding of Time-varying and Other Joint Exposures. Epidemiology, 27(6), 859-869.",
+    "url": "https://doi.org/10.1097/ede.0000000000000547",
+    "topic": "Additional methodology",
+    "metadata_source": "https://api.crossref.org/works/10.1097/ede.0000000000000547"
+  },
+  {
+    "id": "10.1214/23-ejs2157",
+    "match": [],
+    "aliases": [
+      "Kennedy (2023), Towards optimal doubly robust estimation of heterogeneous causal effects",
+      "Kennedy, E. H. (2023). Towards optimal doubly robust estimation of heterogeneous causal effects. Electronic Journal of Statistics, 17(2)."
+    ],
+    "citation": "Kennedy, E. H. (2023). Towards optimal doubly robust estimation of heterogeneous causal effects. Electronic Journal of Statistics, 17(2).",
+    "url": "https://doi.org/10.1214/23-ejs2157",
+    "topic": "Additional methodology",
+    "metadata_source": "https://api.crossref.org/works/10.1214/23-ejs2157"
+  },
+  {
+    "id": "10.1257/aer.20160945",
+    "match": [],
+    "aliases": [
+      "Kolesar & Rothe (2018), Inference in regression discontinuity designs with a discrete running variable",
+      "Kolesár, M.; Rothe, C. (2018). Inference in Regression Discontinuity Designs with a Discrete Running Variable. American Economic Review, 108(8), 2277-2304."
+    ],
+    "citation": "Kolesár, M.; Rothe, C. (2018). Inference in Regression Discontinuity Designs with a Discrete Running Variable. American Economic Review, 108(8), 2277-2304.",
+    "url": "https://doi.org/10.1257/aer.20160945",
+    "topic": "Additional methodology",
+    "metadata_source": "https://api.crossref.org/works/10.1257/aer.20160945"
+  },
+  {
+    "id": "10.1136/bmj.h2750",
+    "match": [],
+    "aliases": [
+      "Kontopantelis, Doran, Springate, Buchan & Reeves (2015), Regression based quasi-experimental approach when randomisation is not an option",
+      "Kontopantelis, E.; Doran, T.; Springate, D. A.; Buchan, I.; Reeves, D. (2015). Regression based quasi-experimental approach when randomisation is not an option: interrupted time series analysis. BMJ, 350(jun09 5), h2750-h2750."
+    ],
+    "citation": "Kontopantelis, E.; Doran, T.; Springate, D. A.; Buchan, I.; Reeves, D. (2015). Regression based quasi-experimental approach when randomisation is not an option: interrupted time series analysis. BMJ, 350(jun09 5), h2750-h2750.",
+    "url": "https://doi.org/10.1136/bmj.h2750",
+    "topic": "Additional methodology",
+    "metadata_source": "https://api.crossref.org/works/10.1136/bmj.h2750"
+  },
+  {
+    "id": "10.1073/pnas.1804597116",
+    "match": [],
+    "aliases": [
+      "Kunzel, Sekhon, Bickel & Yu (2019), Metalearners for estimating heterogeneous treatment effects using machine learning",
+      "Künzel, S. R.; Sekhon, J. S.; Bickel, P. J.; Yu, B. (2019). Metalearners for estimating heterogeneous treatment effects using machine learning. Proceedings of the National Academy of Sciences, 116(10), 4156-4165."
+    ],
+    "citation": "Künzel, S. R.; Sekhon, J. S.; Bickel, P. J.; Yu, B. (2019). Metalearners for estimating heterogeneous treatment effects using machine learning. Proceedings of the National Academy of Sciences, 116(10), 4156-4165.",
+    "url": "https://doi.org/10.1073/pnas.1804597116",
+    "topic": "Additional methodology",
+    "metadata_source": "https://api.crossref.org/works/10.1073/pnas.1804597116"
+  },
+  {
+    "id": "10.1257/aer.20211063",
+    "match": [],
+    "aliases": [
+      "Lee, McCrary, Moreira & Porter (2022), Valid t-ratio inference for IV",
+      "Lee, D. S.; McCrary, J.; Moreira, M. J.; Porter, J. (2022). Valid <i>t</i>-ratio Inference for IV. American Economic Review, 112(10), 3260-3290."
+    ],
+    "citation": "Lee, D. S.; McCrary, J.; Moreira, M. J.; Porter, J. (2022). Valid <i>t</i>-ratio Inference for IV. American Economic Review, 112(10), 3260-3290.",
+    "url": "https://doi.org/10.1257/aer.20211063",
+    "topic": "Additional methodology",
+    "metadata_source": "https://api.crossref.org/works/10.1257/aer.20211063"
+  },
+  {
+    "id": "10.1080/01621459.2016.1260466",
+    "match": [],
+    "aliases": [
+      "Li, Morgan & Zaslavsky (2018), Balancing covariates via propensity score weighting",
+      "Li, F.; Morgan, K. L.; Zaslavsky, A. M. (2018). Balancing Covariates via Propensity Score Weighting. Journal of the American Statistical Association, 113(521), 390-400."
+    ],
+    "citation": "Li, F.; Morgan, K. L.; Zaslavsky, A. M. (2018). Balancing Covariates via Propensity Score Weighting. Journal of the American Statistical Association, 113(521), 390-400.",
+    "url": "https://doi.org/10.1080/01621459.2016.1260466",
+    "topic": "Additional methodology",
+    "metadata_source": "https://api.crossref.org/works/10.1080/01621459.2016.1260466"
+  },
+  {
+    "id": "10.1214/12-aoas583",
+    "match": [],
+    "aliases": [
+      "Lin (2013), Agnostic Notes on Regression Adjustments to Experimental Data",
+      "Lin, W. (2013). Agnostic notes on regression adjustments to experimental data: Reexamining Freedman’s critique. The Annals of Applied Statistics, 7(1)."
+    ],
+    "citation": "Lin, W. (2013). Agnostic notes on regression adjustments to experimental data: Reexamining Freedman’s critique. The Annals of Applied Statistics, 7(1).",
+    "url": "https://doi.org/10.1214/12-aoas583",
+    "topic": "Additional methodology",
+    "metadata_source": "https://api.crossref.org/works/10.1214/12-aoas583"
+  },
+  {
+    "id": "10.1093/ije/dyy135",
+    "match": [],
+    "aliases": [
+      "Lopez Bernal, Cummins & Gasparrini (2018), The use of controls in interrupted time series studies of public health interventions",
+      "Lopez Bernal, J.; Cummins, S.; Gasparrini, A. (2018). The use of controls in interrupted time series studies of public health interventions. International Journal of Epidemiology, 47(6), 2082-2093."
+    ],
+    "citation": "Lopez Bernal, J.; Cummins, S.; Gasparrini, A. (2018). The use of controls in interrupted time series studies of public health interventions. International Journal of Epidemiology, 47(6), 2082-2093.",
+    "url": "https://doi.org/10.1093/ije/dyy135",
+    "topic": "Additional methodology",
+    "metadata_source": "https://api.crossref.org/works/10.1093/ije/dyy135"
+  },
+  {
+    "id": "10.1016/j.jpubeco.2015.01.001",
+    "match": [],
+    "aliases": [
+      "Malani & Reif (2015), Interpreting pre-trends as anticipation",
+      "Malani, A.; Reif, J. (2015). Interpreting pre-trends as anticipation: Impact on estimated treatment effects from tort reform. Journal of Public Economics, 124, 1-17."
+    ],
+    "citation": "Malani, A.; Reif, J. (2015). Interpreting pre-trends as anticipation: Impact on estimated treatment effects from tort reform. Journal of Public Economics, 124, 1-17.",
+    "url": "https://doi.org/10.1016/j.jpubeco.2015.01.001",
+    "topic": "Additional methodology",
+    "metadata_source": "https://api.crossref.org/works/10.1016/j.jpubeco.2015.01.001"
+  },
+  {
+    "id": "10.1016/j.jeconom.2007.05.005",
+    "match": [],
+    "aliases": [
+      "McCrary (2008), Manipulation of the running variable",
+      "McCrary (2008), Manipulation of the running variable in the regression discontinuity design: a density test",
+      "McCrary, J. (2008). Manipulation of the running variable in the regression discontinuity design: A density test. Journal of Econometrics, 142(2), 698-714."
+    ],
+    "citation": "McCrary, J. (2008). Manipulation of the running variable in the regression discontinuity design: A density test. Journal of Econometrics, 142(2), 698-714.",
+    "url": "https://doi.org/10.1016/j.jeconom.2007.05.005",
+    "topic": "Additional methodology",
+    "metadata_source": "https://api.crossref.org/works/10.1016/j.jeconom.2007.05.005"
+  },
+  {
+    "id": "10.1111/j.1467-9868.2012.01048.x",
+    "match": [],
+    "aliases": [
+      "Miratrix, Sekhon and Yu (2013), Adjusting Treatment Effect Estimates by Post-stratification in Randomized Experiments",
+      "Miratrix, L. W.; Sekhon, J. S.; Yu, B. (2013). Adjusting Treatment Effect Estimates by Post-Stratification in Randomized Experiments. Journal of the Royal Statistical Society Series B: Statistical Methodology, 75(2), 369-396."
+    ],
+    "citation": "Miratrix, L. W.; Sekhon, J. S.; Yu, B. (2013). Adjusting Treatment Effect Estimates by Post-Stratification in Randomized Experiments. Journal of the Royal Statistical Society Series B: Statistical Methodology, 75(2), 369-396.",
+    "url": "https://doi.org/10.1111/j.1467-9868.2012.01048.x",
+    "topic": "Additional methodology",
+    "metadata_source": "https://api.crossref.org/works/10.1111/j.1467-9868.2012.01048.x"
+  },
+  {
+    "id": "10.1111/1468-0262.00438",
+    "match": [],
+    "aliases": [
+      "Moreira (2003), A conditional likelihood ratio test",
+      "Moreira (2003), A conditional likelihood ratio test for structural models",
+      "Moreira, M. J. (2003). A Conditional Likelihood Ratio Test for Structural Models. Econometrica, 71(4), 1027-1048."
+    ],
+    "citation": "Moreira, M. J. (2003). A Conditional Likelihood Ratio Test for Structural Models. Econometrica, 71(4), 1027-1048.",
+    "url": "https://doi.org/10.1111/1468-0262.00438",
+    "topic": "Additional methodology",
+    "metadata_source": "https://api.crossref.org/works/10.1111/1468-0262.00438"
+  },
+  {
+    "id": "10.2307/1913610",
+    "match": [],
+    "aliases": [
+      "Newey & West (1987), A simple, positive semi-definite, heteroskedasticity and autocorrelation consistent covariance matrix",
+      "Newey, W. K.; West, K. D. (1987). A Simple, Positive Semi-Definite, Heteroskedasticity and Autocorrelation Consistent Covariance Matrix. Econometrica, 55(3), 703."
+    ],
+    "citation": "Newey, W. K.; West, K. D. (1987). A Simple, Positive Semi-Definite, Heteroskedasticity and Autocorrelation Consistent Covariance Matrix. Econometrica, 55(3), 703.",
+    "url": "https://doi.org/10.2307/1913610",
+    "topic": "Additional methodology",
+    "metadata_source": "https://api.crossref.org/works/10.2307/1913610"
+  },
+  {
+    "id": "10.1093/biomet/asaa076",
+    "match": [],
+    "aliases": [
+      "Nie & Wager (2021), Quasi-oracle estimation of heterogeneous treatment effects",
+      "Nie, X.; Wager, S. (2021). Quasi-oracle estimation of heterogeneous treatment effects. Biometrika, 108(2), 299-319."
+    ],
+    "citation": "Nie, X.; Wager, S. (2021). Quasi-oracle estimation of heterogeneous treatment effects. Biometrika, 108(2), 299-319.",
+    "url": "https://doi.org/10.1093/biomet/asaa076",
+    "topic": "Additional methodology",
+    "metadata_source": "https://api.crossref.org/works/10.1093/biomet/asaa076"
+  },
+  {
+    "id": "10.1093/ectj/utac010",
+    "match": [],
+    "aliases": [
+      "Olden and Moen (2022), The triple difference estimator",
+      "Olden, A.; Møen, J. (2022). The triple difference estimator. The Econometrics Journal, 25(3), 531-553."
+    ],
+    "citation": "Olden, A.; Møen, J. (2022). The triple difference estimator. The Econometrics Journal, 25(3), 531-553.",
+    "url": "https://doi.org/10.1093/ectj/utac010",
+    "topic": "Additional methodology",
+    "metadata_source": "https://api.crossref.org/works/10.1093/ectj/utac010"
+  },
+  {
+    "id": "10.1080/00401706.2013.806694",
+    "match": [],
+    "aliases": [
+      "Olea & Pflueger (2013), A robust test for weak instruments",
+      "Olea, J. L. M.; Pflueger, C. (2013). A Robust Test for Weak Instruments. Journal of Business &amp; Economic Statistics, 31(3), 358-369."
+    ],
+    "citation": "Olea, J. L. M.; Pflueger, C. (2013). A Robust Test for Weak Instruments. Journal of Business &amp; Economic Statistics, 31(3), 358-369.",
+    "url": "https://doi.org/10.1080/00401706.2013.806694",
+    "topic": "Additional methodology",
+    "metadata_source": "https://api.crossref.org/works/10.1080/00401706.2013.806694"
+  },
+  {
+    "id": "10.1080/07350015.2016.1227711",
+    "match": [],
+    "aliases": [
+      "Oster (2019), Unobservable selection and coefficient stability",
+      "Oster, E. (2019). Unobservable Selection and Coefficient Stability: Theory and Evidence. Journal of Business &amp; Economic Statistics, 37(2), 187-204."
+    ],
+    "citation": "Oster, E. (2019). Unobservable Selection and Coefficient Stability: Theory and Evidence. Journal of Business &amp; Economic Statistics, 37(2), 187-204.",
+    "url": "https://doi.org/10.1080/07350015.2016.1227711",
+    "topic": "Additional methodology",
+    "metadata_source": "https://api.crossref.org/works/10.1080/07350015.2016.1227711"
+  },
+  {
+    "id": "10.1177/0962280210386207",
+    "match": [],
+    "aliases": [
+      "Petersen et al. (2012), Diagnosing and responding to violations in the positivity assumption",
+      "Petersen, M. L.; Porter, K. E.; Gruber, S.; Wang, Y.; van der Laan, M. J. (2012). Diagnosing and responding to violations in the positivity assumption. Statistical Methods in Medical Research, 21(1), 31-54."
+    ],
+    "citation": "Petersen, M. L.; Porter, K. E.; Gruber, S.; Wang, Y.; van der Laan, M. J. (2012). Diagnosing and responding to violations in the positivity assumption. Statistical Methods in Medical Research, 21(1), 31-54.",
+    "url": "https://doi.org/10.1177/0962280210386207",
+    "topic": "Additional methodology",
+    "metadata_source": "https://api.crossref.org/works/10.1177/0962280210386207"
+  },
+  {
+    "id": "10.1080/07350015.2016.1247004",
+    "match": [],
+    "aliases": [
+      "Pustejovsky and Tipton (2018), Small-Sample Methods for Cluster-Robust Variance Estimation and Hypothesis Testing",
+      "Pustejovsky, J. E.; Tipton, E. (2018). Small-Sample Methods for Cluster-Robust Variance Estimation and Hypothesis Testing in Fixed Effects Models. Journal of Business &amp; Economic Statistics, 36(4), 672-683."
+    ],
+    "citation": "Pustejovsky, J. E.; Tipton, E. (2018). Small-Sample Methods for Cluster-Robust Variance Estimation and Hypothesis Testing in Fixed Effects Models. Journal of Business &amp; Economic Statistics, 36(4), 672-683.",
+    "url": "https://doi.org/10.1080/07350015.2016.1247004",
+    "topic": "Additional methodology",
+    "metadata_source": "https://api.crossref.org/works/10.1080/07350015.2016.1247004"
+  },
+  {
+    "id": "10.1093/restud/rdad018",
+    "match": [],
+    "aliases": [
+      "Rambachan & Roth (2023), A more credible approach to parallel trends",
+      "Rambachan, A.; Roth, J. (2023). A More Credible Approach to Parallel Trends. Review of Economic Studies, 90(5), 2555-2591."
+    ],
+    "citation": "Rambachan, A.; Roth, J. (2023). A More Credible Approach to Parallel Trends. Review of Economic Studies, 90(5), 2555-2591.",
+    "url": "https://doi.org/10.1093/restud/rdad018",
+    "topic": "Additional methodology",
+    "metadata_source": "https://api.crossref.org/works/10.1093/restud/rdad018"
+  },
+  {
+    "id": "10.1097/00001648-199203000-00013",
+    "match": [],
+    "aliases": [
+      "Robins & Greenland (1992), Identifiability and exchangeability for direct and indirect effects",
+      "Robins, J. M.; Greenland, S. (1992). Identifiability and Exchangeability for Direct and Indirect Effects. Epidemiology, 3(2), 143-155."
+    ],
+    "citation": "Robins, J. M.; Greenland, S. (1992). Identifiability and Exchangeability for Direct and Indirect Effects. Epidemiology, 3(2), 143-155.",
+    "url": "https://doi.org/10.1097/00001648-199203000-00013",
+    "topic": "Additional methodology",
+    "metadata_source": "https://api.crossref.org/works/10.1097/00001648-199203000-00013"
+  },
+  {
+    "id": "10.1016/0270-0255(86)90088-6",
+    "match": [],
+    "aliases": [
+      "Robins (1986), A new approach to causal inference in mortality studies",
+      "Robins, J. (1986). A new approach to causal inference in mortality studies with a sustained exposure period—application to control of the healthy worker survivor effect. Mathematical Modelling, 7(9-12), 1393-1512."
+    ],
+    "citation": "Robins, J. (1986). A new approach to causal inference in mortality studies with a sustained exposure period—application to control of the healthy worker survivor effect. Mathematical Modelling, 7(9-12), 1393-1512.",
+    "url": "https://doi.org/10.1016/0270-0255(86)90088-6",
+    "topic": "Additional methodology",
+    "metadata_source": "https://api.crossref.org/works/10.1016/0270-0255(86)90088-6"
+  },
+  {
+    "id": "10.1097/00001648-200009000-00011",
+    "match": [],
+    "aliases": [
+      "Robins, Hernan & Brumback (2000), Marginal structural models and causal inference in epidemiology",
+      "Robins, J. M.; Hernán, M. Á.; Brumback, B. (2000). Marginal Structural Models and Causal Inference in Epidemiology. Epidemiology, 11(5), 550-560."
+    ],
+    "citation": "Robins, J. M.; Hernán, M. Á.; Brumback, B. (2000). Marginal Structural Models and Causal Inference in Epidemiology. Epidemiology, 11(5), 550-560.",
+    "url": "https://doi.org/10.1097/00001648-200009000-00011",
+    "topic": "Additional methodology",
+    "metadata_source": "https://api.crossref.org/works/10.1097/00001648-200009000-00011"
+  },
+  {
+    "id": "10.1080/01621459.1994.10476818",
+    "match": [],
+    "aliases": [
+      "Robins, Rotnitzky & Zhao (1994), Estimation of regression coefficients when some regressors are not always observed",
+      "Robins, J. M.; Rotnitzky, A.; Zhao, L. P. (1994). Estimation of Regression Coefficients When Some Regressors are not Always Observed. Journal of the American Statistical Association, 89(427), 846-866."
+    ],
+    "citation": "Robins, J. M.; Rotnitzky, A.; Zhao, L. P. (1994). Estimation of Regression Coefficients When Some Regressors are not Always Observed. Journal of the American Statistical Association, 89(427), 846-866.",
+    "url": "https://doi.org/10.1080/01621459.1994.10476818",
+    "topic": "Additional methodology",
+    "metadata_source": "https://api.crossref.org/works/10.1080/01621459.1994.10476818"
+  },
+  {
+    "id": "10.2307/1912705",
+    "match": [],
+    "aliases": [
+      "Robinson (1988), Root-N-consistent semiparametric regression",
+      "Robinson, P. M. (1988). Root-N-Consistent Semiparametric Regression. Econometrica, 56(4), 931."
+    ],
+    "citation": "Robinson, P. M. (1988). Root-N-Consistent Semiparametric Regression. Econometrica, 56(4), 931.",
+    "url": "https://doi.org/10.2307/1912705",
+    "topic": "Additional methodology",
+    "metadata_source": "https://api.crossref.org/works/10.2307/1912705"
+  },
+  {
+    "id": "10.1007/978-1-4419-1213-8",
+    "match": [],
+    "aliases": [
+      "Rosenbaum (2010), Design of Observational Studies",
+      "Rosenbaum, P. R. (2010). Design of Observational Studies. Springer Series in Statistics."
+    ],
+    "citation": "Rosenbaum, P. R. (2010). Design of Observational Studies. Springer Series in Statistics.",
+    "url": "https://doi.org/10.1007/978-1-4419-1213-8",
+    "topic": "Additional methodology",
+    "metadata_source": "https://api.crossref.org/works/10.1007/978-1-4419-1213-8"
+  },
+  {
+    "id": "10.1257/aeri.20210236",
+    "match": [],
+    "aliases": [
+      "Roth (2022), Pretest with caution: event-study estimates after testing for parallel trends",
+      "Roth, J. (2022). Pretest with Caution: Event-Study Estimates after Testing for Parallel Trends. American Economic Review: Insights, 4(3), 305-322."
+    ],
+    "citation": "Roth, J. (2022). Pretest with Caution: Event-Study Estimates after Testing for Parallel Trends. American Economic Review: Insights, 4(3), 305-322.",
+    "url": "https://doi.org/10.1257/aeri.20210236",
+    "topic": "Additional methodology",
+    "metadata_source": "https://api.crossref.org/works/10.1257/aeri.20210236"
+  },
+  {
+    "id": "10.1186/s12874-021-01235-8",
+    "match": [],
+    "aliases": [
+      "Schaffer, Dobbins & Pearson (2021), Interrupted time series analysis using autoregressive integrated moving average (ARIMA) models",
+      "Schaffer, A. L.; Dobbins, T. A.; Pearson, S. (2021). Interrupted time series analysis using autoregressive integrated moving average (ARIMA) models: a guide for evaluating large-scale health interventions. BMC Medical Research Methodology, 21(1)."
+    ],
+    "citation": "Schaffer, A. L.; Dobbins, T. A.; Pearson, S. (2021). Interrupted time series analysis using autoregressive integrated moving average (ARIMA) models: a guide for evaluating large-scale health interventions. BMC Medical Research Methodology, 21(1).",
+    "url": "https://doi.org/10.1186/s12874-021-01235-8",
+    "topic": "Additional methodology",
+    "metadata_source": "https://api.crossref.org/works/10.1186/s12874-021-01235-8"
+  },
+  {
+    "id": "10.1093/aje/kww165",
+    "match": [],
+    "aliases": [
+      "Schuler & Rose (2017), Targeted maximum likelihood estimation for causal inference in observational studies",
+      "Schuler, M. S.; Rose, S. (2017). Targeted Maximum Likelihood Estimation for Causal Inference in Observational Studies. American Journal of Epidemiology, 185(1), 65-73."
+    ],
+    "citation": "Schuler, M. S.; Rose, S. (2017). Targeted Maximum Likelihood Estimation for Causal Inference in Observational Studies. American Journal of Epidemiology, 185(1), 65-73.",
+    "url": "https://doi.org/10.1093/aje/kww165",
+    "topic": "Additional methodology",
+    "metadata_source": "https://api.crossref.org/works/10.1093/aje/kww165"
+  },
+  {
+    "id": "10.1007/s40471-020-00243-4",
+    "match": [],
+    "aliases": [
+      "Shi, Miao & Tchetgen Tchetgen (2020), A selective review of negative control methods",
+      "Shi, X.; Miao, W.; Tchetgen, E. T. (2020). A Selective Review of Negative Control Methods in Epidemiology. Current Epidemiology Reports, 7(4), 190-202."
+    ],
+    "citation": "Shi, X.; Miao, W.; Tchetgen, E. T. (2020). A Selective Review of Negative Control Methods in Epidemiology. Current Epidemiology Reports, 7(4), 190-202.",
+    "url": "https://doi.org/10.1007/s40471-020-00243-4",
+    "topic": "Additional methodology",
+    "metadata_source": "https://api.crossref.org/works/10.1007/s40471-020-00243-4"
+  },
+  {
+    "id": "10.1038/s41562-020-0912-z",
+    "match": [],
+    "aliases": [
+      "Simonsohn, Simmons & Nelson (2020), Specification curve analysis",
+      "Simonsohn, U.; Simmons, J. P.; Nelson, L. D. (2020). Specification curve analysis. Nature Human Behaviour, 4(11), 1208-1214."
+    ],
+    "citation": "Simonsohn, U.; Simmons, J. P.; Nelson, L. D. (2020). Specification curve analysis. Nature Human Behaviour, 4(11), 1208-1214.",
+    "url": "https://doi.org/10.1038/s41562-020-0912-z",
+    "topic": "Additional methodology",
+    "metadata_source": "https://api.crossref.org/works/10.1038/s41562-020-0912-z"
+  },
+  {
+    "id": "10.1177/1745691616658637",
+    "match": [],
+    "aliases": [
+      "Steegen et al. (2016), Increasing transparency through a multiverse analysis",
+      "Steegen, S.; Tuerlinckx, F.; Gelman, A.; Vanpaemel, W. (2016). Increasing Transparency Through a Multiverse Analysis. Perspectives on Psychological Science, 11(5), 702-712."
+    ],
+    "citation": "Steegen, S.; Tuerlinckx, F.; Gelman, A.; Vanpaemel, W. (2016). Increasing Transparency Through a Multiverse Analysis. Perspectives on Psychological Science, 11(5), 702-712.",
+    "url": "https://doi.org/10.1177/1745691616658637",
+    "topic": "Additional methodology",
+    "metadata_source": "https://api.crossref.org/works/10.1177/1745691616658637"
+  },
+  {
+    "id": "10.1214/09-sts313",
+    "match": [],
+    "aliases": [
+      "Stuart (2010), Matching methods for causal inference",
+      "Stuart, E. A. (2010). Matching Methods for Causal Inference: A Review and a Look Forward. Statistical Science, 25(1)."
+    ],
+    "citation": "Stuart, E. A. (2010). Matching Methods for Causal Inference: A Review and a Look Forward. Statistical Science, 25(1).",
+    "url": "https://doi.org/10.1214/09-sts313",
+    "topic": "Additional methodology",
+    "metadata_source": "https://api.crossref.org/works/10.1214/09-sts313"
+  },
+  {
+    "id": "10.1515/em-2012-0010",
+    "match": [],
+    "aliases": [
+      "VanderWeele & Vansteelandt (2014), Mediation analysis with multiple mediators",
+      "VanderWeele, T.; Vansteelandt, S. (2014). Mediation Analysis with Multiple Mediators. Epidemiologic Methods, 2(1)."
+    ],
+    "citation": "VanderWeele, T.; Vansteelandt, S. (2014). Mediation Analysis with Multiple Mediators. Epidemiologic Methods, 2(1).",
+    "url": "https://doi.org/10.1515/em-2012-0010",
+    "topic": "Additional methodology",
+    "metadata_source": "https://api.crossref.org/works/10.1515/em-2012-0010"
+  },
+  {
+    "id": "10.1097/ede.0000000000000034",
+    "match": [],
+    "aliases": [
+      "VanderWeele, Vansteelandt & Robins (2014), Effect decomposition in the presence of an exposure-induced mediator-outcome confounder",
+      "VanderWeele, T. J.; Vansteelandt, S.; Robins, J. M. (2014). Effect Decomposition in the Presence of an Exposure-Induced Mediator-Outcome Confounder. Epidemiology, 25(2), 300-306."
+    ],
+    "citation": "VanderWeele, T. J.; Vansteelandt, S.; Robins, J. M. (2014). Effect Decomposition in the Presence of an Exposure-Induced Mediator-Outcome Confounder. Epidemiology, 25(2), 300-306.",
+    "url": "https://doi.org/10.1097/ede.0000000000000034",
+    "topic": "Additional methodology",
+    "metadata_source": "https://api.crossref.org/works/10.1097/ede.0000000000000034"
+  },
+  {
+    "id": "10.1097/ede.0000000000000596",
+    "match": [],
+    "aliases": [
+      "Vansteelandt & Daniel (2017), Interventional effects for mediation analysis with multiple mediators",
+      "Vansteelandt, S.; Daniel, R. M. (2017). Interventional Effects for Mediation Analysis with Multiple Mediators. Epidemiology, 28(2), 258-265."
+    ],
+    "citation": "Vansteelandt, S.; Daniel, R. M. (2017). Interventional Effects for Mediation Analysis with Multiple Mediators. Epidemiology, 28(2), 258-265.",
+    "url": "https://doi.org/10.1097/ede.0000000000000596",
+    "topic": "Additional methodology",
+    "metadata_source": "https://api.crossref.org/works/10.1097/ede.0000000000000596"
+  },
+  {
+    "id": "10.1080/01621459.2017.1319839",
+    "match": [],
+    "aliases": [
+      "Wager & Athey (2018), Estimation and inference of heterogeneous treatment effects",
+      "Wager & Athey (2018), Estimation and inference of heterogeneous treatment effects using random forests",
+      "Wager, S.; Athey, S. (2018). Estimation and Inference of Heterogeneous Treatment Effects using Random Forests. Journal of the American Statistical Association, 113(523), 1228-1242."
+    ],
+    "citation": "Wager, S.; Athey, S. (2018). Estimation and Inference of Heterogeneous Treatment Effects using Random Forests. Journal of the American Statistical Association, 113(523), 1228-1242.",
+    "url": "https://doi.org/10.1080/01621459.2017.1319839",
+    "topic": "Additional methodology",
+    "metadata_source": "https://api.crossref.org/works/10.1080/01621459.2017.1319839"
+  },
+  {
+    "id": "10.1046/j.1365-2710.2002.00430.x",
+    "match": [],
+    "aliases": [
+      "Wagner, Soumerai, Zhang & Ross-Degnan (2002), Segmented regression analysis of interrupted time series studies in medication use research",
+      "Wagner, A. K.; Soumerai, S. B.; Zhang, F.; Ross-Degnan, D. (2002). Segmented regression analysis of interrupted time series studies in medication use research. Journal of Clinical Pharmacy and Therapeutics, 27(4), 299-309."
+    ],
+    "citation": "Wagner, A. K.; Soumerai, S. B.; Zhang, F.; Ross-Degnan, D. (2002). Segmented regression analysis of interrupted time series studies in medication use research. Journal of Clinical Pharmacy and Therapeutics, 27(4), 299-309.",
+    "url": "https://doi.org/10.1046/j.1365-2710.2002.00430.x",
+    "topic": "Additional methodology",
+    "metadata_source": "https://api.crossref.org/works/10.1046/j.1365-2710.2002.00430.x"
+  },
+  {
+    "id": "10.2139/ssrn.3906345",
+    "match": [],
+    "aliases": [
+      "Wooldridge (2021), Two-way fixed effects, the two-way Mundlak regression, and difference-in-differences estimators",
+      "Wooldridge, J. M. (2021). Two-Way Fixed Effects, the Two-Way Mundlak Regression, and Difference-in-Differences Estimators."
+    ],
+    "citation": "Wooldridge, J. M. (2021). Two-Way Fixed Effects, the Two-Way Mundlak Regression, and Difference-in-Differences Estimators.",
+    "url": "https://doi.org/10.2139/ssrn.3906345",
+    "topic": "Additional methodology",
+    "metadata_source": "https://api.crossref.org/works/10.2139/ssrn.3906345"
+  },
+  {
+    "id": "10.1287/opre.2022.2271",
+    "match": [],
+    "aliases": [
+      "Zhou, Athey & Wager (2023), Offline multi-action policy learning",
+      "Zhou, Z.; Athey, S.; Wager, S. (2023). Offline Multi-Action Policy Learning: Generalization and Optimization. Operations Research, 71(1), 148-183."
+    ],
+    "citation": "Zhou, Z.; Athey, S.; Wager, S. (2023). Offline Multi-Action Policy Learning: Generalization and Optimization. Operations Research, 71(1), 148-183.",
+    "url": "https://doi.org/10.1287/opre.2022.2271",
+    "topic": "Additional methodology",
+    "metadata_source": "https://api.crossref.org/works/10.1287/opre.2022.2271"
+  },
+  {
+    "id": "10.1201/9780429492259",
+    "match": [],
+    "aliases": [
+      "van Buuren (2018), Flexible Imputation of Missing Data",
+      "van Buuren, S. (2018). Flexible Imputation of Missing Data, Second Edition."
+    ],
+    "citation": "van Buuren, S. (2018). Flexible Imputation of Missing Data, Second Edition.",
+    "url": "https://doi.org/10.1201/9780429492259",
+    "topic": "Additional methodology",
+    "metadata_source": "https://api.crossref.org/works/10.1201/9780429492259"
+  },
+  {
+    "id": "10.1515/1557-4679.1370",
+    "match": [],
+    "aliases": [
+      "van der Laan & Gruber (2012), Targeted minimum loss based estimation of causal effects of multiple time point interventions",
+      "van der Laan, M. J.; Gruber, S. (2012). Targeted Minimum Loss Based Estimation of Causal Effects of Multiple Time Point Interventions. The International Journal of Biostatistics, 8(1)."
+    ],
+    "citation": "van der Laan, M. J.; Gruber, S. (2012). Targeted Minimum Loss Based Estimation of Causal Effects of Multiple Time Point Interventions. The International Journal of Biostatistics, 8(1).",
+    "url": "https://doi.org/10.1515/1557-4679.1370",
+    "topic": "Additional methodology",
+    "metadata_source": "https://api.crossref.org/works/10.1515/1557-4679.1370"
+  },
+  {
+    "id": "10.2202/1557-4679.1043",
+    "match": [],
+    "aliases": [
+      "van der Laan & Rubin (2006), Targeted maximum likelihood learning",
+      "van der Laan, M. J.; Rubin, D. (2006). Targeted Maximum Likelihood Learning. The International Journal of Biostatistics, 2(1)."
+    ],
+    "citation": "van der Laan, M. J.; Rubin, D. (2006). Targeted Maximum Likelihood Learning. The International Journal of Biostatistics, 2(1).",
+    "url": "https://doi.org/10.2202/1557-4679.1043",
+    "topic": "Additional methodology",
+    "metadata_source": "https://api.crossref.org/works/10.2202/1557-4679.1043"
+  }
+]

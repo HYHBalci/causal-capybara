@@ -1,0 +1,176 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://causalcapybara.dev/schemas/capy.result.v1.json",
+  "title": "capy.result.v1",
+  "description": "The canonical result. Every adapter, R or Python, fills this. Print, plot, compare and report consume this and never a package-specific object.",
+  "type": "object",
+  "required": ["schema", "version", "run_id", "spec_id", "design", "method", "engine", "status"],
+  "properties": {
+    "schema": { "const": "capy.result" },
+    "version": { "const": 1 },
+    "run_id": { "type": "string" },
+    "spec_id": { "type": "string" },
+    "job_id": { "type": ["string", "null"] },
+    "timestamp": { "type": ["string", "null"] },
+    "status": { "enum": ["ok", "failed", "cancelled", "unstructured"] },
+    "design": { "type": "string" },
+    "estimand": { "type": ["string", "null"] },
+    "estimand_label": { "type": ["string", "null"], "description": "The plain-language sentence shown on the glass" },
+    "treatment": { "type": ["string", "null"] },
+    "outcome": { "type": ["string", "null"] },
+    "roles_used": { "type": "object" },
+    "n": { "type": ["integer", "null"] },
+    "n_treated": { "type": ["integer", "null"] },
+    "n_control": { "type": ["integer", "null"] },
+    "n_effective": { "type": ["number", "null"] },
+    "estimate": { "type": ["number", "null"] },
+    "se": { "type": ["number", "null"] },
+    "ci_low": { "type": ["number", "null"] },
+    "ci_high": { "type": ["number", "null"] },
+    "ci_level": { "type": ["number", "null"], "default": 0.95 },
+    "statistic": { "type": ["number", "null"] },
+    "p_value": { "type": ["number", "null"] },
+    "inference": { "type": ["string", "null"], "description": "e.g. 'HC3 robust', 'cluster(state)', 'bootstrap(999)', 'Anderson-Rubin set'" },
+    "estimates": {
+      "type": "array",
+      "description": "Secondary estimates: cohort ATTs, event-study leads/lags, dose-response points, per-group CATEs.",
+      "items": {
+        "type": "object",
+        "required": ["label", "estimate"],
+        "properties": {
+          "label": { "type": "string" },
+          "group": { "type": ["string", "null"] },
+          "term": { "type": ["string", "number", "null"] },
+          "estimate": { "type": ["number", "null"] },
+          "se": { "type": ["number", "null"] },
+          "ci_low": { "type": ["number", "null"] },
+          "ci_high": { "type": ["number", "null"] },
+          "p_value": { "type": ["number", "null"] },
+          "n": { "type": ["integer", "null"] }
+        }
+      }
+    },
+    "method": { "type": "string" },
+    "method_label": { "type": ["string", "null"] },
+    "engine": { "enum": ["r", "python", "native"] },
+    "package": { "type": ["string", "null"] },
+    "package_version": { "type": ["string", "null"] },
+    "engine_version": { "type": ["string", "null"] },
+    "assumptions": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["id", "status"],
+        "properties": {
+          "id": { "type": "string" },
+          "label": { "type": ["string", "null"] },
+          "status": { "enum": ["assumed", "supported", "weakened", "untested", "not_applicable"] },
+          "note": { "type": ["string", "null"] },
+          "diagnostic_ids": { "type": "array", "items": { "type": "string" } },
+          "explain_key": { "type": ["string", "null"] }
+        }
+      }
+    },
+    "diagnostics": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["id", "title"],
+        "properties": {
+          "id": { "type": "string" },
+          "title": { "type": "string" },
+          "status": { "enum": ["supports", "weakens", "untested", "not_applicable", "info"] },
+          "summary": { "type": ["string", "null"] },
+          "worry_when": { "type": ["string", "null"], "description": "The 'what would worry me' line" },
+          "artifact_ids": { "type": "array", "items": { "type": "string" } },
+          "explain_key": { "type": ["string", "null"] },
+          "values": { "type": "object" }
+        }
+      }
+    },
+    "sensitivity": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["id"],
+        "properties": {
+          "id": { "type": "string" },
+          "title": { "type": ["string", "null"] },
+          "summary": { "type": ["string", "null"] },
+          "values": { "type": "object" },
+          "artifact_ids": { "type": "array", "items": { "type": "string" } }
+        }
+      }
+    },
+    "artifacts": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["id", "kind"],
+        "properties": {
+          "id": { "type": "string" },
+          "kind": { "enum": ["vega", "table", "text", "image", "data"] },
+          "title": { "type": ["string", "null"] },
+          "caption": { "type": ["string", "null"] },
+          "explain_key": { "type": ["string", "null"] },
+          "spec": { "type": ["object", "null"], "description": "Vega-Lite spec for kind=vega" },
+          "data": { "description": "Inline rows for kind=table/data, or text for kind=text" },
+          "path": { "type": ["string", "null"], "description": "Relative path inside the run workdir" },
+          "columns": { "type": ["array", "null"], "items": { "type": "string" } }
+        }
+      }
+    },
+    "sample_flow": {
+      "type": "array",
+      "description": "CONSORT-style flow. Nothing is dropped without a row here.",
+      "items": {
+        "type": "object",
+        "required": ["step", "n"],
+        "properties": {
+          "step": { "type": "string" },
+          "n": { "type": "integer" },
+          "n_treated": { "type": ["integer", "null"] },
+          "n_control": { "type": ["integer", "null"] },
+          "dropped": { "type": ["integer", "null"] },
+          "reason": { "type": ["string", "null"] }
+        }
+      }
+    },
+    "warnings": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["level", "message"],
+        "properties": {
+          "level": { "enum": ["info", "caution", "warning", "error"] },
+          "code": { "type": ["string", "null"] },
+          "message": { "type": "string" },
+          "explain_key": { "type": ["string", "null"] }
+        }
+      }
+    },
+    "provisional": { "type": "boolean", "default": false },
+    "provisional_reasons": { "type": "array", "items": { "type": "string" } },
+    "command_spec": { "type": ["object", "null"], "description": "Snapshot of the spec that produced this run" },
+    "scripts": {
+      "type": "object",
+      "properties": {
+        "r": { "type": ["string", "null"] },
+        "python": { "type": ["string", "null"] }
+      }
+    },
+    "classic": { "type": ["string", "null"], "description": "The text the package printed, captured for referees" },
+    "log": { "type": ["string", "null"] },
+    "elapsed_ms": { "type": ["number", "null"] },
+    "seed": { "type": ["integer", "null"] },
+    "error": {
+      "type": ["object", "null"],
+      "properties": {
+        "type": { "type": "string" },
+        "message": { "type": "string" },
+        "detail": { "type": ["string", "null"] }
+      }
+    }
+  },
+  "additionalProperties": true
+}

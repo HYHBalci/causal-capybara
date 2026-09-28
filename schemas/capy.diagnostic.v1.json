@@ -1,0 +1,29 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://causalcapybara.dev/schemas/capy.diagnostic.v1.json",
+  "title": "capy.diagnostic.v1",
+  "type": "object",
+  "required": ["schema", "version", "id", "title"],
+  "properties": {
+    "schema": { "const": "capy.diagnostic" },
+    "version": { "const": 1 },
+    "id": { "type": "string" },
+    "title": { "type": "string" },
+    "designs": { "type": "array", "items": { "type": "string" } },
+    "status": { "enum": ["supports", "weakens", "untested", "not_applicable", "info"] },
+    "summary": { "type": ["string", "null"] },
+    "worry_when": { "type": ["string", "null"] },
+    "values": { "type": "object" },
+    "artifacts": { "type": "array", "items": { "type": "object" } },
+    "explain_key": { "type": ["string", "null"] },
+    "engine": { "type": ["string", "null"] },
+    "ledger_suggestion": {
+      "type": ["object", "null"],
+      "properties": {
+        "assumption_id": { "type": "string" },
+        "status": { "enum": ["supported", "weakened", "untested"] }
+      }
+    }
+  },
+  "additionalProperties": true
+}

@@ -1,0 +1,28 @@
+{
+  "$schema": "https://schema.tauri.app/config/2",
+  "bundle": {
+    "windows": {
+      "nsis": {
+        "installMode": "currentUser"
+      }
+    },
+    "resources": {
+      "../../sidecar": null,
+      "../../engines": null,
+      "../../schemas": null,
+      "../../docs/explain": null,
+      "../../LICENSE": null,
+      "../../NOTICE": null,
+      "../../docs/GUIDE.md": null,
+      "../../.capy-build/release/windows-x64/sidecar": "sidecar",
+      "../../.capy-build/release/windows-x64/engines": "engines",
+      "../../.capy-build/release/windows-x64/schemas": "schemas",
+      "../../.capy-build/release/windows-x64/docs/explain": "docs/explain",
+      "../../.capy-build/release/windows-x64/LICENSE": "LICENSE",
+      "../../.capy-build/release/windows-x64/NOTICE": "NOTICE",
+      "../../.capy-build/release/windows-x64/docs/GUIDE.md": "docs/GUIDE.md",
+      "../../.capy-build/release/windows-x64/runtimes/python": "runtimes/python",
+      "../../.capy-build/release/windows-x64/licenses": "licenses"
+    }
+  }
+}

@@ -1,0 +1,214 @@
+
+# Causal Capybara -- design cards.
+#
+# The app never opens on a list named AIPW, DML, Callaway-Sant'Anna. It opens on
+# a sentence and a design card. Each card here is a picture of a research design
+# with labelled drop-zones; completing the board IS role assignment.
+
+schema: capy.designs
+version: 1
+
+designs:
+  - id: rct
+    title: Randomised or as-if randomised
+    sentence: People were assigned by chance, or as good as chance.
+    aliases: [Randomised controlled trial, RCT, randomised experiment, field experiment, A/B test, experiment, random assignment]
+    schematic: urns
+    order: 1
+    explain_key: design.rct
+    board_caption: Put the column that says who was offered the programme in Assignment, and what it was meant to change in Outcome. Blocks and clusters describe how the assignment was actually done, so they are facts about the study rather than choices you make here.
+    zones:
+      - { role: treatment, label: Assignment, help: "Who was offered or given the programme.", accepts: [binary, categorical], required: true }
+      - { role: outcome, label: Outcome, help: "What the programme was meant to change.", accepts: [continuous, binary], required: true }
+      - { role: strata, label: Blocks, help: "If randomisation happened within blocks or strata.", accepts: [categorical, binary], multiple: true }
+      - { role: cluster, label: Randomised in clusters of, help: "If whole schools, clinics or villages were assigned together.", accepts: [id, categorical] }
+      - { role: confounders, label: Baseline covariates, help: "Measured before assignment. Used for precision, not for identification.", accepts: [continuous, binary, categorical], multiple: true }
+      - { role: weight, label: Survey weight, accepts: [continuous], profile: advanced }
+    live_sketch: baseline_balance
+    estimands: [ATE, ATT, ITT, CACE, LATE, CATE, GATE]
+    default_estimand: ATE
+    assumptions: [randomisation, sutva, consistency]
+    methods_hint: [rct.diff_means, rct.stratified, rct.cluster, rct.cace, rct.randomization_inference]
+
+  - id: observational
+    title: Adjust for background differences
+    sentence: Treatment was not random; we can measure the things that made people get it.
+    aliases: [Selection on observables, unconfoundedness, conditional ignorability, propensity score, matching, inverse probability weighting, IPW, covariate adjustment, doubly robust, AIPW]
+    schematic: two_groups_confounders
+    order: 2
+    explain_key: design.observational
+    board_caption: Every column you put in "measured confounders" is a claim that it was recorded before treatment was decided. Anything measured afterwards belongs in the box below it instead.
+    zones:
+      - { role: treatment, label: Treatment, help: "Who got the programme.", accepts: [binary, categorical], required: true }
+      - { role: outcome, label: Outcome, accepts: [continuous, binary], required: true }
+      - { role: confounders, label: Measured confounders, help: "Causes of both treatment and outcome, measured before treatment.", accepts: [continuous, binary, categorical, datetime], multiple: true, required: true }
+      - { role: forbidden, label: "Do not adjust for (post-treatment / colliders)", help: "Anything measured after treatment. Adjusting for it blocks part of the effect.", accepts: [continuous, binary, categorical], multiple: true, tone: forbidden }
+      - { role: cluster, label: Cluster standard errors by, accepts: [id, categorical] }
+      - { role: weight, label: Survey weight, accepts: [continuous] }
+      - { role: effect_modifiers, label: Look for varying effects across, accepts: [continuous, binary, categorical], multiple: true, profile: advanced }
+    live_sketch: overlap
+    estimands: [ATT, ATE, ATC, ATO, CATE, GATE, dose_response]
+    default_estimand: ATT
+    assumptions: [exchangeability, positivity, sutva, consistency]
+    methods_hint: [obs.aipw, obs.weighting.ipw, obs.matching.nn, obs.outcome_regression]
+
+  - id: did
+    title: Policy rolled out over time
+    sentence: Some places or groups got it earlier than others.
+    aliases: [Difference-in-differences, DiD, DD, two-way fixed effects, TWFE, event study, staggered adoption, parallel trends, panel data]
+    schematic: panel_grid
+    order: 3
+    explain_key: design.did
+    board_caption: Rows are units, columns are periods. The cells light up when treatment turns on.
+    staggered_copy: >-
+      Units here switch on at different dates. That breaks the usual two-way fixed effects
+      estimator, and the panel on the right says what this particular data does about it.
+    zones:
+      - { role: unit, label: One row per, help: "State, hospital, school, firm.", accepts: [id, categorical], required: true }
+      - { role: time, label: Time, accepts: [continuous, categorical, datetime, binary], required: true, help: "Two periods is the canonical 2x2; more is a panel." }
+      - { role: treatment, label: Treated in this cell, help: "1 once the policy is on for that unit in that period.", accepts: [binary], required: true }
+      - { role: outcome, label: Outcome, accepts: [continuous, binary], required: true }
+      - { role: cluster, label: Cluster standard errors by, help: "Usually the level treatment was assigned at.", accepts: [id, categorical] }
+      - { role: confounders, label: Time-varying controls, help: "Careful: anything affected by the policy is a bad control.", accepts: [continuous, binary, categorical], multiple: true }
+      - { role: strata, label: Third dimension (for triple differences), accepts: [binary, categorical], multiple: true, profile: advanced }
+      - { role: weight, label: Weight, accepts: [continuous], profile: advanced }
+    live_sketch: adoption
+    estimands: [ATT, cohort_ATT, CATE]
+    default_estimand: ATT
+    assumptions: [parallel_trends, no_anticipation, sutva, consistency]
+    methods_hint: [did.callaway_santanna, did.sun_abraham, did.event_study, did.twfe]
+
+  - id: rd
+    title: A cutoff decided eligibility
+    sentence: Crossing a score, age, or border switched the programme on.
+    aliases: [Regression discontinuity, RD, RDD, sharp RD, fuzzy RD, running variable, forcing variable, cutoff design, bandwidth]
+    schematic: number_line_cutoff
+    order: 4
+    explain_key: design.rd
+    board_caption: Type the threshold into the Cutoff box. The binned scatter appears before any estimator does.
+    zones:
+      - { role: running, label: Running variable, help: "The score, age, or distance that decided eligibility.", accepts: [continuous], required: true }
+      - { role: cutoff, label: Cutoff, kind: value, help: "The value at which the programme switches on.", required: true }
+      - { role: outcome, label: Outcome, accepts: [continuous, binary], required: true }
+      - { role: treatment, label: Actual treatment (for fuzzy RD), help: "Leave empty if crossing the cutoff meant treatment for certain.", accepts: [binary] }
+      - { role: confounders, label: Covariates to check for balance at the cutoff, accepts: [continuous, binary, categorical], multiple: true }
+      - { role: cluster, label: Cluster standard errors by, accepts: [id, categorical] }
+    live_sketch: rd_scatter
+    estimands: [LATE, ATT]
+    default_estimand: LATE
+    assumptions: [no_manipulation, continuity, sutva, consistency]
+    methods_hint: [rd.local_linear, rd.fuzzy, rd.density_test, rd.covariate_balance]
+
+  - id: iv
+    title: Something else pushed people in
+    sentence: An instrument or encouragement changed treatment, not the outcome directly.
+    aliases: [Instrumental variables, IV, 2SLS, two-stage least squares, encouragement design, natural experiment, LATE, exclusion restriction]
+    schematic: iv_triangle
+    order: 5
+    explain_key: design.iv
+    board_caption: The arrow from the instrument straight to the outcome is missing on purpose. That missing arrow is the exclusion restriction, and it is an assumption you are making.
+    zones:
+      - { role: instruments, label: Instrument, help: "Something that moved treatment but has no other route to the outcome.", accepts: [binary, continuous, categorical], multiple: true, required: true }
+      - { role: treatment, label: Treatment, accepts: [binary, continuous], required: true }
+      - { role: outcome, label: Outcome, accepts: [continuous, binary], required: true }
+      - { role: confounders, label: Controls, help: "Exogenous covariates entering both stages.", accepts: [continuous, binary, categorical], multiple: true }
+      - { role: cluster, label: Cluster standard errors by, accepts: [id, categorical] }
+    live_sketch: first_stage
+    estimands: [LATE, CACE, LATET, ATE]
+    default_estimand: LATE
+    assumptions: [relevance, exclusion, monotonicity, sutva, consistency]
+    methods_hint: [iv.2sls, iv.weak_robust, iv.liml]
+
+  - id: synth
+    title: One place, constructed twin
+    sentence: One treated unit; build a comparison from a donor pool.
+    aliases: [Synthetic control, SCM, synthetic difference-in-differences, donor pool, comparative case study]
+    schematic: one_vs_bundle
+    order: 6
+    explain_key: design.synth
+    board_caption: If the synthetic unit cannot reproduce the pre-period, it is not a counterfactual.
+    zones:
+      - { role: unit, label: One row per, accepts: [id, categorical], required: true }
+      - { role: time, label: Time, accepts: [continuous, datetime, categorical], required: true }
+      - { role: outcome, label: Outcome, accepts: [continuous], required: true }
+      - { role: treated_unit, label: Treated unit, kind: value, help: "The single place, firm or region that got the intervention.", required: true }
+      - { role: event_time, label: Intervention period, kind: value, required: true }
+      - { role: donor_pool, label: Donor pool, help: "Leave empty to use every other unit.", kind: values, multiple: true }
+      - { role: confounders, label: Predictors, help: "Averaged over the pre-period and matched alongside the outcome path.", accepts: [continuous, binary], multiple: true }
+    live_sketch: sc_prepath
+    estimands: [ATT]
+    default_estimand: ATT
+    assumptions: [donor_fit, convex_hull, no_anticipation, sutva]
+    methods_hint: [sc.abadie, sc.augmented, sc.synthdid, sc.matrix_completion]
+
+  - id: its
+    title: A shock in a single series
+    sentence: Before versus after an interruption; maybe a control series.
+    aliases: [Interrupted time series, ITS, segmented regression, before and after, single series]
+    schematic: line_with_event
+    order: 7
+    explain_key: design.its
+    board_caption: The counterfactual trend is an assumption, not an estimate.
+    zones:
+      - { role: outcome, label: Outcome series, accepts: [continuous], required: true }
+      - { role: time, label: Time, accepts: [continuous, datetime], required: true }
+      - { role: event_time, label: Interruption, kind: value, help: "When the policy took effect. Add an announcement date too if they differ.", required: true }
+      - { role: control_series, label: Control series, help: "A comparable series that should not have been affected.", accepts: [continuous], multiple: true }
+      - { role: confounders, label: Covariates, accepts: [continuous, binary, categorical], multiple: true }
+    live_sketch: its_series
+    estimands: [ATT]
+    default_estimand: ATT
+    assumptions: [no_cointerventions, model_form, no_anticipation, sutva]
+    methods_hint: [its.segmented, its.controlled, its.arima]
+
+  - id: mediation
+    title: How it worked (pathways)
+    sentence: We care about a mediator, not only the total effect.
+    aliases: [Causal mediation, direct and indirect effects, natural direct effect, natural indirect effect, pathway analysis, mechanism]
+    schematic: d_m_y
+    order: 8
+    explain_key: design.mediation
+    board_caption: You have to believe you measured everything that confounds treatment with the outcome AND everything that confounds the mediator with the outcome. That second half is the hard one, and it is what statisticians call sequential ignorability.
+    zones:
+      - { role: treatment, label: Treatment, accepts: [binary, categorical], required: true }
+      - { role: mediator, label: Mediator, help: "The pathway you think the effect travels through.", accepts: [continuous, binary, categorical], multiple: true, required: true }
+      - { role: outcome, label: Outcome, accepts: [continuous, binary], required: true }
+      - { role: confounders, label: Treatment-outcome confounders, accepts: [continuous, binary, categorical], multiple: true }
+      - { role: forbidden, label: "Mediator-outcome confounders affected by treatment", help: "These break the natural-effects decomposition. Interventional effects handle them.", accepts: [continuous, binary, categorical], multiple: true, tone: forbidden }
+    live_sketch: mediation_paths
+    estimands: [ATE, ATT]
+    default_estimand: ATE
+    assumptions: [sequential_ignorability, exchangeability, positivity, sutva, consistency]
+    methods_hint: [med.interventional, med.natural_effects, med.controlled_direct]
+
+  - id: longitudinal
+    title: Treatment that changes over time
+    sentence: The same person is treated, untreated, treated again; confounders also move.
+    aliases: [Time-varying treatment, marginal structural model, MSM, g-formula, g-methods, TMLE, longitudinal data, dynamic treatment]
+    schematic: person_time_grid
+    order: 9
+    explain_key: design.longitudinal
+    board_caption: Treatment and confounders both move over time, and each can only be affected by what came before it. Whether a covariate is treated as measured at the same time as the treatment or one period earlier changes the answer, so say which you mean.
+    zones:
+      - { role: unit, label: One row per person-period, accepts: [id, categorical], required: true }
+      - { role: time, label: Period, accepts: [continuous, datetime, categorical], required: true }
+      - { role: treatment, label: Treatment at this period, accepts: [binary, continuous], required: true }
+      - { role: outcome, label: Outcome, accepts: [continuous, binary], required: true }
+      - { role: confounders, label: Time-varying confounders, help: "Measured at or before the treatment decision in the same period.", accepts: [continuous, binary, categorical], multiple: true }
+      - { role: strata, label: Baseline covariates, accepts: [continuous, binary, categorical], multiple: true }
+    live_sketch: person_time
+    estimands: [ATE, ATT]
+    default_estimand: ATE
+    assumptions: [no_time_varying_confounding, positivity, sequential_ignorability, sutva, consistency]
+    methods_hint: [long.msm_iptw, long.gformula, long.ltmle]
+
+  - id: catalogue
+    title: I already know the method
+    sentence: Skip the cards; open the method catalogue with a search box.
+    schematic: none
+    order: 99
+    explain_key: design.catalogue
+    zones: []
+    estimands: []
+    assumptions: []
+    methods_hint: []

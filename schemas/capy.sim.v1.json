@@ -1,0 +1,49 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://causalcapybara.dev/schemas/capy.sim.v1.json",
+  "title": "capy.sim.v1",
+  "type": "object",
+  "required": ["schema", "version", "id", "dgp"],
+  "properties": {
+    "schema": { "const": "capy.sim" },
+    "version": { "const": 1 },
+    "id": { "type": "string" },
+    "name": { "type": ["string", "null"] },
+    "dgp": {
+      "type": "object",
+      "required": ["template"],
+      "properties": {
+        "template": { "type": "string" },
+        "params": { "type": "object" },
+        "truth": { "type": "object", "description": "e.g. ATE and ATT under the simulated world" }
+      }
+    },
+    "methods": { "type": "array", "items": { "type": "object" } },
+    "replications": { "type": "integer" },
+    "seed": { "type": ["integer", "null"] },
+    "results": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "method_id": { "type": "string" },
+          "method_label": { "type": ["string", "null"] },
+          "engine": { "type": "string" },
+          "bias": { "type": ["number", "null"] },
+          "rmse": { "type": ["number", "null"] },
+          "sd": { "type": ["number", "null"] },
+          "coverage": { "type": ["number", "null"] },
+          "mean_ci_width": { "type": ["number", "null"] },
+          "rejection_rate": { "type": ["number", "null"] },
+          "n_converged": { "type": ["integer", "null"] },
+          "n_failed": { "type": ["integer", "null"] },
+          "mean_estimate": { "type": ["number", "null"] },
+          "truth": { "type": ["number", "null"] }
+        }
+      }
+    },
+    "artifacts": { "type": "array", "items": { "type": "object" } },
+    "status": { "enum": ["draft", "running", "done", "failed", "cancelled"] }
+  },
+  "additionalProperties": true
+}
