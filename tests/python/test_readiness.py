@@ -204,9 +204,10 @@ def test_engine_not_reading_large_input_still_times_out(project, monkeypatch):
 @pytest.mark.parametrize("engine", ["python", "r"])
 def test_real_job_persists_result_and_zero_seed(project, engine):
     if engine == "r":
-        from capy_sidecar.engines import find_rscript
-        if not find_rscript():
-            pytest.skip("R is not installed")
+        from capy_sidecar.engines import r_health
+        health = r_health(refresh=True)
+        if health["status"] != "healthy":
+            pytest.skip(f"R is not ready for jobs: {health['status']}; {health['problems']}")
     frame = pd.DataFrame({"d": [0] * 30 + [1] * 30,
                           "y": list(range(30)) + [value + 2 for value in range(30)]})
     project.set_data(frame)

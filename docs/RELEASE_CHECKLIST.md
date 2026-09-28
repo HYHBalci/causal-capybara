@@ -50,12 +50,13 @@ old name is a compatibility concern, not a reason to keep the old branding.
 - [ ] Rename the existing repository to a private archive and retarget local remotes
   before moving the clean staging repository to the canonical
   `HYHBalci/causal-capybara` slug. Confirm the archive remains private.
-- [ ] Reapply branch protection and repository rulesets to the fresh private
-  staging repository. Enable Issues and verify the bug form.
+- [ ] Enable Issues in the fresh private staging repository and verify the bug
+  form.
 - [ ] Verify the exact installer, checksum, licenses, notices and release notes
   in the **draft** release. On Friday, October 2, 2026 (Europe/Amsterdam),
-  make the fresh repository public, enable and verify private vulnerability
-  reporting, then publish the draft only after every release gate above is met.
+  make the fresh repository public. Then apply and verify branch protection,
+  repository rulesets and private vulnerability reporting before publishing the
+  draft, after every release gate above is met.
 
 ## Release candidate smoke test
 

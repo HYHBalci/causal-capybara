@@ -198,7 +198,8 @@ try {
       })
       assert(geometry.maxScroll > 0, 'Long report needs a scrollable preview')
       assert(Math.abs(geometry.scrollTop - geometry.maxScroll) <= 1, 'Keyboard must reach the end of the report')
-      assert(geometry.top >= geometry.canvasTop - 1 && geometry.bottom <= geometry.canvasBottom + 1,
+      // Browser layout uses fractional pixels while scroll offsets use whole pixels.
+      assert(geometry.top >= geometry.canvasTop - 2 && geometry.bottom <= geometry.canvasBottom + 2,
         `Preview must remain inside the visible canvas: ${JSON.stringify(geometry)}`)
       await audit(`report-${viewport.width}`)
     }
