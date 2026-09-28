@@ -1,0 +1,149 @@
+name: Windows release candidate
+
+on:
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: Existing release tag (for example v0.1.0)
+        required: true
+        type: string
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    name: Build and smoke-test Windows x64 installer
+    runs-on: windows-latest
+    env:
+      RELEASE_TAG: ${{ inputs.tag }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.tag }}
+          fetch-depth: 0
+          persist-credentials: false
+      - name: Check exact release tag and versions
+        shell: pwsh
+        run: |
+          $version = (Get-Content app/package.json -Raw | ConvertFrom-Json).version
+          $tauri = (Get-Content app/src-tauri/tauri.conf.json -Raw | ConvertFrom-Json).version
+          $cargo = ([regex]::Match((Get-Content app/src-tauri/Cargo.toml -Raw), '(?m)^version = "([^"]+)"')).Groups[1].Value
+          $sidecar = ([regex]::Match((Get-Content sidecar/pyproject.toml -Raw), '(?m)^version = "([^"]+)"')).Groups[1].Value
+          $engine = ([regex]::Match((Get-Content engines/python/pyproject.toml -Raw), '(?m)^version = "([^"]+)"')).Groups[1].Value
+          if ($env:RELEASE_TAG -ne "v$version") { throw "Tag $env:RELEASE_TAG does not match app version $version." }
+          if (@($tauri, $cargo, $sidecar, $engine) | Where-Object { $_ -ne $version }) {
+            throw 'Tauri, Cargo, sidecar, and engine versions must match app/package.json.'
+          }
+          $tagCommit = git rev-parse "refs/tags/$env:RELEASE_TAG^{}"
+          if ($LASTEXITCODE -ne 0 -or $tagCommit -ne (git rev-parse HEAD)) {
+            throw 'The checked-out commit does not match the requested release tag.'
+          }
+          if (-not (Test-Path "docs/RELEASE_NOTES_$version.md")) {
+            throw "Missing versioned release notes for $version."
+          }
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: npm
+          cache-dependency-path: app/package-lock.json
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+          cache: pip
+      - uses: dtolnay/rust-toolchain@stable
+      - name: Install frontend dependencies
+        run: npm ci
+        working-directory: app
+      - name: Frontend checks
+        working-directory: app
+        run: |
+          npm test
+          npm run typecheck
+      - name: Desktop bootstrap tests
+        working-directory: app
+        run: cargo test --manifest-path src-tauri/Cargo.toml --locked
+      - name: Stage verified embedded Python and pinned wheels
+        shell: pwsh
+        run: ./tools/stage_windows_runtime.ps1
+      - name: Smoke-test the staged analysis runtime
+        shell: pwsh
+        run: ./tools/smoke_windows_runtime.ps1
+      - name: Full Python suite on the shipped interpreter
+        shell: pwsh
+        env:
+          CAPY_HOME: ${{ runner.temp }}/causal-capybara-release-tests
+          PYTHONDONTWRITEBYTECODE: "1"
+        run: |
+          & ./.capy-build/release/windows-x64/runtimes/python/python.exe -m pytest tests/python -q -p no:cacheprovider
+          if ($LASTEXITCODE -ne 0) { throw "Embedded Python test suite failed with exit $LASTEXITCODE." }
+      - name: Collect exact third-party license texts
+        run: node tools/collect_release_licenses.mjs
+      - name: Build the self-contained NSIS installer
+        working-directory: app
+        run: npm run tauri build -- --config src-tauri/tauri.release.conf.json --bundles nsis
+      - name: Install and smoke-test the packaged runtime
+        shell: pwsh
+        run: ./tools/smoke_windows_installer.ps1
+      - name: Rename download and write SHA-256 checksum
+        shell: pwsh
+        run: |
+          $version = (Get-Content app/package.json -Raw | ConvertFrom-Json).version
+          $candidates = @(Get-ChildItem app/src-tauri/target/release/bundle/nsis -Filter '*.exe' -File)
+          if ($candidates.Count -ne 1) { throw "Expected one NSIS installer, found $($candidates.Count)." }
+          $publish = '.capy-build/publish'
+          New-Item -ItemType Directory -Path $publish -Force | Out-Null
+          $name = "Causal-Capybara-$version-windows-x64-setup.exe"
+          Copy-Item -LiteralPath $candidates[0].FullName -Destination (Join-Path $publish $name)
+          $digest = (Get-FileHash -LiteralPath (Join-Path $publish $name) -Algorithm SHA256).Hash.ToLowerInvariant()
+          "$digest  $name" | Set-Content -LiteralPath (Join-Path $publish 'SHA256SUMS.txt') -Encoding ascii
+          Write-Host "Release asset: $name"
+          Write-Host "SHA-256: $digest"
+          $contents = @(Get-ChildItem -LiteralPath $publish -Force)
+          if ($contents.Count -ne 2 -or $name -notin $contents.Name -or 'SHA256SUMS.txt' -notin $contents.Name) {
+            throw 'The publish directory must contain only the installer and SHA256SUMS.txt.'
+          }
+      - uses: actions/upload-artifact@v4
+        with:
+          name: causal-capybara-windows-release
+          path: .capy-build/publish/*
+          include-hidden-files: true
+          if-no-files-found: error
+          retention-days: 14
+
+  draft-release:
+    name: Attach assets to a draft GitHub Release
+    needs: build
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    env:
+      GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      RELEASE_TAG: ${{ inputs.tag }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.tag }}
+          persist-credentials: false
+      - uses: actions/download-artifact@v4
+        with:
+          name: causal-capybara-windows-release
+          path: release-assets
+      - name: Create or refresh draft only
+        shell: bash
+        run: |
+          set -euo pipefail
+          version="$(node -p "require('./app/package.json').version")"
+          notes="docs/RELEASE_NOTES_$version.md"
+          test -f "$notes"
+          test -f "release-assets/Causal-Capybara-$version-windows-x64-setup.exe"
+          test -f release-assets/SHA256SUMS.txt
+          if gh release view "$RELEASE_TAG" >/dev/null 2>&1; then
+            draft="$(gh release view "$RELEASE_TAG" --json isDraft --jq '.isDraft')"
+            test "$draft" = true || { echo 'Refusing to modify an already published release.' >&2; exit 1; }
+            gh release upload "$RELEASE_TAG" release-assets/* --clobber
+            gh release edit "$RELEASE_TAG" --title "Causal Capybara $RELEASE_TAG" --notes-file "$notes"
+          else
+            gh release create "$RELEASE_TAG" release-assets/* --draft --verify-tag \
+              --title "Causal Capybara $RELEASE_TAG" --notes-file "$notes"
+          fi
