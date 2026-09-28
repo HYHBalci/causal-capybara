@@ -1,0 +1,254 @@
+name: ci
+
+# Pins break. Catch them.
+#
+# Check the engine on each platform, frontend regressions, cross-engine agreement,
+# and a real Windows desktop compilation and installer build.
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  schedule:
+    # CRAN and PyPI churn on their own schedule; so do we.
+    - cron: "0 6 * * 1"
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  engine:
+    name: python engine (${{ matrix.os }})
+    runs-on: ${{ matrix.os }}
+    env:
+      PYTHONPATH: ${{ runner.os == 'Windows' && 'engines/python;sidecar' || 'engines/python:sidecar' }}
+      CAPY_HOME: ${{ runner.temp }}/causal-capybara-tests
+    strategy:
+      fail-fast: false
+      matrix:
+        # Windows first: policy users are on Windows, and it is where the
+        # packaging pain lives.
+        os: [windows-latest, ubuntu-latest, macos-latest]
+        python: ["3.12"]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python }}
+          cache: pip
+      - name: Install the engine
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install -r requirements.txt
+      - name: Schemas parse and the registry loads
+        shell: bash
+        run: |
+          python - <<'PY'
+          import json, glob, yaml
+          for f in glob.glob('schemas/*.json'):
+              json.load(open(f, encoding='utf-8'))
+          for f in glob.glob('engines/registry/*.yaml') + glob.glob('docs/explain/*.yaml'):
+              yaml.safe_load(open(f, encoding='utf-8'))
+          from capy_sidecar import registry
+          methods = registry.methods()
+          runnable = [m for m in methods if m.get('python_available')]
+          cat = registry.explain_catalog()
+          print(f"{len(methods)} methods ({len(runnable)} runnable), {len(cat)} explain entries")
+          assert len(runnable) >= 60, "the Python engine lost adapters"
+          # every explain_key the app can ask for must resolve
+          wanted = {d['explain_key'] for d in registry.designs()}
+          wanted |= {e['explain_key'] for e in registry.estimands()}
+          wanted |= {m['explain_key'] for m in methods}
+          wanted |= {a['explain_key'] for a in registry.assumption_catalog()}
+          missing = sorted(k for k in wanted if k and k not in cat)
+          assert not missing, f"unresolved Explain keys: {missing}"
+          PY
+      - name: Adapter contract, across every registered adapter
+        shell: bash
+        run: |
+          python tests/python/test_all_adapters.py
+      - name: Design-family tests
+        shell: bash
+        run: |
+          set -e
+          for t in observational did_modern rd iv causalml probes sensitivity dag reports simlab examples; do
+            echo "== $t =="
+            python "tests/python/test_$t.py"
+          done
+      - name: Application regressions and offline studies
+        run: python -m pytest tests/python/test_learn.py tests/python/test_literature.py tests/python/test_recents.py tests/python/test_realdata.py tests/python/test_robustness.py tests/python/test_readiness.py tests/python/test_scripts.py tests/python/test_catalogue_concurrency.py tests/python/test_engine_install.py -q
+      - name: A run validates against capy.result.v1, end to end
+        shell: bash
+        run: |
+          export CAPY_HOME="$RUNNER_TEMP/capy"
+          python -m capy_sidecar example medicaid > /tmp/proj.txt
+          PROJ=$(tail -1 /tmp/proj.txt)
+          SPEC=$(python -m capy_sidecar spec "$PROJ" --design did --estimand ATT \
+            --treatment expanded --outcome uninsured_rate --unit state --time year --cluster state | tail -1)
+          python -m capy_sidecar run "$PROJ" "$SPEC" did.callaway_santanna did.twfe
+          python -m capy_sidecar validate "$PROJ"
+
+  ui:
+    name: ui
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: app
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: npm
+          cache-dependency-path: app/package-lock.json
+      - run: npm ci
+      - run: npm test
+      - run: npm run typecheck
+      - run: npm run build
+
+  browser:
+    name: Browser workflow and accessibility
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    env:
+      PYTHONPATH: engines/python:sidecar
+      CAPY_HOME: ${{ runner.temp }}/causal-capybara-ui
+      CAPY_TEST_URL: http://127.0.0.1:4173
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: npm
+          cache-dependency-path: app/package-lock.json
+      - run: python -m pip install -r requirements.txt
+      - run: npm ci
+        working-directory: app
+      - run: npx playwright install --with-deps chromium
+        working-directory: app
+      - run: npm run build
+        working-directory: app
+      - name: Exercise the built app with an isolated workspace
+        shell: bash
+        run: |
+          set -euo pipefail
+          python - <<'PY'
+          import json, os
+          from pathlib import Path
+          home = Path(os.environ['CAPY_HOME'])
+          home.mkdir(parents=True, exist_ok=True)
+          (home / 'settings.json').write_text(json.dumps({
+              'workspace': str(home / 'workspace'),
+              'allow_downloads': False,
+          }), encoding='utf-8')
+          PY
+          python -m capy_sidecar serve > "$CAPY_HOME/sidecar.log" 2>&1 &
+          SIDECAR_PID=$!
+          npm --prefix app run preview -- --host 127.0.0.1 --port 4173 --strictPort > "$CAPY_HOME/preview.log" 2>&1 &
+          PREVIEW_PID=$!
+          trap 'kill "$SIDECAR_PID" "$PREVIEW_PID" 2>/dev/null || true' EXIT
+          python - <<'PY'
+          import json, time, urllib.request
+          endpoints = ['http://127.0.0.1:8760/health', 'http://127.0.0.1:4173']
+          for endpoint in endpoints:
+              deadline = time.monotonic() + 60
+              while True:
+                  try:
+                      with urllib.request.urlopen(endpoint, timeout=2) as response:
+                          if endpoint.endswith('/health'):
+                              health = json.load(response)
+                              assert health.get('ok') and health.get('app') == 'Causal Capybara'
+                          assert response.status == 200
+                      break
+                  except Exception:
+                      if time.monotonic() >= deadline:
+                          raise RuntimeError(f'Test service did not become ready: {endpoint}')
+                      time.sleep(0.5)
+          PY
+          npm --prefix app run test:ui
+      - name: Keep browser evidence and test-service logs
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: causal-capybara-browser-results
+          path: |
+            ${{ runner.temp }}/causal-capybara-ui/*.log
+            .audit/browser-results/
+          include-hidden-files: true
+          if-no-files-found: ignore
+          retention-days: 14
+
+  cross-engine:
+    name: cross-engine concordance
+    runs-on: ubuntu-latest
+    env:
+      PYTHONPATH: engines/python:sidecar
+      CAPY_HOME: ${{ runner.temp }}/causal-capybara-cross-engine
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+      - uses: r-lib/actions/setup-r@v2
+        with:
+          r-version: release
+          use-public-rspm: true
+      - name: Install the R engine's dependencies
+        run: |
+          Rscript -e 'install.packages(c("jsonlite", "grf"), repos = "https://cloud.r-project.org")'
+      - name: Install the Python engine
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install -r requirements.txt
+      - name: The R engine answers
+        run: Rscript --vanilla engines/r/capy.r/R/main.R health
+      - name: Both engines agree, or the run fails
+        run: |
+          python tests/python/test_cross_engine.py
+      - name: Refresh the R lockfile so it stops being a guess
+        run: |
+          Rscript -e 'p <- installed.packages(); writeLines(paste0(rownames(p), "==", p[,"Version"]))' \
+            > /tmp/r-installed.txt
+          echo "Packages actually resolved on this runner:"
+          cat /tmp/r-installed.txt
+      - uses: actions/upload-artifact@v4
+        with:
+          name: r-installed-versions
+          path: /tmp/r-installed.txt
+
+  desktop:
+    name: Windows desktop and preview installer
+    runs-on: windows-latest
+    defaults:
+      run:
+        working-directory: app
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: npm
+          cache-dependency-path: app/package-lock.json
+      - uses: dtolnay/rust-toolchain@stable
+      - run: npm ci
+      - name: Desktop bootstrap regression tests
+        run: cargo test --manifest-path src-tauri/Cargo.toml --locked
+      - name: Build the Windows installer
+        run: npm run tauri build -- --bundles nsis
+      # Build verification only. This does not publish a release or certify a
+      # clean install: the preview installer still requires an external Python.
+      - uses: actions/upload-artifact@v4
+        with:
+          name: causal-capybara-windows-preview
+          path: app/src-tauri/target/release/bundle/nsis/*.exe
+          if-no-files-found: error
+          retention-days: 14
