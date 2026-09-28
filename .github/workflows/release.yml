@@ -73,13 +73,13 @@ jobs:
       - name: Smoke-test the staged analysis runtime
         shell: pwsh
         run: ./tools/smoke_windows_runtime.ps1
-      - name: Full Python suite on the shipped interpreter
+      - name: Bundled Python tests (R concordance runs in CI)
         shell: pwsh
         env:
           CAPY_HOME: ${{ runner.temp }}/causal-capybara-release-tests
           PYTHONDONTWRITEBYTECODE: "1"
         run: |
-          & ./.capy-build/release/windows-x64/runtimes/python/python.exe -m pytest tests/python -q -p no:cacheprovider
+          & ./.capy-build/release/windows-x64/runtimes/python/python.exe -m pytest tests/python --ignore=tests/python/test_cross_engine.py -q -p no:cacheprovider
           if ($LASTEXITCODE -ne 0) { throw "Embedded Python test suite failed with exit $LASTEXITCODE." }
       - name: Collect exact third-party license texts
         run: node tools/collect_release_licenses.mjs
