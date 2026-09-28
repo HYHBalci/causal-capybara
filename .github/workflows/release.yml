@@ -100,7 +100,8 @@ jobs:
           $name = "Causal-Capybara-$version-windows-x64-setup.exe"
           Copy-Item -LiteralPath $candidates[0].FullName -Destination (Join-Path $publish $name)
           $digest = (Get-FileHash -LiteralPath (Join-Path $publish $name) -Algorithm SHA256).Hash.ToLowerInvariant()
-          "$digest  $name" | Set-Content -LiteralPath (Join-Path $publish 'SHA256SUMS.txt') -Encoding ascii
+          $checksumPath = Join-Path $publish 'SHA256SUMS.txt'
+          [IO.File]::WriteAllText($checksumPath, "$digest  $name`n", [Text.UTF8Encoding]::new($false))
           Write-Host "Release asset: $name"
           Write-Host "SHA-256: $digest"
           $contents = @(Get-ChildItem -LiteralPath $publish -Force)
