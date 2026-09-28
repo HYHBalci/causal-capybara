@@ -13,7 +13,8 @@ and export the analysis and its methodological references.
 This release targets **Windows x64**. Download
 `Causal-Capybara-0.1.0-windows-x64-setup.exe` and
 `SHA256SUMS.txt` from the release assets. Compare the installer's full SHA-256
-hash with the matching checksum before running it:
+hash with the matching checksum before running it. Open PowerShell in the
+folder containing both downloads (usually Downloads), then run:
 
 ```powershell
 Get-FileHash -Algorithm SHA256 -LiteralPath '.\Causal-Capybara-0.1.0-windows-x64-setup.exe'

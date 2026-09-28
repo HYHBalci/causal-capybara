@@ -24,3 +24,14 @@ app/src-tauri/gen/
 # Local app and release-test state.
 .codex-run/
 .release-test-home/
+# Local credentials and signing material must not enter a public source tree.
+.env
+.env.*
+!.env.example
+.npmrc
+.pypirc
+.netrc
+*.pem
+*.p12
+*.pfx
+*.key

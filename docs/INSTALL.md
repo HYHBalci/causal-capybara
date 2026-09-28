@@ -12,7 +12,9 @@ R is optional. PDF export requires a separate TeX installation.
 2. Download `Causal-Capybara-0.1.0-windows-x64-setup.exe` and its SHA-256
    checksum file from the same release. Read its notes for tested Windows versions,
    signing status, and known limitations.
-3. In PowerShell, calculate the download's SHA-256 hash:
+3. Open PowerShell in the folder where you saved both downloads. For the usual
+   Downloads folder, run `Set-Location (Join-Path $HOME 'Downloads')` first.
+   Calculate the installer's SHA-256 hash:
 
    ```powershell
    Get-FileHash -Algorithm SHA256 -LiteralPath '.\Causal-Capybara-0.1.0-windows-x64-setup.exe'
