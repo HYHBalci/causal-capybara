@@ -15,6 +15,8 @@ jobs:
   build:
     name: Build and smoke-test Windows x64 installer
     runs-on: windows-latest
+    outputs:
+      release_sha: ${{ steps.verify_tag.outputs.sha }}
     env:
       RELEASE_TAG: ${{ inputs.tag }}
     steps:
@@ -24,6 +26,7 @@ jobs:
           fetch-depth: 0
           persist-credentials: false
       - name: Check exact release tag and versions
+        id: verify_tag
         shell: pwsh
         run: |
           $version = (Get-Content app/package.json -Raw | ConvertFrom-Json).version
@@ -42,6 +45,7 @@ jobs:
           if (-not (Test-Path "docs/RELEASE_NOTES_$version.md")) {
             throw "Missing versioned release notes for $version."
           }
+          "sha=$tagCommit" >> $env:GITHUB_OUTPUT
       - uses: actions/setup-node@v4
         with:
           node-version: "22"
@@ -120,6 +124,7 @@ jobs:
     env:
       GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       RELEASE_TAG: ${{ inputs.tag }}
+      RELEASE_SHA: ${{ needs.build.outputs.release_sha }}
     steps:
       - uses: actions/checkout@v4
         with:
@@ -133,17 +138,30 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
+          test "$(git rev-parse HEAD)" = "$RELEASE_SHA" || { echo 'Release tag changed between build and draft jobs.' >&2; exit 1; }
           version="$(node -p "require('./app/package.json').version")"
           notes="docs/RELEASE_NOTES_$version.md"
           test -f "$notes"
-          test -f "release-assets/Causal-Capybara-$version-windows-x64-setup.exe"
+          installer="Causal-Capybara-$version-windows-x64-setup.exe"
+          test -f "release-assets/$installer"
           test -f release-assets/SHA256SUMS.txt
+          test "$(find release-assets -maxdepth 1 -type f | wc -l)" -eq 2 || { echo 'Expected exactly two release assets.' >&2; exit 1; }
+          (cd release-assets && sha256sum -c SHA256SUMS.txt)
           if gh release view "$RELEASE_TAG" >/dev/null 2>&1; then
             draft="$(gh release view "$RELEASE_TAG" --json isDraft --jq '.isDraft')"
             test "$draft" = true || { echo 'Refusing to modify an already published release.' >&2; exit 1; }
+            while IFS= read -r existing; do
+              case "$existing" in
+                "$installer"|SHA256SUMS.txt) ;;
+                *) echo "Refusing stale draft asset: $existing" >&2; exit 1 ;;
+              esac
+            done < <(gh release view "$RELEASE_TAG" --json assets --jq '.assets[].name')
             gh release upload "$RELEASE_TAG" release-assets/* --clobber
             gh release edit "$RELEASE_TAG" --title "Causal Capybara $RELEASE_TAG" --notes-file "$notes"
           else
             gh release create "$RELEASE_TAG" release-assets/* --draft --verify-tag \
               --title "Causal Capybara $RELEASE_TAG" --notes-file "$notes"
           fi
+          expected_assets="$(printf '%s\n' "$installer" SHA256SUMS.txt | sort)"
+          actual_assets="$(gh release view "$RELEASE_TAG" --json assets --jq '.assets[].name' | sort)"
+          test "$actual_assets" = "$expected_assets" || { echo 'Draft release has unexpected assets.' >&2; exit 1; }
