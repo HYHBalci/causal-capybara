@@ -17,9 +17,10 @@ once, because the disagreement between them is part of what you learned.
 **Public download opens after publication, planned for Friday, October 2, 2026.**
 The release is currently a private draft. Windows x64 is the first desktop target.
 
-1. **Download** the installer using the link above.
-2. **Open** the downloaded `.exe`, keep the suggested settings, and choose **Install**.
-3. **Finish** and open **Causal Capybara** from the Start menu. Try a worked example from Home.
+1. **Download** the installer using the link above, then double-click the `.exe`.
+2. Choose **Next**, review the Apache license, and choose **I Agree**.
+3. Keep the default folder for your Windows user and choose **Next**. When setup completes, choose **Next** again.
+4. Leave **Run Causal Capybara** checked and choose **Finish**. Try a worked example from Home.
 
 **Python and the analysis packages are included.** You do not need to install Python,
 R, Git, or programming tools. Once the release is public, the download needs no GitHub account.
@@ -89,9 +90,9 @@ The installer is written to `app/src-tauri/target/release/bundle/nsis` and appea
 Start menu as **Causal Capybara**. The release workflow performs these steps and adds a
 SHA-256 checksum; a fresh-account manual GUI test remains a release gate.
 
-The app starts its Python engine automatically. It uses `CAPY_PYTHON` first, then an interpreter
-saved from the recovery screen, a managed runtime if present, a nearby `.venv`, and finally Python
-on PATH. Selecting an interpreter does not install missing packages. The recovery screen checks
+The app starts its Python engine automatically and uses its bundled runtime by default.
+An explicit `CAPY_PYTHON` setting or recovery-screen override takes precedence. Development
+builds can fall back to a saved interpreter, a nearby `.venv`, or Python on PATH. Selecting an interpreter does not install missing packages. The recovery screen checks
 its version and required packages before you use it. Set `CAPY_PYTHON` to a working environment
 when running a development build.
 

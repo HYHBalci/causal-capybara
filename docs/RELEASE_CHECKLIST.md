@@ -2,7 +2,7 @@
 
 Updated September 30, 2026. Target publication: **Friday, October 2, 2026
 (Europe/Amsterdam)**. Status: **0.1.0 release candidate in preparation;
-student installation and license audit in progress; fresh-account verification still required**. The repository remains private until
+student installer built and audited; fresh-account verification, signing decision, and hosted CI still required**. The repository remains private until
 the public-release gates are complete.
 
 The repository and all user-facing material should use **Causal Capybara**. Existing user data under the
@@ -19,12 +19,12 @@ old name is a compatibility concern, not a reason to keep the old branding.
 - [ ] Test native open/save dialogs, paths containing spaces and non-ASCII characters, recent-project
   reopening, external citation links, clipboard actions, and Markdown/HTML/Word exports. Confirm PDF
   export explains its typesetting dependency and returns the stated fallback when unavailable.
-- [ ] Review redistribution notices for the actual installer contents, including frontend libraries,
+- [x] Review redistribution notices for the actual installer contents, including frontend libraries,
   fonts and any bundled Python runtime or wheels. Include all required third-party notices.
 - [x] Audit tracked files and Git history for credentials, private paths, real project data and
   unreleasable third-party content before changing the repository to public. Remove or revoke
   exposed secrets and review the final source archive.
-- [ ] Confirm the Apache-2.0 license and copyright notice identify Yusufhan Balci; VCESR, and
+- [x] Confirm the Apache-2.0 license and copyright notice identify Yusufhan Balci; VCESR, and
   that release archives include the required project and bundled dependency notices.
 - [ ] Enable and verify GitHub private vulnerability reporting, or publish a working private
   security contact. Check that the public bug form asks for redacted logs only.
@@ -38,7 +38,7 @@ old name is a compatibility concern, not a reason to keep the old branding.
   [installation guide](INSTALL.md), including supported platforms, known limitations,
   an issue-reporting link and checksums alongside the download. Keep the launch claims
   consistent with the formats, methods and platforms actually verified. The student path
-  now has a direct installer link, three GUI steps, and optional checksum verification.
+  now has a direct installer link, the verified setup screens, and optional checksum verification.
 
 ## Final audit evidence
 
@@ -52,7 +52,7 @@ Third-party copyright notices remain intact.
 - [x] Create a fresh **private** staging repository from the reviewed tracked-file
   snapshot. Ensure every commit uses the maintainer's GitHub no-reply address or
   a GitHub App identity. Keep the existing 19-commit repository private.
-- [ ] Inspect the staging repository's complete tree and history, Actions logs,
+- [x] Inspect the staging repository's complete tree and history, Actions logs,
   artifacts and draft-release assets. Scan the exported snapshot for private commit
   IDs, email addresses, local filesystem paths, credentials and research data.
 - [x] Rename the existing repository to a private archive and retarget local remotes
@@ -60,8 +60,9 @@ Third-party copyright notices remain intact.
   `HYHBalci/causal-capybara` slug. Confirm the archive remains private.
 - [x] Enable Issues in the fresh private staging repository and verify the bug
   form.
-- [ ] Verify the exact installer, checksum, licenses, notices and release notes
-  in the **draft** release. On Friday, October 2, 2026 (Europe/Amsterdam),
+- [x] Verify the exact installer, checksum, licenses, notices and release notes
+  in the **draft** release. A fresh download matches the tested artifact and GitHub digest.
+- [ ] On Friday, October 2, 2026 (Europe/Amsterdam),
   make the fresh repository public. Then apply and verify branch protection,
   repository rulesets and private vulnerability reporting before publishing the
   draft, after every release gate above is met. Confirm the direct download works
@@ -82,7 +83,7 @@ Third-party copyright notices remain intact.
 5. Use an isolated test environment to check rejected file paths, malformed imports, failed downloads,
    occupied engine port, read-only destinations, repeated clicks and cancellation.
 
-## What the build checks establish
+## Current candidate verification
 
 Routine CI builds an **unsigned source-only Windows preview installer** as an artifact.
 The manual v0.1.0 release workflow stages a managed Python runtime, builds a separate
@@ -92,27 +93,31 @@ release, establish the clean-user GUI workflow, or establish signing status.
 macOS and Linux desktop installations remain unverified; do not advertise them
 as supported downloads yet.
 
-On Windows 10 Home x64 build 19045, the bundled CPython 3.13.15 runtime passed
-the full Python suite: 311 tests, 7 warnings, in 10m30s. Its offline smoke also
-covered imports, a worked example, two estimates and result validation. Frontend
-tests (38/38), TypeScript checking and the production UI build passed locally.
-On September 28, `npm audit --audit-level=high` reported no advisories and
-`pip-audit -r requirements.txt --no-deps --disable-pip` reported none for the
-pinned direct Python entries. Advisory checks do not guarantee the absence of
-vulnerabilities.
+The current local Windows x64 installer was built from `90cb5e4` and is identified
+by SHA-256 `f1773c3888d0e4b90e9fb96c067d888af872a186b67d3da0fffce52c4935d313`.
+It passed the normal non-elevated installer wizard, default folder, license page,
+Finish launch, shortcuts, bundled engine, installed worked-example analysis, clean
+close, and normal uninstall. The full installed payload privacy and notice scans
+passed, including absence of generated bytecode after use.
 
-The isolated NSIS smoke installed and uninstalled the candidate on this host,
-found the bundled runtime and license files, completed example analysis, and
-verified desktop startup, `/health`, one Python child and child cleanup with
-system Python absent from PATH. This does not establish the fresh-account
-manual GUI workflow or signing status.
+Frontend tests (38), TypeScript checking, the production UI and Rust/NSIS builds,
+and the Rust test passed. The current bundled Python run passed 307 checks; its one
+harness cache-location failure passed after correcting the cache directory (308
+checks across the run and rerun). Earlier R and CI results are identified separately
+in the audit. The latest hosted CI/release jobs were not started because of a GitHub
+Actions account restriction; green CI for the release source remains required.
+
+Automatic launch from Finish was slow on this host (about 116 seconds to a healthy
+engine in the completed audit). Earlier launch deadlines expired. A fresh-machine
+timing and Windows-warning check remains open. This account is not fresh and the
+installer is unsigned.
 
 For local verification from the repository root:
 
 ```powershell
 $env:CAPY_HOME = Join-Path $env:TEMP "causal-capybara-release-tests"
 $env:PYTHONPATH = 'engines/python;sidecar'
-.\.venv\Scripts\python.exe -m pytest tests/python -q
+.\.venv\Scripts\python.exe -B -m pytest tests/python -q
 npm --prefix app ci
 npm --prefix app test
 npm --prefix app run build

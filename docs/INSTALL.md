@@ -14,11 +14,12 @@ without a GitHub account. The download is about **133 MB**.
 1. **Download.** Click the link above. Your browser usually saves the installer in
    **Downloads**. On the [release page](https://github.com/HYHBalci/causal-capybara/releases/tag/v0.1.0),
    choose `Causal-Capybara-0.1.0-windows-x64-setup.exe` under **Assets**.
-2. **Open and install.** Double-click the downloaded file. Choose **Next**, accept the
-   license, keep the suggested folder, then choose **Install**. Setup installs for your
-   Windows user; you do not need to choose a Python interpreter or install R.
-3. **Start.** Leave **Run Causal Capybara** selected and choose **Finish**, or open
-   **Causal Capybara** from the Start menu. You can also select the desktop shortcut.
+2. **Open.** Double-click the downloaded file and choose **Next**.
+3. **Agree.** Review the Apache license and choose **I Agree**.
+4. **Install.** Keep the default folder for your Windows user and choose **Next**.
+   When setup completes, choose **Next** again.
+5. **Start.** Leave **Run Causal Capybara** checked and choose **Finish**. You can
+   also open the app later from the Start menu or desktop shortcut.
 
 The candidate has been tested on Windows 10 x64. Windows 11 x64 is an intended
 target with a separate clean-machine test still pending. macOS, Linux, and Windows
@@ -67,7 +68,7 @@ Windows installer. GitHub's **Source code** ZIP is for developers; use the `.exe
 ### The app cannot start its analysis engine
 
 The release bundles CPython 3.13.15 and the required packages. Let the app finish
-starting. If it shows a recovery screen, use its error details when reporting the problem
+starting. If no window appears after setup, open Causal Capybara from the Start menu. If it shows a recovery screen, use its error details when reporting the problem
 through the [bug form](https://github.com/HYHBalci/causal-capybara/issues/new?template=bug_report.yml).
 Redact usernames, local paths, and private data. Ordinary installation should not
 require setting up another Python environment.
@@ -147,7 +148,8 @@ Use the release workflow for the student download.
 
 ## Verification status
 
-The exact draft installer passed isolated installation, engine startup without
-system Python, example analysis, clean exit, and uninstall checks. A fresh-account
+A local Windows x64 installer passed isolated installation, engine startup without
+system Python, example analysis, clean exit, and uninstall checks. The latest hosted
+build is blocked by a GitHub Actions account restriction. A fresh-account
 interactive test remains pending. See the [release checklist](RELEASE_CHECKLIST.md)
 and [final audit](RELEASE_AUDIT_2026-09-30.md) for the evidence and publication gates.

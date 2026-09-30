@@ -7,11 +7,10 @@ The download link activates when the repository is public and this release is pu
 
 **Python and the analysis packages are included. No programming setup required.**
 
-1. Download `Causal-Capybara-0.1.0-windows-x64-setup.exe` (about 133 MB).
-2. Open it, choose **Next**, accept the license, and keep the suggested settings.
-   Choose **Install**.
-3. Choose **Finish** to launch the app, or open **Causal Capybara** from Start.
-   Open a worked example from Home and try your first analysis.
+1. Download `Causal-Capybara-0.1.0-windows-x64-setup.exe` (about 133 MB) and double-click it.
+2. Choose **Next**, review the Apache license, and choose **I Agree**.
+3. Keep the default folder for your Windows user and choose **Next**. When setup completes, choose **Next** again.
+4. Leave **Run Causal Capybara** checked and choose **Finish**. Open a worked example from Home.
 
 The app installs for your Windows user. If Microsoft WebView2 is missing, setup
 downloads that component, so keep an internet connection available during installation.
@@ -33,17 +32,22 @@ and export the analysis and its methodological references.
   its publisher only when requested and retains that publisher's reuse terms.
 - Bundled Python engine and packages. R methods are optional and require a separate installation.
 
-## Verified candidate
+## Local validation
 
-The installer bundles CPython 3.13.15. All seven CI jobs passed for the tagged
-source, including Windows desktop checks, browser readiness, Python on three
-operating systems, and R concordance. The hosted release build passed **307 Python
-tests, with 1 skipped**, and its isolated installed-app smoke passed. The separate
-local suite with R installed passed 311 tests.
+The local Windows x64 installer built from commit `90cb5e4` bundles CPython 3.13.15.
+Its SHA-256 is `f1773c3888d0e4b90e9fb96c067d888af872a186b67d3da0fffce52c4935d313`.
+Local checks installed it without system Python on PATH, ran an example analysis,
+started the desktop app with its bundled engine, confirmed clean shutdown, and
+uninstalled it. The current bundled Python run passed 307 checks; a cache-location
+assertion caused by the audit harness passed after correcting its cache directory
+(308 checks across the run and rerun). Frontend tests (38), TypeScript checking,
+the Rust test, and production builds passed. The earlier local suite with R passed
+311 tests. Automatic launch from Finish was slow on this host and needs a fresh-machine
+timing check before publication.
 
-The exact draft download was independently verified against the checksum and
-GitHub asset digest, installed without system Python on PATH, used for example
-analysis, started with its bundled engine, closed cleanly, and uninstalled.
+The latest hosted build could not start because GitHub Actions is blocked by
+an Actions account restriction. The local hash above identifies the
+tested file; verify the published download against its own `SHA256SUMS.txt` asset.
 A fresh-account interactive test remains a publication gate in the
 [release checklist](https://github.com/HYHBalci/causal-capybara/blob/main/docs/RELEASE_CHECKLIST.md).
 

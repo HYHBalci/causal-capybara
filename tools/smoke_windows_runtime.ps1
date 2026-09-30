@@ -2,6 +2,7 @@ param([string]$ResourceRoot = '')
 
 $ErrorActionPreference = 'Stop'
 Set-StrictMode -Version Latest
+. (Join-Path $PSScriptRoot 'build_path_safety.ps1')
 
 if ($env:OS -ne 'Windows_NT') {
     throw 'The bundled runtime can only be smoke-tested on Windows.'
@@ -10,16 +11,15 @@ if ($env:OS -ne 'Windows_NT') {
 $repoRoot = [IO.Path]::GetFullPath((Join-Path $PSScriptRoot '..'))
 $stageRoot = if ($ResourceRoot) { [IO.Path]::GetFullPath($ResourceRoot) } else { Join-Path $repoRoot '.capy-build/release/windows-x64' }
 $pythonExe = Join-Path $stageRoot 'runtimes/python/python.exe'
-$smokeHome = Join-Path $repoRoot '.capy-build/release/smoke-home'
+$buildRoot = [IO.Path]::GetFullPath((Join-Path $repoRoot '.capy-build'))
+$smokeHome = Join-Path $buildRoot 'release/smoke-home'
 if (-not (Test-Path -LiteralPath $pythonExe)) {
     throw "Run tools/stage_windows_runtime.ps1 first; missing $pythonExe"
 }
 
-$buildPrefix = [IO.Path]::GetFullPath((Join-Path $repoRoot '.capy-build')).TrimEnd('\', '/') + [IO.Path]::DirectorySeparatorChar
-if (-not [IO.Path]::GetFullPath($smokeHome).StartsWith($buildPrefix, [StringComparison]::OrdinalIgnoreCase)) {
-    throw 'Refusing to clear a smoke-test directory outside .capy-build.'
-}
+Assert-BuildPath -BuildRoot $buildRoot -Path $smokeHome
 if (Test-Path -LiteralPath $smokeHome) {
+    Assert-BuildTreeSafe -BuildRoot $buildRoot -Path $smokeHome
     Remove-Item -LiteralPath $smokeHome -Recurse -Force
 }
 New-Item -ItemType Directory -Path $smokeHome -Force | Out-Null

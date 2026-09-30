@@ -4,6 +4,7 @@ param(
 
 $ErrorActionPreference = 'Stop'
 Set-StrictMode -Version Latest
+. (Join-Path $PSScriptRoot 'build_path_safety.ps1')
 
 if ($env:OS -ne 'Windows_NT') {
     throw 'The bundled runtime can only be staged on Windows.'
@@ -22,16 +23,9 @@ $pythonRoot = Join-Path $stageRoot 'runtimes/python'
 $cacheRoot = Join-Path $buildRoot 'cache'
 $pythonZip = Join-Path $cacheRoot $pythonZipName
 
-function Assert-WithinBuildRoot([string]$Path) {
-    $fullBuild = [IO.Path]::GetFullPath($buildRoot).TrimEnd('\', '/') + [IO.Path]::DirectorySeparatorChar
-    $fullPath = [IO.Path]::GetFullPath($Path)
-    if (-not $fullPath.StartsWith($fullBuild, [StringComparison]::OrdinalIgnoreCase)) {
-        throw "Refusing to change a path outside the build root: $fullPath"
-    }
-}
-
-Assert-WithinBuildRoot $stageRoot
-Assert-WithinBuildRoot $cacheRoot
+Assert-BuildPath -BuildRoot $buildRoot -Path $stageRoot
+Assert-BuildPath -BuildRoot $buildRoot -Path $cacheRoot
+Assert-BuildPath -BuildRoot $buildRoot -Path $pythonZip
 
 New-Item -ItemType Directory -Path $cacheRoot -Force | Out-Null
 if (-not (Test-Path -LiteralPath $pythonZip)) {
@@ -53,12 +47,15 @@ if (Test-Path -LiteralPath $stageRoot) {
         $ids = ($running | ForEach-Object { $_.ProcessId }) -join ', '
         throw "Close staged release processes before restaging. Running process IDs: $ids"
     }
+    Assert-BuildTreeSafe -BuildRoot $buildRoot -Path $stageRoot
     Remove-Item -LiteralPath $stageRoot -Recurse -Force
 }
+Assert-BuildPath -BuildRoot $buildRoot -Path $pythonRoot
 New-Item -ItemType Directory -Path $pythonRoot -Force | Out-Null
 Expand-Archive -LiteralPath $pythonZip -DestinationPath $pythonRoot
 
 $pathFile = Join-Path $pythonRoot 'python313._pth'
+Assert-BuildPath -BuildRoot $buildRoot -Path $pathFile
 if (-not (Test-Path -LiteralPath $pathFile)) {
     throw "The official runtime is missing $pathFile"
 }
@@ -75,6 +72,7 @@ if (-not (Test-Path -LiteralPath $pathFile)) {
 ) | Set-Content -LiteralPath $pathFile -Encoding ascii
 
 $sitePackages = Join-Path $pythonRoot 'Lib/site-packages'
+Assert-BuildPath -BuildRoot $buildRoot -Path $sitePackages
 New-Item -ItemType Directory -Path $sitePackages -Force | Out-Null
 
 # Resolve only binary wheels for the target interpreter, regardless of the
@@ -100,6 +98,7 @@ if ($LASTEXITCODE -ne 0 -or -not $tracked) {
 foreach ($relative in $tracked) {
     $source = Join-Path $repoRoot $relative
     $destination = Join-Path $stageRoot $relative
+    Assert-BuildPath -BuildRoot $buildRoot -Path $destination
     $parent = Split-Path -Parent $destination
     New-Item -ItemType Directory -Path $parent -Force | Out-Null
     Copy-Item -LiteralPath $source -Destination $destination
