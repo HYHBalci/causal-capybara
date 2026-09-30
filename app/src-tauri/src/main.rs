@@ -382,7 +382,7 @@ fn probe_python(path: String) -> PythonProbe {
                   print(sys.version.split()[0]); \
                   print(','.join(m for m in mods if u.find_spec(m) is None))";
     let mut cmd = Command::new(&path);
-    cmd.arg("-c").arg(script);
+    cmd.arg("-B").arg("-c").arg(script);
     #[cfg(windows)]
     {
         use std::os::windows::process::CommandExt;
