@@ -1,0 +1,9 @@
+Copyright notices copied from winapi-i686-pc-windows-gnu 0.4.0 source headers.
+Source release: https://crates.io/crates/winapi-i686-pc-windows-gnu/0.4.0
+
+build.rs
+Copyright © 2016-2018 winapi-rs developers
+
+src/lib.rs
+Copyright © 2016 winapi-rs developers
+

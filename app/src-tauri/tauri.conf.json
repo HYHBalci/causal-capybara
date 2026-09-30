@@ -46,6 +46,8 @@
       "icons/icon.icns"
     ],
     "copyright": "Yusufhan Balci; VCESR",
+    "publisher": "Yusufhan Balci; VCESR",
+    "homepage": "https://github.com/HYHBalci/causal-capybara",
     "category": "Education",
     "shortDescription": "Serious causal inference. Casual to use.",
     "longDescription": "A local desktop studio for applied causal inference: state a causal question, complete a picture of the research design, look at the diagnostics that design depends on, and estimate with the R and Python packages the field already publishes with.",

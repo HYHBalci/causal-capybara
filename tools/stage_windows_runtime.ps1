@@ -108,4 +108,6 @@ if (-not (Test-Path -LiteralPath (Join-Path $stageRoot 'sidecar/capy_sidecar/__m
     throw 'The staged source is missing the sidecar entrypoint.'
 }
 
+& (Join-Path $PSScriptRoot 'clean_windows_runtime.ps1') -ResourceRoot $stageRoot
+
 Write-Host "Staged verified CPython $pythonVersion and tracked resources at $stageRoot"

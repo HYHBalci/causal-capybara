@@ -10,11 +10,26 @@ Point it at a dataset, state the question in ordinary language, complete a pictu
 design, look at the diagnostics that design depends on, and estimate — usually with several methods at
 once, because the disagreement between them is part of what you learned.
 
-**Release status: 0.1.0 release candidate for Windows x64.** A public download is planned for
-October 2, 2026. See the [installation guide](docs/INSTALL.md) for the release download,
-checksum verification and source setup. The Windows candidate passed an isolated
-installer smoke test; a fresh-account manual GUI test remains a release gate in the
-[release checklist](docs/RELEASE_CHECKLIST.md).
+## Download for Windows
+
+### [Download Causal Capybara 0.1.0 — Windows 64-bit installer](https://github.com/HYHBalci/causal-capybara/releases/download/v0.1.0/Causal-Capybara-0.1.0-windows-x64-setup.exe)
+
+**Public download opens after publication, planned for Friday, October 2, 2026.**
+The release is currently a private draft. Windows x64 is the first desktop target.
+
+1. **Download** the installer using the link above.
+2. **Open** the downloaded `.exe`, keep the suggested settings, and choose **Install**.
+3. **Finish** and open **Causal Capybara** from the Start menu. Try a worked example from Home.
+
+**Python and the analysis packages are included.** You do not need to install Python,
+R, Git, or programming tools. Once the release is public, the download needs no GitHub account.
+The app installs for your Windows user. If Microsoft WebView2 is missing, setup installs
+it using an internet connection; university device policies may require IT assistance.
+
+The preview installer is unsigned, so Windows may show an unknown-publisher warning.
+See [installation help](docs/INSTALL.md) for that warning, troubleshooting, and optional
+checksum verification. The [release checklist](docs/RELEASE_CHECKLIST.md) records the
+remaining checks before publication.
 
 The full design is in [`IMPLEMENTATION_PLAN.md`](IMPLEMENTATION_PLAN.md). This README is what exists and
 how to run it.
@@ -26,19 +41,21 @@ and accessibility improvements, verification results and remaining release check
 
 ---
 
-## Running it
+## Using the app
 
 Causal Capybara is a desktop application. It is not a website and it is not meant to be opened in a
 browser tab.
 
-### Windows x64 download
+### Your first analysis
 
-The public download is pending. When published, get `Causal-Capybara-0.1.0-windows-x64-setup.exe` and
-`SHA256SUMS.txt` from the [release page](https://github.com/HYHBalci/causal-capybara/releases),
-verify the SHA-256 hash, run the installer, and open **Causal Capybara** from Start.
-The [installation guide](docs/INSTALL.md) gives the exact command and first-run steps.
+Open a worked example from Home. Read its question, inspect the diagnostic, and
+choose **Estimate the recommended set**. Your data and projects stay on your computer.
+The [analysis guide](docs/GUIDE.md) walks through the workflow.
 
-### The app — Windows development setup
+<details>
+<summary>Developer setup and command-line tools</summary>
+
+### Windows development setup
 
 You need Python 3.11 or newer in the Python 3 series, Node.js 22, Rust with the MSVC toolchain,
 Microsoft C++ build tools, and WebView2. Python 3.12 is used in CI.
@@ -62,6 +79,7 @@ repository root to stage the runtime, collect notices, build and smoke-test the 
 npm --prefix app ci
 pwsh -File tools/stage_windows_runtime.ps1
 pwsh -File tools/smoke_windows_runtime.ps1
+pwsh -File tools/clean_windows_runtime.ps1
 node tools/collect_release_licenses.mjs
 npm --prefix app run tauri build -- --config src-tauri/tauri.release.conf.json --bundles nsis
 pwsh -File tools/smoke_windows_installer.ps1
@@ -96,7 +114,7 @@ On macOS and Linux, use `.venv/bin/python` and `:` as the `PYTHONPATH` separator
 The browser is a development preview; native file dialogs and other desktop integrations
 must also be tested in the installed application.
 
-### Without the window
+### Command-line analysis
 
 The command-line interface supports the analysis workflow. This example uses Bash; on Windows,
 use PowerShell with `& .\.venv\Scripts\python.exe -m capy_sidecar` in place of `$capy`.
@@ -121,13 +139,15 @@ $capy study nsw_observational              # open a fetched study as a project
 
 ---
 
+</details>
+
 ## What is here
 
 | | |
 |---|---|
 | **86 methods** in the catalogue | 63 runnable on the Python engine, 23 grey cards that teach without an adapter |
 | **7 methods on the R engine** | agreeing with Python to machine precision across 9 tested configurations |
-| **10 design cards** | randomised, observational, DiD, RD, IV, synthetic control, ITS, mediation, longitudinal |
+| **9 design cards** | randomised, observational, DiD, RD, IV, synthetic control, ITS, mediation, longitudinal |
 | **111 diagnostics** | each with a summary and a "what would worry me" line |
 | **296 Explain entries** | every key the interface can ask for resolves, diagnostics included |
 | **a browsable catalogue** | all 286 articles readable on their own, with no project open and no engine running |

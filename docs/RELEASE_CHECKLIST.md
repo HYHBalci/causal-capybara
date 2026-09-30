@@ -1,8 +1,8 @@
 # Causal Capybara release checklist
 
-Updated September 28, 2026. Target publication: **Friday, October 2, 2026
+Updated September 30, 2026. Target publication: **Friday, October 2, 2026
 (Europe/Amsterdam)**. Status: **0.1.0 release candidate in preparation;
-clean-install verification still required**. The repository remains private until
+student installation and license audit in progress; fresh-account verification still required**. The repository remains private until
 the public-release gates are complete.
 
 The repository and all user-facing material should use **Causal Capybara**. Existing user data under the
@@ -21,7 +21,7 @@ old name is a compatibility concern, not a reason to keep the old branding.
   export explains its typesetting dependency and returns the stated fallback when unavailable.
 - [ ] Review redistribution notices for the actual installer contents, including frontend libraries,
   fonts and any bundled Python runtime or wheels. Include all required third-party notices.
-- [ ] Audit tracked files and Git history for credentials, private paths, real project data and
+- [x] Audit tracked files and Git history for credentials, private paths, real project data and
   unreleasable third-party content before changing the repository to public. Remove or revoke
   exposed secrets and review the final source archive.
 - [ ] Confirm the Apache-2.0 license and copyright notice identify Yusufhan Balci; VCESR, and
@@ -34,29 +34,39 @@ old name is a compatibility concern, not a reason to keep the old branding.
   application regressions, frontend tests/build, Windows desktop tests/build, and R concordance.
 - [ ] Test the interface at 900 × 600, 1280 × 800, and Windows 150%/200% display scaling. Complete the
   main workflow using only the keyboard; verify visible focus, menu/dialog escape and readable plots.
-- [ ] Finalize the [v0.1.0 draft release notes](RELEASE_NOTES_0.1.0.md) and
+- [x] Finalize the [v0.1.0 draft release notes](RELEASE_NOTES_0.1.0.md) and
   [installation guide](INSTALL.md), including supported platforms, known limitations,
   an issue-reporting link and checksums alongside the download. Keep the launch claims
-  consistent with the formats, methods and platforms actually verified.
+  consistent with the formats, methods and platforms actually verified. The student path
+  now has a direct installer link, three GUI steps, and optional checksum verification.
+
+## Final audit evidence
+
+See the [September 30 audit](RELEASE_AUDIT_2026-09-30.md) for source privacy, current
+dependency checks, installer verification, license corrections, and outstanding gates.
+The maintainer's private email must remain absent from public source, history, and assets.
+Third-party copyright notices remain intact.
 
 ## Repository and release cutover
 
-- [ ] Create a fresh **private** staging repository from the reviewed tracked-file
+- [x] Create a fresh **private** staging repository from the reviewed tracked-file
   snapshot. Ensure every commit uses the maintainer's GitHub no-reply address or
   a GitHub App identity. Keep the existing 19-commit repository private.
 - [ ] Inspect the staging repository's complete tree and history, Actions logs,
   artifacts and draft-release assets. Scan the exported snapshot for private commit
   IDs, email addresses, local filesystem paths, credentials and research data.
-- [ ] Rename the existing repository to a private archive and retarget local remotes
+- [x] Rename the existing repository to a private archive and retarget local remotes
   before moving the clean staging repository to the canonical
   `HYHBalci/causal-capybara` slug. Confirm the archive remains private.
-- [ ] Enable Issues in the fresh private staging repository and verify the bug
+- [x] Enable Issues in the fresh private staging repository and verify the bug
   form.
 - [ ] Verify the exact installer, checksum, licenses, notices and release notes
   in the **draft** release. On Friday, October 2, 2026 (Europe/Amsterdam),
   make the fresh repository public. Then apply and verify branch protection,
   repository rulesets and private vulnerability reporting before publishing the
-  draft, after every release gate above is met.
+  draft, after every release gate above is met. Confirm the direct download works
+  without a GitHub account and update the draft-status wording in README, installation
+  help, and release notes. Keep the old history archive private.
 
 ## Release candidate smoke test
 
@@ -109,6 +119,7 @@ npm --prefix app run build
 cargo test --manifest-path app/src-tauri/Cargo.toml --locked
 pwsh -File tools/stage_windows_runtime.ps1
 pwsh -File tools/smoke_windows_runtime.ps1
+pwsh -File tools/clean_windows_runtime.ps1
 node tools/collect_release_licenses.mjs
 npm --prefix app run tauri build -- --config src-tauri/tauri.release.conf.json --bundles nsis
 pwsh -File tools/smoke_windows_installer.ps1

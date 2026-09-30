@@ -1,0 +1,838 @@
+{
+  "version": 1,
+  "packages": {
+    "alloc-stdlib@0.2.4": {
+      "declaredLicense": "BSD-3-Clause",
+      "vcsRevision": "ae42d22078b98549e987d2f03d12df7b984fde47",
+      "repository": "https://github.com/dropbox/rust-alloc-no-stdlib",
+      "sourceRevision": "ae42d22078b98549e987d2f03d12df7b984fde47",
+      "review": "Upstream monorepo license and notices were inspected at the crate VCS revision.",
+      "standardTerms": [
+        "BSD-3-Clause"
+      ],
+      "files": [
+        {
+          "path": "texts/cd496ba72eb37e83a44958358d1f89a8a28cbc15-LICENSE",
+          "sha256": "c0c56f26d9c051cac4d200c34c84e7ae9aaa853e01a982a1df08b09931e518ae",
+          "source": "https://github.com/dropbox/rust-alloc-no-stdlib/blob/ae42d22078b98549e987d2f03d12df7b984fde47/LICENSE"
+        }
+      ]
+    },
+    "block2@0.6.2": {
+      "declaredLicense": "MIT",
+      "vcsRevision": "b4167b582b2f75f9a1be75495c41b765344fd03c",
+      "repository": "https://github.com/madsmtm/objc2",
+      "sourceRevision": "b4167b582b2f75f9a1be75495c41b765344fd03c",
+      "review": "Upstream monorepo license and notices were inspected at the crate VCS revision. The upstream LICENSE.md explains license choices but supplies no separate copyright notice or full license text. Canonical MIT terms accompany that statement; these are non-Windows targets.",
+      "standardTerms": [
+        "MIT"
+      ],
+      "files": [
+        {
+          "path": "texts/540ae4c81adb5f64a9f61e222b688880da24300e-LICENSE.md",
+          "sha256": "7f976f7e9cb2d87df7230606feb932c3f21ac0e664045a775b600046ff850c54",
+          "source": "https://github.com/madsmtm/objc2/blob/b4167b582b2f75f9a1be75495c41b765344fd03c/LICENSE.md"
+        }
+      ]
+    },
+    "defmt-parser@1.0.0": {
+      "declaredLicense": "MIT OR Apache-2.0",
+      "vcsRevision": "4a8cdb44891ed57b8ff5a023b6bec7137c48708f",
+      "repository": "https://github.com/knurling-rs/defmt",
+      "sourceRevision": "4a8cdb44891ed57b8ff5a023b6bec7137c48708f",
+      "review": "Upstream monorepo license and notices were inspected at the crate VCS revision.",
+      "standardTerms": [
+        "MIT"
+      ],
+      "files": [
+        {
+          "path": "texts/11069edd79019f7dafbe3138841cf289209270dd-LICENSE-APACHE",
+          "sha256": "8173d5c29b4f956d532781d2b86e4e30f83e6b7878dce18c919451d6ba707c90",
+          "source": "https://github.com/knurling-rs/defmt/blob/4a8cdb44891ed57b8ff5a023b6bec7137c48708f/LICENSE-APACHE"
+        },
+        {
+          "path": "texts/e68a7ab37c8accca023db5f1505d48e4375d4324-LICENSE-MIT",
+          "sha256": "2710a622a896bba67356913d4d0492cab5465f61b2ecce6d880aeb483834fb50",
+          "source": "https://github.com/knurling-rs/defmt/blob/4a8cdb44891ed57b8ff5a023b6bec7137c48708f/LICENSE-MIT"
+        }
+      ]
+    },
+    "dispatch2@0.3.1": {
+      "declaredLicense": "Zlib OR Apache-2.0 OR MIT",
+      "vcsRevision": "8852b424193ca41602281b3d7540d7c8ed51e49a",
+      "repository": "https://github.com/madsmtm/objc2",
+      "sourceRevision": "8852b424193ca41602281b3d7540d7c8ed51e49a",
+      "review": "Upstream monorepo license and notices were inspected at the crate VCS revision. The upstream LICENSE.md explains license choices but supplies no separate copyright notice or full license text. Canonical MIT terms accompany that statement; these are non-Windows targets.",
+      "standardTerms": [
+        "MIT"
+      ],
+      "files": [
+        {
+          "path": "texts/540ae4c81adb5f64a9f61e222b688880da24300e-LICENSE.md",
+          "sha256": "7f976f7e9cb2d87df7230606feb932c3f21ac0e664045a775b600046ff850c54",
+          "source": "https://github.com/madsmtm/objc2/blob/8852b424193ca41602281b3d7540d7c8ed51e49a/LICENSE.md"
+        }
+      ]
+    },
+    "dlopen2@0.8.2": {
+      "declaredLicense": "MIT",
+      "vcsRevision": "cc80e4a0a90d499b677fdf7743699b4b3a43a989",
+      "repository": "https://github.com/OpenByteDev/dlopen2",
+      "sourceRevision": "cc80e4a0a90d499b677fdf7743699b4b3a43a989",
+      "review": "Upstream monorepo license and notices were inspected at the crate VCS revision.",
+      "standardTerms": [
+        "MIT"
+      ],
+      "files": [
+        {
+          "path": "texts/d38093a7a564c64ad15e459f2e0a1f86a443c8b3-LICENSE",
+          "sha256": "39fa265207450e77c62e90c5594a06c085b655d8374c7ced4bf7894b6bd95dd2",
+          "source": "https://github.com/OpenByteDev/dlopen2/blob/cc80e4a0a90d499b677fdf7743699b4b3a43a989/LICENSE"
+        }
+      ]
+    },
+    "dlopen2_derive@0.4.3": {
+      "declaredLicense": "MIT",
+      "vcsRevision": "cc80e4a0a90d499b677fdf7743699b4b3a43a989",
+      "repository": "https://github.com/OpenByteDev/dlopen2",
+      "sourceRevision": "cc80e4a0a90d499b677fdf7743699b4b3a43a989",
+      "review": "Upstream monorepo license and notices were inspected at the crate VCS revision.",
+      "standardTerms": [
+        "MIT"
+      ],
+      "files": [
+        {
+          "path": "texts/d38093a7a564c64ad15e459f2e0a1f86a443c8b3-LICENSE",
+          "sha256": "39fa265207450e77c62e90c5594a06c085b655d8374c7ced4bf7894b6bd95dd2",
+          "source": "https://github.com/OpenByteDev/dlopen2/blob/cc80e4a0a90d499b677fdf7743699b4b3a43a989/LICENSE"
+        }
+      ]
+    },
+    "jni-sys-macros@0.4.1": {
+      "declaredLicense": "MIT OR Apache-2.0",
+      "vcsRevision": "64d77b7a5f119d7b55b4e2c169a4668067ff59e6",
+      "repository": "https://github.com/jni-rs/jni-sys",
+      "sourceRevision": "64d77b7a5f119d7b55b4e2c169a4668067ff59e6",
+      "review": "Upstream monorepo license and notices were inspected at the crate VCS revision.",
+      "standardTerms": [
+        "MIT"
+      ],
+      "files": [
+        {
+          "path": "texts/8f71f43fee3f78649d238238cbde51e6d7055c82-LICENSE-APACHE",
+          "sha256": "c6596eb7be8581c18be736c846fb9173b69eccf6ef94c5135893ec56bd92ba08",
+          "source": "https://github.com/jni-rs/jni-sys/blob/64d77b7a5f119d7b55b4e2c169a4668067ff59e6/LICENSE-APACHE"
+        },
+        {
+          "path": "texts/2008402b8a1299cf118ea38e02116bfcc72e53c3-LICENSE-MIT",
+          "sha256": "1d85bd754b04ceec93e98e890edd1fa3c6a22e81bcb32135806beeccefa51cd1",
+          "source": "https://github.com/jni-rs/jni-sys/blob/64d77b7a5f119d7b55b4e2c169a4668067ff59e6/LICENSE-MIT"
+        }
+      ]
+    },
+    "libappindicator-sys@0.9.0": {
+      "declaredLicense": "Apache-2.0 OR MIT",
+      "vcsRevision": "eafd1e3682a1247f595410266091e9684021cb6f",
+      "repository": "https://github.com/tauri-apps/libappindicator-rs",
+      "sourceRevision": "eafd1e3682a1247f595410266091e9684021cb6f",
+      "review": "Upstream monorepo license and notices were inspected at the crate VCS revision.",
+      "standardTerms": [
+        "MIT"
+      ],
+      "files": [
+        {
+          "path": "texts/16fe87b06e802f094b3fbb0894b137bca2b16ef1-LICENSE-APACHE",
+          "sha256": "a60eea817514531668d7e00765731449fe14d059d3249e0bc93b36de45f759f2",
+          "source": "https://github.com/tauri-apps/libappindicator-rs/blob/eafd1e3682a1247f595410266091e9684021cb6f/LICENSE-APACHE"
+        },
+        {
+          "path": "texts/50e79e21ccd1454f00695108ae01eaff9569689a-LICENSE-MIT",
+          "sha256": "eb227437252b2a7a9c1fc342c93ade1f3d7ce38cc6dd754f613db07d53ceff0b",
+          "source": "https://github.com/tauri-apps/libappindicator-rs/blob/eafd1e3682a1247f595410266091e9684021cb6f/LICENSE-MIT"
+        }
+      ]
+    },
+    "ndk@0.9.0": {
+      "declaredLicense": "MIT OR Apache-2.0",
+      "vcsRevision": "49bbbba16c58ff63cb8a0ad0eca5a9fb7ecaec25",
+      "repository": "https://github.com/rust-mobile/ndk",
+      "sourceRevision": "49bbbba16c58ff63cb8a0ad0eca5a9fb7ecaec25",
+      "review": "Upstream monorepo license and notices were inspected at the crate VCS revision.",
+      "standardTerms": [
+        "MIT"
+      ],
+      "files": [
+        {
+          "path": "texts/261eeb9e9f8b2b4b0d119366dda99c6fd7d35c64-LICENSE-APACHE",
+          "sha256": "c71d239df91726fc519c6eb72d318ec65820627232b2f796219e87dcf35d0ab4",
+          "source": "https://github.com/rust-mobile/ndk/blob/49bbbba16c58ff63cb8a0ad0eca5a9fb7ecaec25/LICENSE-APACHE"
+        },
+        {
+          "path": "texts/9cf106272ac3b56b0c4c80218e8fc10a664ca5f4-LICENSE-MIT",
+          "sha256": "508a77d2e7b51d98adeed32648ad124b7b30241a8e70b2e72c99f92d8e5874d1",
+          "source": "https://github.com/rust-mobile/ndk/blob/49bbbba16c58ff63cb8a0ad0eca5a9fb7ecaec25/LICENSE-MIT"
+        }
+      ]
+    },
+    "ndk-sys@0.6.0+11769913": {
+      "declaredLicense": "MIT OR Apache-2.0",
+      "vcsRevision": "49bbbba16c58ff63cb8a0ad0eca5a9fb7ecaec25",
+      "repository": "https://github.com/rust-mobile/ndk",
+      "sourceRevision": "49bbbba16c58ff63cb8a0ad0eca5a9fb7ecaec25",
+      "review": "Upstream monorepo license and notices were inspected at the crate VCS revision.",
+      "standardTerms": [
+        "MIT"
+      ],
+      "files": [
+        {
+          "path": "texts/261eeb9e9f8b2b4b0d119366dda99c6fd7d35c64-LICENSE-APACHE",
+          "sha256": "c71d239df91726fc519c6eb72d318ec65820627232b2f796219e87dcf35d0ab4",
+          "source": "https://github.com/rust-mobile/ndk/blob/49bbbba16c58ff63cb8a0ad0eca5a9fb7ecaec25/LICENSE-APACHE"
+        },
+        {
+          "path": "texts/9cf106272ac3b56b0c4c80218e8fc10a664ca5f4-LICENSE-MIT",
+          "sha256": "508a77d2e7b51d98adeed32648ad124b7b30241a8e70b2e72c99f92d8e5874d1",
+          "source": "https://github.com/rust-mobile/ndk/blob/49bbbba16c58ff63cb8a0ad0eca5a9fb7ecaec25/LICENSE-MIT"
+        }
+      ]
+    },
+    "objc2@0.6.4": {
+      "declaredLicense": "MIT",
+      "vcsRevision": "8852b424193ca41602281b3d7540d7c8ed51e49a",
+      "repository": "https://github.com/madsmtm/objc2",
+      "sourceRevision": "8852b424193ca41602281b3d7540d7c8ed51e49a",
+      "review": "Upstream monorepo license and notices were inspected at the crate VCS revision. The upstream LICENSE.md explains license choices but supplies no separate copyright notice or full license text. Canonical MIT terms accompany that statement; these are non-Windows targets.",
+      "standardTerms": [
+        "MIT"
+      ],
+      "files": [
+        {
+          "path": "texts/540ae4c81adb5f64a9f61e222b688880da24300e-LICENSE.md",
+          "sha256": "7f976f7e9cb2d87df7230606feb932c3f21ac0e664045a775b600046ff850c54",
+          "source": "https://github.com/madsmtm/objc2/blob/8852b424193ca41602281b3d7540d7c8ed51e49a/LICENSE.md"
+        }
+      ]
+    },
+    "objc2-app-kit@0.3.2": {
+      "declaredLicense": "Zlib OR Apache-2.0 OR MIT",
+      "vcsRevision": "7b1abfd750a2cacaea71d6a56ecfb83cb7de560b",
+      "repository": "https://github.com/madsmtm/objc2",
+      "sourceRevision": "7b1abfd750a2cacaea71d6a56ecfb83cb7de560b",
+      "review": "Upstream monorepo license and notices were inspected at the crate VCS revision. The upstream LICENSE.md explains license choices but supplies no separate copyright notice or full license text. Canonical MIT terms accompany that statement; these are non-Windows targets.",
+      "standardTerms": [
+        "MIT"
+      ],
+      "files": [
+        {
+          "path": "texts/540ae4c81adb5f64a9f61e222b688880da24300e-LICENSE.md",
+          "sha256": "7f976f7e9cb2d87df7230606feb932c3f21ac0e664045a775b600046ff850c54",
+          "source": "https://github.com/madsmtm/objc2/blob/7b1abfd750a2cacaea71d6a56ecfb83cb7de560b/LICENSE.md"
+        }
+      ]
+    },
+    "objc2-cloud-kit@0.3.2": {
+      "declaredLicense": "Zlib OR Apache-2.0 OR MIT",
+      "vcsRevision": "7b1abfd750a2cacaea71d6a56ecfb83cb7de560b",
+      "repository": "https://github.com/madsmtm/objc2",
+      "sourceRevision": "7b1abfd750a2cacaea71d6a56ecfb83cb7de560b",
+      "review": "Upstream monorepo license and notices were inspected at the crate VCS revision. The upstream LICENSE.md explains license choices but supplies no separate copyright notice or full license text. Canonical MIT terms accompany that statement; these are non-Windows targets.",
+      "standardTerms": [
+        "MIT"
+      ],
+      "files": [
+        {
+          "path": "texts/540ae4c81adb5f64a9f61e222b688880da24300e-LICENSE.md",
+          "sha256": "7f976f7e9cb2d87df7230606feb932c3f21ac0e664045a775b600046ff850c54",
+          "source": "https://github.com/madsmtm/objc2/blob/7b1abfd750a2cacaea71d6a56ecfb83cb7de560b/LICENSE.md"
+        }
+      ]
+    },
+    "objc2-core-data@0.3.2": {
+      "declaredLicense": "Zlib OR Apache-2.0 OR MIT",
+      "vcsRevision": "7b1abfd750a2cacaea71d6a56ecfb83cb7de560b",
+      "repository": "https://github.com/madsmtm/objc2",
+      "sourceRevision": "7b1abfd750a2cacaea71d6a56ecfb83cb7de560b",
+      "review": "Upstream monorepo license and notices were inspected at the crate VCS revision. The upstream LICENSE.md explains license choices but supplies no separate copyright notice or full license text. Canonical MIT terms accompany that statement; these are non-Windows targets.",
+      "standardTerms": [
+        "MIT"
+      ],
+      "files": [
+        {
+          "path": "texts/540ae4c81adb5f64a9f61e222b688880da24300e-LICENSE.md",
+          "sha256": "7f976f7e9cb2d87df7230606feb932c3f21ac0e664045a775b600046ff850c54",
+          "source": "https://github.com/madsmtm/objc2/blob/7b1abfd750a2cacaea71d6a56ecfb83cb7de560b/LICENSE.md"
+        }
+      ]
+    },
+    "objc2-core-foundation@0.3.2": {
+      "declaredLicense": "Zlib OR Apache-2.0 OR MIT",
+      "vcsRevision": "7b1abfd750a2cacaea71d6a56ecfb83cb7de560b",
+      "repository": "https://github.com/madsmtm/objc2",
+      "sourceRevision": "7b1abfd750a2cacaea71d6a56ecfb83cb7de560b",
+      "review": "Upstream monorepo license and notices were inspected at the crate VCS revision. The upstream LICENSE.md explains license choices but supplies no separate copyright notice or full license text. Canonical MIT terms accompany that statement; these are non-Windows targets.",
+      "standardTerms": [
+        "MIT"
+      ],
+      "files": [
+        {
+          "path": "texts/540ae4c81adb5f64a9f61e222b688880da24300e-LICENSE.md",
+          "sha256": "7f976f7e9cb2d87df7230606feb932c3f21ac0e664045a775b600046ff850c54",
+          "source": "https://github.com/madsmtm/objc2/blob/7b1abfd750a2cacaea71d6a56ecfb83cb7de560b/LICENSE.md"
+        }
+      ]
+    },
+    "objc2-core-graphics@0.3.2": {
+      "declaredLicense": "Zlib OR Apache-2.0 OR MIT",
+      "vcsRevision": "7b1abfd750a2cacaea71d6a56ecfb83cb7de560b",
+      "repository": "https://github.com/madsmtm/objc2",
+      "sourceRevision": "7b1abfd750a2cacaea71d6a56ecfb83cb7de560b",
+      "review": "Upstream monorepo license and notices were inspected at the crate VCS revision. The upstream LICENSE.md explains license choices but supplies no separate copyright notice or full license text. Canonical MIT terms accompany that statement; these are non-Windows targets.",
+      "standardTerms": [
+        "MIT"
+      ],
+      "files": [
+        {
+          "path": "texts/540ae4c81adb5f64a9f61e222b688880da24300e-LICENSE.md",
+          "sha256": "7f976f7e9cb2d87df7230606feb932c3f21ac0e664045a775b600046ff850c54",
+          "source": "https://github.com/madsmtm/objc2/blob/7b1abfd750a2cacaea71d6a56ecfb83cb7de560b/LICENSE.md"
+        }
+      ]
+    },
+    "objc2-core-image@0.3.2": {
+      "declaredLicense": "Zlib OR Apache-2.0 OR MIT",
+      "vcsRevision": "7b1abfd750a2cacaea71d6a56ecfb83cb7de560b",
+      "repository": "https://github.com/madsmtm/objc2",
+      "sourceRevision": "7b1abfd750a2cacaea71d6a56ecfb83cb7de560b",
+      "review": "Upstream monorepo license and notices were inspected at the crate VCS revision. The upstream LICENSE.md explains license choices but supplies no separate copyright notice or full license text. Canonical MIT terms accompany that statement; these are non-Windows targets.",
+      "standardTerms": [
+        "MIT"
+      ],
+      "files": [
+        {
+          "path": "texts/540ae4c81adb5f64a9f61e222b688880da24300e-LICENSE.md",
+          "sha256": "7f976f7e9cb2d87df7230606feb932c3f21ac0e664045a775b600046ff850c54",
+          "source": "https://github.com/madsmtm/objc2/blob/7b1abfd750a2cacaea71d6a56ecfb83cb7de560b/LICENSE.md"
+        }
+      ]
+    },
+    "objc2-core-location@0.3.2": {
+      "declaredLicense": "Zlib OR Apache-2.0 OR MIT",
+      "vcsRevision": "7b1abfd750a2cacaea71d6a56ecfb83cb7de560b",
+      "repository": "https://github.com/madsmtm/objc2",
+      "sourceRevision": "7b1abfd750a2cacaea71d6a56ecfb83cb7de560b",
+      "review": "Upstream monorepo license and notices were inspected at the crate VCS revision. The upstream LICENSE.md explains license choices but supplies no separate copyright notice or full license text. Canonical MIT terms accompany that statement; these are non-Windows targets.",
+      "standardTerms": [
+        "MIT"
+      ],
+      "files": [
+        {
+          "path": "texts/540ae4c81adb5f64a9f61e222b688880da24300e-LICENSE.md",
+          "sha256": "7f976f7e9cb2d87df7230606feb932c3f21ac0e664045a775b600046ff850c54",
+          "source": "https://github.com/madsmtm/objc2/blob/7b1abfd750a2cacaea71d6a56ecfb83cb7de560b/LICENSE.md"
+        }
+      ]
+    },
+    "objc2-core-text@0.3.2": {
+      "declaredLicense": "Zlib OR Apache-2.0 OR MIT",
+      "vcsRevision": "7b1abfd750a2cacaea71d6a56ecfb83cb7de560b",
+      "repository": "https://github.com/madsmtm/objc2",
+      "sourceRevision": "7b1abfd750a2cacaea71d6a56ecfb83cb7de560b",
+      "review": "Upstream monorepo license and notices were inspected at the crate VCS revision. The upstream LICENSE.md explains license choices but supplies no separate copyright notice or full license text. Canonical MIT terms accompany that statement; these are non-Windows targets.",
+      "standardTerms": [
+        "MIT"
+      ],
+      "files": [
+        {
+          "path": "texts/540ae4c81adb5f64a9f61e222b688880da24300e-LICENSE.md",
+          "sha256": "7f976f7e9cb2d87df7230606feb932c3f21ac0e664045a775b600046ff850c54",
+          "source": "https://github.com/madsmtm/objc2/blob/7b1abfd750a2cacaea71d6a56ecfb83cb7de560b/LICENSE.md"
+        }
+      ]
+    },
+    "objc2-encode@4.1.0": {
+      "declaredLicense": "MIT",
+      "vcsRevision": "8d214f5477365ffcbcbb7de058c86ed9a518efb7",
+      "repository": "https://github.com/madsmtm/objc2",
+      "sourceRevision": "8d214f5477365ffcbcbb7de058c86ed9a518efb7",
+      "review": "Upstream monorepo license and notices were inspected at the crate VCS revision. The upstream LICENSE.md explains license choices but supplies no separate copyright notice or full license text. Canonical MIT terms accompany that statement; these are non-Windows targets.",
+      "standardTerms": [
+        "MIT"
+      ],
+      "files": [
+        {
+          "path": "texts/540ae4c81adb5f64a9f61e222b688880da24300e-LICENSE.md",
+          "sha256": "7f976f7e9cb2d87df7230606feb932c3f21ac0e664045a775b600046ff850c54",
+          "source": "https://github.com/madsmtm/objc2/blob/8d214f5477365ffcbcbb7de058c86ed9a518efb7/LICENSE.md"
+        }
+      ]
+    },
+    "objc2-exception-helper@0.1.1": {
+      "declaredLicense": "Zlib OR Apache-2.0 OR MIT",
+      "vcsRevision": "8d214f5477365ffcbcbb7de058c86ed9a518efb7",
+      "repository": "https://github.com/madsmtm/objc2",
+      "sourceRevision": "8d214f5477365ffcbcbb7de058c86ed9a518efb7",
+      "review": "Upstream monorepo license and notices were inspected at the crate VCS revision. The upstream LICENSE.md explains license choices but supplies no separate copyright notice or full license text. Canonical MIT terms accompany that statement; these are non-Windows targets.",
+      "standardTerms": [
+        "MIT"
+      ],
+      "files": [
+        {
+          "path": "texts/540ae4c81adb5f64a9f61e222b688880da24300e-LICENSE.md",
+          "sha256": "7f976f7e9cb2d87df7230606feb932c3f21ac0e664045a775b600046ff850c54",
+          "source": "https://github.com/madsmtm/objc2/blob/8d214f5477365ffcbcbb7de058c86ed9a518efb7/LICENSE.md"
+        }
+      ]
+    },
+    "objc2-foundation@0.3.2": {
+      "declaredLicense": "MIT",
+      "vcsRevision": "7b1abfd750a2cacaea71d6a56ecfb83cb7de560b",
+      "repository": "https://github.com/madsmtm/objc2",
+      "sourceRevision": "7b1abfd750a2cacaea71d6a56ecfb83cb7de560b",
+      "review": "Upstream monorepo license and notices were inspected at the crate VCS revision. The upstream LICENSE.md explains license choices but supplies no separate copyright notice or full license text. Canonical MIT terms accompany that statement; these are non-Windows targets.",
+      "standardTerms": [
+        "MIT"
+      ],
+      "files": [
+        {
+          "path": "texts/540ae4c81adb5f64a9f61e222b688880da24300e-LICENSE.md",
+          "sha256": "7f976f7e9cb2d87df7230606feb932c3f21ac0e664045a775b600046ff850c54",
+          "source": "https://github.com/madsmtm/objc2/blob/7b1abfd750a2cacaea71d6a56ecfb83cb7de560b/LICENSE.md"
+        }
+      ]
+    },
+    "objc2-io-surface@0.3.2": {
+      "declaredLicense": "Zlib OR Apache-2.0 OR MIT",
+      "vcsRevision": "7b1abfd750a2cacaea71d6a56ecfb83cb7de560b",
+      "repository": "https://github.com/madsmtm/objc2",
+      "sourceRevision": "7b1abfd750a2cacaea71d6a56ecfb83cb7de560b",
+      "review": "Upstream monorepo license and notices were inspected at the crate VCS revision. The upstream LICENSE.md explains license choices but supplies no separate copyright notice or full license text. Canonical MIT terms accompany that statement; these are non-Windows targets.",
+      "standardTerms": [
+        "MIT"
+      ],
+      "files": [
+        {
+          "path": "texts/540ae4c81adb5f64a9f61e222b688880da24300e-LICENSE.md",
+          "sha256": "7f976f7e9cb2d87df7230606feb932c3f21ac0e664045a775b600046ff850c54",
+          "source": "https://github.com/madsmtm/objc2/blob/7b1abfd750a2cacaea71d6a56ecfb83cb7de560b/LICENSE.md"
+        }
+      ]
+    },
+    "objc2-quartz-core@0.3.2": {
+      "declaredLicense": "Zlib OR Apache-2.0 OR MIT",
+      "vcsRevision": "7b1abfd750a2cacaea71d6a56ecfb83cb7de560b",
+      "repository": "https://github.com/madsmtm/objc2",
+      "sourceRevision": "7b1abfd750a2cacaea71d6a56ecfb83cb7de560b",
+      "review": "Upstream monorepo license and notices were inspected at the crate VCS revision. The upstream LICENSE.md explains license choices but supplies no separate copyright notice or full license text. Canonical MIT terms accompany that statement; these are non-Windows targets.",
+      "standardTerms": [
+        "MIT"
+      ],
+      "files": [
+        {
+          "path": "texts/540ae4c81adb5f64a9f61e222b688880da24300e-LICENSE.md",
+          "sha256": "7f976f7e9cb2d87df7230606feb932c3f21ac0e664045a775b600046ff850c54",
+          "source": "https://github.com/madsmtm/objc2/blob/7b1abfd750a2cacaea71d6a56ecfb83cb7de560b/LICENSE.md"
+        }
+      ]
+    },
+    "objc2-ui-kit@0.3.2": {
+      "declaredLicense": "Zlib OR Apache-2.0 OR MIT",
+      "vcsRevision": "7b1abfd750a2cacaea71d6a56ecfb83cb7de560b",
+      "repository": "https://github.com/madsmtm/objc2",
+      "sourceRevision": "7b1abfd750a2cacaea71d6a56ecfb83cb7de560b",
+      "review": "Upstream monorepo license and notices were inspected at the crate VCS revision. The upstream LICENSE.md explains license choices but supplies no separate copyright notice or full license text. Canonical MIT terms accompany that statement; these are non-Windows targets.",
+      "standardTerms": [
+        "MIT"
+      ],
+      "files": [
+        {
+          "path": "texts/540ae4c81adb5f64a9f61e222b688880da24300e-LICENSE.md",
+          "sha256": "7f976f7e9cb2d87df7230606feb932c3f21ac0e664045a775b600046ff850c54",
+          "source": "https://github.com/madsmtm/objc2/blob/7b1abfd750a2cacaea71d6a56ecfb83cb7de560b/LICENSE.md"
+        }
+      ]
+    },
+    "objc2-user-notifications@0.3.2": {
+      "declaredLicense": "Zlib OR Apache-2.0 OR MIT",
+      "vcsRevision": "7b1abfd750a2cacaea71d6a56ecfb83cb7de560b",
+      "repository": "https://github.com/madsmtm/objc2",
+      "sourceRevision": "7b1abfd750a2cacaea71d6a56ecfb83cb7de560b",
+      "review": "Upstream monorepo license and notices were inspected at the crate VCS revision. The upstream LICENSE.md explains license choices but supplies no separate copyright notice or full license text. Canonical MIT terms accompany that statement; these are non-Windows targets.",
+      "standardTerms": [
+        "MIT"
+      ],
+      "files": [
+        {
+          "path": "texts/540ae4c81adb5f64a9f61e222b688880da24300e-LICENSE.md",
+          "sha256": "7f976f7e9cb2d87df7230606feb932c3f21ac0e664045a775b600046ff850c54",
+          "source": "https://github.com/madsmtm/objc2/blob/7b1abfd750a2cacaea71d6a56ecfb83cb7de560b/LICENSE.md"
+        }
+      ]
+    },
+    "objc2-web-kit@0.3.2": {
+      "declaredLicense": "Zlib OR Apache-2.0 OR MIT",
+      "vcsRevision": "7b1abfd750a2cacaea71d6a56ecfb83cb7de560b",
+      "repository": "https://github.com/madsmtm/objc2",
+      "sourceRevision": "7b1abfd750a2cacaea71d6a56ecfb83cb7de560b",
+      "review": "Upstream monorepo license and notices were inspected at the crate VCS revision. The upstream LICENSE.md explains license choices but supplies no separate copyright notice or full license text. Canonical MIT terms accompany that statement; these are non-Windows targets.",
+      "standardTerms": [
+        "MIT"
+      ],
+      "files": [
+        {
+          "path": "texts/540ae4c81adb5f64a9f61e222b688880da24300e-LICENSE.md",
+          "sha256": "7f976f7e9cb2d87df7230606feb932c3f21ac0e664045a775b600046ff850c54",
+          "source": "https://github.com/madsmtm/objc2/blob/7b1abfd750a2cacaea71d6a56ecfb83cb7de560b/LICENSE.md"
+        }
+      ]
+    },
+    "r-efi@5.3.0": {
+      "declaredLicense": "MIT OR Apache-2.0 OR LGPL-2.1-or-later",
+      "vcsRevision": "97b55bed1c2c91dcbf787674849f05337ff80b33",
+      "repository": "https://github.com/r-efi/r-efi",
+      "sourceRevision": "97b55bed1c2c91dcbf787674849f05337ff80b33",
+      "review": "Upstream monorepo license and notices were inspected at the crate VCS revision. No separate license file or copyright notice was found in the published crate, repository tree, or source headers. Canonical MIT terms accompany the declared license; these are non-Windows targets.",
+      "standardTerms": [
+        "MIT"
+      ],
+      "files": []
+    },
+    "r-efi@6.0.0": {
+      "declaredLicense": "MIT OR Apache-2.0 OR LGPL-2.1-or-later",
+      "vcsRevision": "7e1b0322d31d625f81a5656096330934f9cd835d",
+      "repository": "https://github.com/r-efi/r-efi",
+      "sourceRevision": "7e1b0322d31d625f81a5656096330934f9cd835d",
+      "review": "Upstream monorepo license and notices were inspected at the crate VCS revision. No separate license file or copyright notice was found in the published crate, repository tree, or source headers. Canonical MIT terms accompany the declared license; these are non-Windows targets.",
+      "standardTerms": [
+        "MIT"
+      ],
+      "files": []
+    },
+    "selectors@0.36.1": {
+      "declaredLicense": "MPL-2.0",
+      "vcsRevision": "635e1a19d02960588a00e189bd4bd5bdb150ec3d",
+      "repository": "https://github.com/servo/stylo",
+      "sourceRevision": "635e1a19d02960588a00e189bd4bd5bdb150ec3d",
+      "review": "Upstream monorepo license and notices were inspected at the crate VCS revision. Distributed source headers specify MPL-2.0; canonical MPL terms and the exact source archive link are supplied.",
+      "standardTerms": [
+        "MPL-2.0"
+      ],
+      "files": []
+    },
+    "sigchld@0.2.4": {
+      "declaredLicense": "MIT",
+      "vcsRevision": "07b95e2fe38b18b376b0f635f2766bf2e641b80b",
+      "repository": "https://github.com/oconnor663/sigchld.rs",
+      "sourceRevision": "07b95e2fe38b18b376b0f635f2766bf2e641b80b",
+      "review": "Upstream monorepo license and notices were inspected at the crate VCS revision. No separate license file or copyright notice was found in the published crate, repository tree, or source headers. Canonical MIT terms accompany the declared license; these are non-Windows targets.",
+      "standardTerms": [
+        "MIT"
+      ],
+      "files": []
+    },
+    "tauri-plugin@2.6.3": {
+      "declaredLicense": "Apache-2.0 OR MIT",
+      "vcsRevision": "6f6ab1207bb3923c2721fbc67d2fdb1c8deb0c7a",
+      "repository": "https://github.com/tauri-apps/tauri",
+      "sourceRevision": "6f6ab1207bb3923c2721fbc67d2fdb1c8deb0c7a",
+      "review": "Upstream monorepo license and notices were inspected at the crate VCS revision.",
+      "standardTerms": [
+        "MIT"
+      ],
+      "files": [
+        {
+          "path": "texts/4080281f12fc44a831babb7bb4f531aeb070078b-LICENSE.spdx",
+          "sha256": "5e834fe9788c524210deda859c46a550ffa5aa0cba9ea0572f0d81120e97c008",
+          "source": "https://github.com/tauri-apps/tauri/blob/6f6ab1207bb3923c2721fbc67d2fdb1c8deb0c7a/LICENSE.spdx"
+        },
+        {
+          "path": "texts/f433b1a53f5b830a205fd2df78e2b34974656c7b-LICENSE_APACHE-2.0",
+          "sha256": "0d542e0c8804e39aa7f37eb00da5a762149dc682d7829451287e11b938e94594",
+          "source": "https://github.com/tauri-apps/tauri/blob/6f6ab1207bb3923c2721fbc67d2fdb1c8deb0c7a/LICENSE_APACHE-2.0"
+        },
+        {
+          "path": "texts/b08530d59433b3060f4fad8751ac2610c0b0aff3-LICENSE_MIT",
+          "sha256": "9dd42ea92cff2ede5cd477cbfcce051b2d0115c0ac7f368ee88cb545055dff1d",
+          "source": "https://github.com/tauri-apps/tauri/blob/6f6ab1207bb3923c2721fbc67d2fdb1c8deb0c7a/LICENSE_MIT"
+        },
+        {
+          "path": "texts/tauri-plugin-2.6.3-source-notices.txt",
+          "sha256": "9e181ae7fcb8ae7802ffaa5f75523877f252df2db8001db3cc87458cd658472f",
+          "source": "https://crates.io/crates/tauri-plugin/2.6.3",
+          "extraction": "Unique copyright lines in the first 20 lines of distributed Rust source files."
+        }
+      ]
+    },
+    "unic-char-property@0.9.0": {
+      "declaredLicense": "MIT/Apache-2.0",
+      "vcsRevision": "5878605364af97a3358368a6eaef02104af2e016",
+      "repository": "https://github.com/open-i18n/rust-unic",
+      "sourceRevision": "5878605364af97a3358368a6eaef02104af2e016",
+      "review": "Upstream monorepo license and notices were inspected at the crate VCS revision.",
+      "standardTerms": [
+        "MIT"
+      ],
+      "files": [
+        {
+          "path": "texts/0322ceec0b8f15aa2d74a6173c07cc8c6f3764b3-COPYRIGHT.md",
+          "sha256": "f5c342c49f3ac804f3e8e7bb62a8040a44c50d47bb36902b1abd13f66a1adf8b",
+          "source": "https://github.com/open-i18n/rust-unic/blob/5878605364af97a3358368a6eaef02104af2e016/COPYRIGHT.md"
+        },
+        {
+          "path": "texts/16fe87b06e802f094b3fbb0894b137bca2b16ef1-LICENSE-APACHE",
+          "sha256": "a60eea817514531668d7e00765731449fe14d059d3249e0bc93b36de45f759f2",
+          "source": "https://github.com/open-i18n/rust-unic/blob/5878605364af97a3358368a6eaef02104af2e016/LICENSE-APACHE"
+        },
+        {
+          "path": "texts/31aa79387f27e730e33d871925e152e35e428031-LICENSE-MIT",
+          "sha256": "23f18e03dc49df91622fe2a76176497404e46ced8a715d9d2b67a7446571cca3",
+          "source": "https://github.com/open-i18n/rust-unic/blob/5878605364af97a3358368a6eaef02104af2e016/LICENSE-MIT"
+        },
+        {
+          "path": "texts/unic-char-property-0.9.0-source-notices.txt",
+          "sha256": "1d368bdd1ea7a35e55ae9d61f287ffde0fc5d6b12240f72c0c90e6c6def785df",
+          "source": "https://crates.io/crates/unic-char-property/0.9.0",
+          "extraction": "Unique copyright lines in the first 20 lines of distributed Rust source files."
+        }
+      ]
+    },
+    "unic-char-range@0.9.0": {
+      "declaredLicense": "MIT/Apache-2.0",
+      "vcsRevision": "5878605364af97a3358368a6eaef02104af2e016",
+      "repository": "https://github.com/open-i18n/rust-unic",
+      "sourceRevision": "5878605364af97a3358368a6eaef02104af2e016",
+      "review": "Upstream monorepo license and notices were inspected at the crate VCS revision.",
+      "standardTerms": [
+        "MIT"
+      ],
+      "files": [
+        {
+          "path": "texts/0322ceec0b8f15aa2d74a6173c07cc8c6f3764b3-COPYRIGHT.md",
+          "sha256": "f5c342c49f3ac804f3e8e7bb62a8040a44c50d47bb36902b1abd13f66a1adf8b",
+          "source": "https://github.com/open-i18n/rust-unic/blob/5878605364af97a3358368a6eaef02104af2e016/COPYRIGHT.md"
+        },
+        {
+          "path": "texts/16fe87b06e802f094b3fbb0894b137bca2b16ef1-LICENSE-APACHE",
+          "sha256": "a60eea817514531668d7e00765731449fe14d059d3249e0bc93b36de45f759f2",
+          "source": "https://github.com/open-i18n/rust-unic/blob/5878605364af97a3358368a6eaef02104af2e016/LICENSE-APACHE"
+        },
+        {
+          "path": "texts/31aa79387f27e730e33d871925e152e35e428031-LICENSE-MIT",
+          "sha256": "23f18e03dc49df91622fe2a76176497404e46ced8a715d9d2b67a7446571cca3",
+          "source": "https://github.com/open-i18n/rust-unic/blob/5878605364af97a3358368a6eaef02104af2e016/LICENSE-MIT"
+        },
+        {
+          "path": "texts/unic-char-range-0.9.0-source-notices.txt",
+          "sha256": "4c27fa15d17fba591a3048e5cf5112e46778ccafcafa4d8af297dffdc103d465",
+          "source": "https://crates.io/crates/unic-char-range/0.9.0",
+          "extraction": "Unique copyright lines in the first 20 lines of distributed Rust source files."
+        }
+      ]
+    },
+    "unic-common@0.9.0": {
+      "declaredLicense": "MIT/Apache-2.0",
+      "vcsRevision": "5878605364af97a3358368a6eaef02104af2e016",
+      "repository": "https://github.com/open-i18n/rust-unic",
+      "sourceRevision": "5878605364af97a3358368a6eaef02104af2e016",
+      "review": "Upstream monorepo license and notices were inspected at the crate VCS revision.",
+      "standardTerms": [
+        "MIT"
+      ],
+      "files": [
+        {
+          "path": "texts/0322ceec0b8f15aa2d74a6173c07cc8c6f3764b3-COPYRIGHT.md",
+          "sha256": "f5c342c49f3ac804f3e8e7bb62a8040a44c50d47bb36902b1abd13f66a1adf8b",
+          "source": "https://github.com/open-i18n/rust-unic/blob/5878605364af97a3358368a6eaef02104af2e016/COPYRIGHT.md"
+        },
+        {
+          "path": "texts/16fe87b06e802f094b3fbb0894b137bca2b16ef1-LICENSE-APACHE",
+          "sha256": "a60eea817514531668d7e00765731449fe14d059d3249e0bc93b36de45f759f2",
+          "source": "https://github.com/open-i18n/rust-unic/blob/5878605364af97a3358368a6eaef02104af2e016/LICENSE-APACHE"
+        },
+        {
+          "path": "texts/31aa79387f27e730e33d871925e152e35e428031-LICENSE-MIT",
+          "sha256": "23f18e03dc49df91622fe2a76176497404e46ced8a715d9d2b67a7446571cca3",
+          "source": "https://github.com/open-i18n/rust-unic/blob/5878605364af97a3358368a6eaef02104af2e016/LICENSE-MIT"
+        },
+        {
+          "path": "texts/unic-common-0.9.0-source-notices.txt",
+          "sha256": "5782e288e903068b8894bff03e4402af46a804f9c4976e6e4a751f18bd7a2437",
+          "source": "https://crates.io/crates/unic-common/0.9.0",
+          "extraction": "Unique copyright lines in the first 20 lines of distributed Rust source files."
+        }
+      ]
+    },
+    "unic-ucd-ident@0.9.0": {
+      "declaredLicense": "MIT/Apache-2.0",
+      "vcsRevision": "8a6ce83063d90b91ae2ce59eddb803edd393fca9",
+      "repository": "https://github.com/open-i18n/rust-unic",
+      "sourceRevision": "8a6ce83063d90b91ae2ce59eddb803edd393fca9",
+      "review": "Upstream monorepo license and notices were inspected at the crate VCS revision.",
+      "standardTerms": [
+        "MIT"
+      ],
+      "files": [
+        {
+          "path": "texts/0322ceec0b8f15aa2d74a6173c07cc8c6f3764b3-COPYRIGHT.md",
+          "sha256": "f5c342c49f3ac804f3e8e7bb62a8040a44c50d47bb36902b1abd13f66a1adf8b",
+          "source": "https://github.com/open-i18n/rust-unic/blob/8a6ce83063d90b91ae2ce59eddb803edd393fca9/COPYRIGHT.md"
+        },
+        {
+          "path": "texts/16fe87b06e802f094b3fbb0894b137bca2b16ef1-LICENSE-APACHE",
+          "sha256": "a60eea817514531668d7e00765731449fe14d059d3249e0bc93b36de45f759f2",
+          "source": "https://github.com/open-i18n/rust-unic/blob/8a6ce83063d90b91ae2ce59eddb803edd393fca9/LICENSE-APACHE"
+        },
+        {
+          "path": "texts/31aa79387f27e730e33d871925e152e35e428031-LICENSE-MIT",
+          "sha256": "23f18e03dc49df91622fe2a76176497404e46ced8a715d9d2b67a7446571cca3",
+          "source": "https://github.com/open-i18n/rust-unic/blob/8a6ce83063d90b91ae2ce59eddb803edd393fca9/LICENSE-MIT"
+        },
+        {
+          "path": "texts/unic-ucd-ident-0.9.0-source-notices.txt",
+          "sha256": "7bb8726a9a17c1196d19488429912cb7e7733838906e2e596da07329516879f7",
+          "source": "https://crates.io/crates/unic-ucd-ident/0.9.0",
+          "extraction": "Unique copyright lines in the first 20 lines of distributed Rust source files."
+        }
+      ]
+    },
+    "unic-ucd-version@0.9.0": {
+      "declaredLicense": "MIT/Apache-2.0",
+      "vcsRevision": "5878605364af97a3358368a6eaef02104af2e016",
+      "repository": "https://github.com/open-i18n/rust-unic",
+      "sourceRevision": "5878605364af97a3358368a6eaef02104af2e016",
+      "review": "Upstream monorepo license and notices were inspected at the crate VCS revision.",
+      "standardTerms": [
+        "MIT"
+      ],
+      "files": [
+        {
+          "path": "texts/0322ceec0b8f15aa2d74a6173c07cc8c6f3764b3-COPYRIGHT.md",
+          "sha256": "f5c342c49f3ac804f3e8e7bb62a8040a44c50d47bb36902b1abd13f66a1adf8b",
+          "source": "https://github.com/open-i18n/rust-unic/blob/5878605364af97a3358368a6eaef02104af2e016/COPYRIGHT.md"
+        },
+        {
+          "path": "texts/16fe87b06e802f094b3fbb0894b137bca2b16ef1-LICENSE-APACHE",
+          "sha256": "a60eea817514531668d7e00765731449fe14d059d3249e0bc93b36de45f759f2",
+          "source": "https://github.com/open-i18n/rust-unic/blob/5878605364af97a3358368a6eaef02104af2e016/LICENSE-APACHE"
+        },
+        {
+          "path": "texts/31aa79387f27e730e33d871925e152e35e428031-LICENSE-MIT",
+          "sha256": "23f18e03dc49df91622fe2a76176497404e46ced8a715d9d2b67a7446571cca3",
+          "source": "https://github.com/open-i18n/rust-unic/blob/5878605364af97a3358368a6eaef02104af2e016/LICENSE-MIT"
+        },
+        {
+          "path": "texts/unic-ucd-version-0.9.0-source-notices.txt",
+          "sha256": "9fc1833a5b0977b1733e050a1075d5d5f4490f0120d9850cbf7e05087742ff52",
+          "source": "https://crates.io/crates/unic-ucd-version/0.9.0",
+          "extraction": "Unique copyright lines in the first 20 lines of distributed Rust source files."
+        }
+      ]
+    },
+    "webview2-com@0.38.2": {
+      "declaredLicense": "MIT",
+      "vcsRevision": "b74dc5e2b394044bea5191052868ce7a106c202c",
+      "repository": "https://github.com/wravery/webview2-rs",
+      "sourceRevision": "b74dc5e2b394044bea5191052868ce7a106c202c",
+      "review": "Upstream monorepo license and notices were inspected at the crate VCS revision.",
+      "standardTerms": [
+        "MIT"
+      ],
+      "files": [
+        {
+          "path": "texts/de9a7e660e173136b351982a34f715af424ff812-LICENSE",
+          "sha256": "0dcf41516e608bbcb6cdc5229feb7b86fe4a643b85e7df251133c93408fdac73",
+          "source": "https://github.com/wravery/webview2-rs/blob/b74dc5e2b394044bea5191052868ce7a106c202c/LICENSE"
+        }
+      ]
+    },
+    "webview2-com-macros@0.8.1": {
+      "declaredLicense": "MIT",
+      "vcsRevision": "dffa41a8a46d3f5565eefbff2de57d38d399f158",
+      "repository": "https://github.com/wravery/webview2-rs",
+      "sourceRevision": "dffa41a8a46d3f5565eefbff2de57d38d399f158",
+      "review": "Upstream monorepo license and notices were inspected at the crate VCS revision.",
+      "standardTerms": [
+        "MIT"
+      ],
+      "files": [
+        {
+          "path": "texts/de9a7e660e173136b351982a34f715af424ff812-LICENSE",
+          "sha256": "0dcf41516e608bbcb6cdc5229feb7b86fe4a643b85e7df251133c93408fdac73",
+          "source": "https://github.com/wravery/webview2-rs/blob/dffa41a8a46d3f5565eefbff2de57d38d399f158/LICENSE"
+        }
+      ]
+    },
+    "webview2-com-sys@0.38.2": {
+      "declaredLicense": "MIT",
+      "vcsRevision": "b74dc5e2b394044bea5191052868ce7a106c202c",
+      "repository": "https://github.com/wravery/webview2-rs",
+      "sourceRevision": "b74dc5e2b394044bea5191052868ce7a106c202c",
+      "review": "Upstream monorepo license and notices were inspected at the crate VCS revision.",
+      "standardTerms": [
+        "MIT"
+      ],
+      "files": [
+        {
+          "path": "texts/de9a7e660e173136b351982a34f715af424ff812-LICENSE",
+          "sha256": "0dcf41516e608bbcb6cdc5229feb7b86fe4a643b85e7df251133c93408fdac73",
+          "source": "https://github.com/wravery/webview2-rs/blob/b74dc5e2b394044bea5191052868ce7a106c202c/LICENSE"
+        }
+      ]
+    },
+    "winapi-i686-pc-windows-gnu@0.4.0": {
+      "declaredLicense": "MIT/Apache-2.0",
+      "vcsRevision": null,
+      "repository": "https://github.com/retep998/winapi-rs",
+      "sourceRevision": "4ac6c90e4ab92850c78b6103137290fe4ab9d273",
+      "review": "The crate archive predates cargo VCS metadata. The pinned winapi-rs 0.3.6 release contains both GNU subcrates at version 0.4.0 and its project-wide license notices.",
+      "standardTerms": [
+        "MIT"
+      ],
+      "files": [
+        {
+          "path": "texts/8dada3edaf50dbc082c9a125058f25def75e625a-LICENSE-APACHE",
+          "sha256": "b40930bbcf80744c86c46a12bc9da056641d722716c378f5659b9e555ef833e1",
+          "source": "https://github.com/retep998/winapi-rs/blob/4ac6c90e4ab92850c78b6103137290fe4ab9d273/LICENSE-APACHE"
+        },
+        {
+          "path": "texts/6f1b4c850cd2bd0d165f122c0274afc95e10a851-LICENSE-MIT",
+          "sha256": "ce7bc3499fee93d5022ef430d5e4201e79a6d9154f3974e42f41349f0569e09b",
+          "source": "https://github.com/retep998/winapi-rs/blob/4ac6c90e4ab92850c78b6103137290fe4ab9d273/LICENSE-MIT"
+        },
+        {
+          "path": "texts/winapi-i686-pc-windows-gnu-0.4.0-source-notices.txt",
+          "sha256": "95e6e9fbd378dc9f64be6c083633fe8bbe652af0b2661c732cdf4b562fd39301",
+          "source": "https://crates.io/crates/winapi-i686-pc-windows-gnu/0.4.0",
+          "extraction": "Unique copyright lines in the first 20 lines of distributed Rust source files."
+        }
+      ]
+    },
+    "winapi-x86_64-pc-windows-gnu@0.4.0": {
+      "declaredLicense": "MIT/Apache-2.0",
+      "vcsRevision": null,
+      "repository": "https://github.com/retep998/winapi-rs",
+      "sourceRevision": "4ac6c90e4ab92850c78b6103137290fe4ab9d273",
+      "review": "The crate archive predates cargo VCS metadata. The pinned winapi-rs 0.3.6 release contains both GNU subcrates at version 0.4.0 and its project-wide license notices.",
+      "standardTerms": [
+        "MIT"
+      ],
+      "files": [
+        {
+          "path": "texts/8dada3edaf50dbc082c9a125058f25def75e625a-LICENSE-APACHE",
+          "sha256": "b40930bbcf80744c86c46a12bc9da056641d722716c378f5659b9e555ef833e1",
+          "source": "https://github.com/retep998/winapi-rs/blob/4ac6c90e4ab92850c78b6103137290fe4ab9d273/LICENSE-APACHE"
+        },
+        {
+          "path": "texts/6f1b4c850cd2bd0d165f122c0274afc95e10a851-LICENSE-MIT",
+          "sha256": "ce7bc3499fee93d5022ef430d5e4201e79a6d9154f3974e42f41349f0569e09b",
+          "source": "https://github.com/retep998/winapi-rs/blob/4ac6c90e4ab92850c78b6103137290fe4ab9d273/LICENSE-MIT"
+        },
+        {
+          "path": "texts/winapi-x86_64-pc-windows-gnu-0.4.0-source-notices.txt",
+          "sha256": "26623cf4d8460ff77b84169a0399b59d50e4f67e9ca36815ebbc07666a83fc36",
+          "source": "https://crates.io/crates/winapi-x86_64-pc-windows-gnu/0.4.0",
+          "extraction": "Unique copyright lines in the first 20 lines of distributed Rust source files."
+        }
+      ]
+    }
+  }
+}

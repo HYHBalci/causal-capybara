@@ -1,54 +1,119 @@
 # Install Causal Capybara
 
-Causal Capybara is a desktop application. The planned first public release
-targets **Windows x64**. macOS and Linux desktop packages have not been verified.
-R is optional. PDF export requires a separate TeX installation.
+**One download. Python and the analysis packages are included.** You do not need
+Python, R, Git, or programming tools to use the Windows release.
 
-## Download and verify
+## Windows: download, open, install
 
-1. Open the [Causal Capybara releases page](https://github.com/HYHBalci/causal-capybara/releases)
-   and select the latest published release. If it has no Windows installer asset,
-   a downloadable release has not been published yet.
-2. Download `Causal-Capybara-0.1.0-windows-x64-setup.exe` and its SHA-256
-   checksum file from the same release. Read its notes for tested Windows versions,
-   signing status, and known limitations.
-3. Open PowerShell in the folder where you saved both downloads. For the usual
-   Downloads folder, run `Set-Location (Join-Path $HOME 'Downloads')` first.
-   Calculate the installer's SHA-256 hash:
+### [Download Causal Capybara 0.1.0 for Windows 64-bit](https://github.com/HYHBalci/causal-capybara/releases/download/v0.1.0/Causal-Capybara-0.1.0-windows-x64-setup.exe)
 
-   ```powershell
-   Get-FileHash -Algorithm SHA256 -LiteralPath '.\Causal-Capybara-0.1.0-windows-x64-setup.exe'
-   ```
+The public download opens after publication, planned for **Friday, October 2, 2026**.
+The repository and release are currently private. After publication, you can download
+without a GitHub account. The download is about **133 MB**.
 
-   Compare the full hash with the matching line in the checksum file. Substitute
-   the actual installer filename if the release uses a different version. If the
-   hashes differ, do not run the file; download it again from the release page.
+1. **Download.** Click the link above. Your browser usually saves the installer in
+   **Downloads**. On the [release page](https://github.com/HYHBalci/causal-capybara/releases/tag/v0.1.0),
+   choose `Causal-Capybara-0.1.0-windows-x64-setup.exe` under **Assets**.
+2. **Open and install.** Double-click the downloaded file. Choose **Next**, accept the
+   license, keep the suggested folder, then choose **Install**. Setup installs for your
+   Windows user; you do not need to choose a Python interpreter or install R.
+3. **Start.** Leave **Run Causal Capybara** selected and choose **Finish**, or open
+   **Causal Capybara** from the Start menu. You can also select the desktop shortcut.
 
-4. Run the installer. Windows may show a publisher warning if that release is
-   unsigned; verify the checksum and read the release notes before deciding whether
-   to proceed. Launch **Causal Capybara** from the Start menu.
+The candidate has been tested on Windows 10 x64. Windows 11 x64 is an intended
+target with a separate clean-machine test still pending. macOS, Linux, and Windows
+ARM64 desktop packages are not included. To check your computer, open
+**Settings → System → About → System type** and look for an **x64-based processor**.
+Allow roughly 1 GB of free space for installation.
 
-## First session
+## Your first session
 
-Open a worked example from Home, choose a design, inspect its diagnostic, and run
-an estimate. The [analysis guide](GUIDE.md) explains the workflow. Projects and
-results stay in folders on your computer. The app does not send your project data
-to the publisher. Downloading a real study or installing an optional method package
-uses the network only after you request that action.
+From Home, open a worked example such as **Job training and later earnings**.
+Read the question, inspect its diagnostic, then choose **Estimate the recommended
+set**. No dataset download is needed for the synthetic examples.
+The [analysis guide](GUIDE.md) explains how to use your own data next.
 
-The v0.1.0 Windows release candidate bundles CPython 3.13.15 and its required
-packages. An isolated install and engine-startup smoke test passed on the build
-host; the fresh-account manual GUI test remains pending. If the engine does
-not start, the recovery screen explains the error and can check a separate
-Python interpreter. A separate environment also needs the packages in
-[requirements.txt](../requirements.txt).
+Projects and results stay on your computer. The app does not send your project data
+to the publisher. Downloading a real study uses the network only when you request it.
 
-## Build from source
+## Installation help
 
-For development on Windows, install Python 3.11 or newer in the Python 3 series,
-Node.js 22, Rust with the MSVC toolchain, Microsoft C++ build tools, and WebView2.
-Python 3.12 is used in CI; the release notes identify the bundled runtime.
-In PowerShell from the repository root:
+### Windows shows an unknown-publisher warning
+
+The v0.1.0 preview installer is **unsigned**. Windows or your browser may warn or
+block it. Download only from the linked Causal Capybara GitHub release and check that
+the filename matches. [Checksum verification](#optional-check-the-download) is available
+if you want to confirm the downloaded file matches the release. A matching checksum
+does not establish publisher identity or remove Windows warnings.
+
+On a university-managed device, ask IT if installation is blocked. Do not disable
+antivirus or device security controls. Signing the installer remains a release decision
+in the [checklist](RELEASE_CHECKLIST.md).
+
+### Setup needs an internet connection
+
+The app's Python runtime and packages are already in the installer. If Microsoft
+**WebView2 Runtime** is missing, setup downloads and installs that Microsoft component.
+Keep the internet connection available during setup. If university policy blocks it,
+ask IT to install WebView2 Runtime. The app and synthetic examples can then run offline.
+
+### The download link does not work
+
+The link becomes available when the repository is public and the release is published.
+Before that, only repository collaborators can view the draft. After publication,
+check the [releases page](https://github.com/HYHBalci/causal-capybara/releases) for the
+Windows installer. GitHub's **Source code** ZIP is for developers; use the `.exe` to install.
+
+### The app cannot start its analysis engine
+
+The release bundles CPython 3.13.15 and the required packages. Let the app finish
+starting. If it shows a recovery screen, use its error details when reporting the problem
+through the [bug form](https://github.com/HYHBalci/causal-capybara/issues/new?template=bug_report.yml).
+Redact usernames, local paths, and private data. Ordinary installation should not
+require setting up another Python environment.
+
+### Uninstall
+
+Open Windows **Settings → Apps**, find **Causal Capybara**, and choose **Uninstall**.
+Your saved analysis projects are separate from the application.
+
+## Optional: check the download
+
+<details>
+<summary>Verify the installer with SHA-256</summary>
+
+Download [SHA256SUMS.txt](https://github.com/HYHBalci/causal-capybara/releases/download/v0.1.0/SHA256SUMS.txt)
+from the same release. In File Explorer, open the folder containing the installer,
+right-click an empty area, and choose **Open in Terminal** (or open PowerShell in that folder).
+Run:
+
+```powershell
+Get-FileHash -Algorithm SHA256 -LiteralPath '.\Causal-Capybara-0.1.0-windows-x64-setup.exe'
+```
+
+Compare the full hash with the matching line in `SHA256SUMS.txt`. If they differ,
+delete the downloaded file and download it again from the release page.
+
+</details>
+
+## Optional features
+
+- **R methods:** require a separate R installation and the relevant R packages.
+  The included Python engine can run the main workflow without R.
+- **PDF export:** requires a separate TeX toolchain; without it, export can provide
+  LaTeX source. Word, HTML, and Markdown exports use the included dependencies.
+- **Real studies:** downloaded from their publishers on request and subject to
+  the publisher's reuse terms.
+
+## Build from source (developers)
+
+<details>
+<summary>Development prerequisites and build commands</summary>
+
+On Windows, install Python 3.11 or newer in the Python 3 series, Node.js 22, Rust
+with the MSVC toolchain, Microsoft C++ build tools, and WebView2. Python 3.12 is
+used in CI; the release notes identify the bundled runtime. In PowerShell from
+the repository root:
 
 ```powershell
 python -m venv .venv
@@ -59,31 +124,30 @@ npm ci
 npm run tauri dev
 ```
 
-To assemble a Windows x64 release candidate with the managed Python runtime,
-install PowerShell 7 (`pwsh`) and return to the repository root. Run:
+To assemble a Windows release with the managed Python runtime, install PowerShell
+7 (`pwsh`) and run from the repository root:
 
 ```powershell
 npm --prefix app ci
 pwsh -File tools/stage_windows_runtime.ps1
 pwsh -File tools/smoke_windows_runtime.ps1
+pwsh -File tools/clean_windows_runtime.ps1
 node tools/collect_release_licenses.mjs
 npm --prefix app run tauri build -- --config src-tauri/tauri.release.conf.json --bundles nsis
 pwsh -File tools/smoke_windows_installer.ps1
 ```
 
 The staging step downloads the pinned Python runtime and required wheels. The
-license collector prepares the third-party notices. The installer smoke test
-refuses to replace an existing Causal Capybara installation; run it under a
-clean Windows user. A direct `npm run tauri build -- --bundles nsis` instead
-makes a source-only developer preview that uses a separately configured Python
-environment. Use the published release's checksum and notes for a verified download.
+license collector prepares third-party notices. The installer smoke refuses to
+replace an existing installation. A direct `npm run tauri build -- --bundles nsis`
+makes a developer preview that requires a separately configured Python environment.
+Use the release workflow for the student download.
 
-## Known limits
+</details>
 
-- The Windows installer needs a clean-machine installation test before any
-  version can be described as ready for first-time users. See the current
-  [release checklist](RELEASE_CHECKLIST.md) for the evidence recorded so far.
-- R is optional and supports fewer methods than the Python engine.
-- PDF export needs a TeX toolchain. Without it, export can provide LaTeX source.
-- Real-study data is fetched from its publisher on request and carries the
-  publisher's own reuse terms.
+## Verification status
+
+The exact draft installer passed isolated installation, engine startup without
+system Python, example analysis, clean exit, and uninstall checks. A fresh-account
+interactive test remains pending. See the [release checklist](RELEASE_CHECKLIST.md)
+and [final audit](RELEASE_AUDIT_2026-09-30.md) for the evidence and publication gates.

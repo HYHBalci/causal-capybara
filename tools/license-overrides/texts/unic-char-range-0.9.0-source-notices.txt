@@ -1,0 +1,9 @@
+Copyright notices copied from unic-char-range 0.9.0 source headers.
+Source release: https://crates.io/crates/unic-char-range/0.9.0
+
+benches/benchmarks.rs
+Copyright 2017 The UNIC Project Developers.
+
+src/par_iter.rs
+Copyright 2018 The UNIC Project Developers.
+

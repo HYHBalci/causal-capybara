@@ -32,16 +32,16 @@ try {
     $env:PYTHONPATH = 'Z:\this-path-must-not-be-used'
     $env:PYTHONDONTWRITEBYTECODE = '1'
 
-    & $pythonExe -c 'import sys; assert sys.version_info[:3] == (3, 13, 15), sys.version; import fastapi, uvicorn, numpy, scipy, pandas, pyarrow, sklearn, statsmodels, linearmodels, polars, duckdb, docx, capy_sidecar, capy_py; assert all("this-path-must-not-be-used" not in p for p in sys.path); print("Bundled interpreter and analysis imports OK")'
+    & $pythonExe -B -c 'import sys; assert sys.version_info[:3] == (3, 13, 15), sys.version; import fastapi, uvicorn, numpy, scipy, pandas, pyarrow, sklearn, statsmodels, linearmodels, polars, duckdb, docx, capy_sidecar, capy_py; assert all("this-path-must-not-be-used" not in p for p in sys.path); print("Bundled interpreter and analysis imports OK")'
     if ($LASTEXITCODE -ne 0) { throw 'Bundled Python import smoke check failed.' }
 
-    $project = (& $pythonExe -m capy_sidecar example medicaid 2>$null | Select-Object -Last 1).Trim()
+    $project = (& $pythonExe -B -m capy_sidecar example medicaid 2>$null | Select-Object -Last 1).Trim()
     if ($LASTEXITCODE -ne 0 -or -not $project) { throw 'Bundled Python could not create a worked example.' }
-    $spec = (& $pythonExe -m capy_sidecar spec $project --design did --estimand ATT --treatment expanded --outcome uninsured_rate --unit state --time year --cluster state | Select-Object -Last 1).Trim()
+    $spec = (& $pythonExe -B -m capy_sidecar spec $project --design did --estimand ATT --treatment expanded --outcome uninsured_rate --unit state --time year --cluster state | Select-Object -Last 1).Trim()
     if ($LASTEXITCODE -ne 0 -or -not $spec) { throw 'Bundled Python could not create a study specification.' }
-    & $pythonExe -m capy_sidecar run $project $spec did.callaway_santanna did.twfe
+    & $pythonExe -B -m capy_sidecar run $project $spec did.callaway_santanna did.twfe
     if ($LASTEXITCODE -ne 0) { throw 'Bundled Python could not estimate the worked example.' }
-    & $pythonExe -m capy_sidecar validate $project
+    & $pythonExe -B -m capy_sidecar validate $project
     if ($LASTEXITCODE -ne 0) { throw 'Bundled Python produced an invalid worked-example result.' }
 
     Write-Host 'Bundled Python 3.13.15 smoke check passed without using system Python packages.'

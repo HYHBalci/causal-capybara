@@ -1,0 +1,2 @@
+# Keep copied upstream notice bytes stable for the SHA-256 provenance checks.
+texts/* -text

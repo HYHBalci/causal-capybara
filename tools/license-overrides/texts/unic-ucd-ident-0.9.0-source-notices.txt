@@ -1,0 +1,9 @@
+Copyright notices copied from unic-ucd-ident 0.9.0 source headers.
+Source release: https://crates.io/crates/unic-ucd-ident/0.9.0
+
+src/id.rs
+Copyright 2017-2019 The UNIC Project Developers.
+
+src/pkg_info.rs
+Copyright 2017 The UNIC Project Developers.
+

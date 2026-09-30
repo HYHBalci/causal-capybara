@@ -1,0 +1,6 @@
+Copyright notices copied from tauri-plugin 2.6.3 source headers.
+Source release: https://crates.io/crates/tauri-plugin/2.6.3
+
+src/build/mobile.rs
+Copyright 2019-2024 Tauri Programme within The Commons Conservancy
+
