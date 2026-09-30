@@ -79,8 +79,11 @@ jobs:
           CAPY_HOME: ${{ runner.temp }}/causal-capybara-release-tests
           PYTHONDONTWRITEBYTECODE: "1"
         run: |
-          & ./.capy-build/release/windows-x64/runtimes/python/python.exe -m pytest tests/python --ignore=tests/python/test_cross_engine.py -q -p no:cacheprovider
+          & ./.capy-build/release/windows-x64/runtimes/python/python.exe -B -m pytest tests/python --ignore=tests/python/test_cross_engine.py -q -p no:cacheprovider
           if ($LASTEXITCODE -ne 0) { throw "Embedded Python test suite failed with exit $LASTEXITCODE." }
+      - name: Remove build paths and unused Python launchers
+        shell: pwsh
+        run: ./tools/clean_windows_runtime.ps1
       - name: Collect exact third-party license texts
         run: node tools/collect_release_licenses.mjs
       - name: Build the self-contained NSIS installer
@@ -157,12 +160,13 @@ jobs:
                 *) echo "Refusing stale draft asset: $existing" >&2; exit 1 ;;
               esac
             done < <(gh release view "$RELEASE_TAG" --json assets --jq '.assets[].name')
-            gh release upload "$RELEASE_TAG" release-assets/* --clobber
+            gh release upload "$RELEASE_TAG" "release-assets/$installer#Windows 64-bit installer (Python included)" "release-assets/SHA256SUMS.txt#Optional checksum" --clobber
             gh release edit "$RELEASE_TAG" --title "Causal Capybara $RELEASE_TAG" --notes-file "$notes"
           else
-            gh release create "$RELEASE_TAG" release-assets/* --draft --verify-tag \
+            gh release create "$RELEASE_TAG" "release-assets/$installer#Windows 64-bit installer (Python included)" "release-assets/SHA256SUMS.txt#Optional checksum" --draft --verify-tag \
               --title "Causal Capybara $RELEASE_TAG" --notes-file "$notes"
           fi
           expected_assets="$(printf '%s\n' "$installer" SHA256SUMS.txt | sort)"
           actual_assets="$(gh release view "$RELEASE_TAG" --json assets --jq '.assets[].name' | sort)"
           test "$actual_assets" = "$expected_assets" || { echo 'Draft release has unexpected assets.' >&2; exit 1; }
+
