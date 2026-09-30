@@ -35,3 +35,6 @@ app/src-tauri/gen/
 *.p12
 *.pfx
 *.key
+
+# Local installer copy for preview review.
+/Release-Candidate/

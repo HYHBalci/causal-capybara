@@ -5,15 +5,16 @@ Python, R, Git, or programming tools to use the Windows release.
 
 ## Windows: download, open, install
 
-### [Download Causal Capybara 0.1.0 for Windows 64-bit](https://github.com/HYHBalci/causal-capybara/releases/download/v0.1.0/Causal-Capybara-0.1.0-windows-x64-setup.exe)
+### Windows 64-bit installer
 
-The public download opens after publication, planned for **Friday, October 2, 2026**.
-The repository and release are currently private. After publication, you can download
-without a GitHub account. The download is about **133 MB**.
+**Private draft — public download planned for Friday, October 2, 2026.**
+To download now, sign in as the repository owner or with write access. After
+publication, anyone can use the Releases page without an account. The installer
+is about **133 MB**.
 
-1. **Download.** Click the link above. Your browser usually saves the installer in
-   **Downloads**. On the [release page](https://github.com/HYHBalci/causal-capybara/releases/tag/v0.1.0),
-   choose `Causal-Capybara-0.1.0-windows-x64-setup.exe` under **Assets**.
+1. **Download.** Open [Releases](https://github.com/HYHBalci/causal-capybara/releases),
+   open the **v0.1.0 draft**, and choose `Causal-Capybara-0.1.0-windows-x64-setup.exe`
+   under **Assets**. Your browser usually saves it in **Downloads**.
 2. **Open.** Double-click the downloaded file and choose **Next**.
 3. **Agree.** Review the Apache license and choose **I Agree**.
 4. **Install.** Keep the default folder for your Windows user and choose **Next**.
@@ -42,7 +43,7 @@ to the publisher. Downloading a real study uses the network only when you reques
 ### Windows shows an unknown-publisher warning
 
 The v0.1.0 preview installer is **unsigned**. Windows or your browser may warn or
-block it. Download only from the linked Causal Capybara GitHub release and check that
+block it. Download only from the Causal Capybara GitHub release and check that
 the filename matches. [Checksum verification](#optional-check-the-download) is available
 if you want to confirm the downloaded file matches the release. A matching checksum
 does not establish publisher identity or remove Windows warnings.
@@ -58,12 +59,13 @@ The app's Python runtime and packages are already in the installer. If Microsoft
 Keep the internet connection available during setup. If university policy blocks it,
 ask IT to install WebView2 Runtime. The app and synthetic examples can then run offline.
 
-### The download link does not work
+### I cannot see the draft installer
 
-The link becomes available when the repository is public and the release is published.
-Before that, only repository collaborators can view the draft. After publication,
-check the [releases page](https://github.com/HYHBalci/causal-capybara/releases) for the
-Windows installer. GitHub's **Source code** ZIP is for developers; use the `.exe` to install.
+A direct installer link may show 404 while the release is a private draft. Sign in
+as the repository owner or with write access, then open the **v0.1.0 draft** from
+[Releases](https://github.com/HYHBalci/causal-capybara/releases) and choose the
+installer under **Assets**. After publication, the same Releases page is public.
+GitHub's **Source code** ZIP is for developers; use the `.exe` to install.
 
 ### The app cannot start its analysis engine
 
@@ -83,8 +85,8 @@ Your saved analysis projects are separate from the application.
 <details>
 <summary>Verify the installer with SHA-256</summary>
 
-Download [SHA256SUMS.txt](https://github.com/HYHBalci/causal-capybara/releases/download/v0.1.0/SHA256SUMS.txt)
-from the same release. In File Explorer, open the folder containing the installer,
+From the same release's **Assets**, download `SHA256SUMS.txt`. In File Explorer,
+open the folder containing the installer,
 right-click an empty area, and choose **Open in Terminal** (or open PowerShell in that folder).
 Run:
 

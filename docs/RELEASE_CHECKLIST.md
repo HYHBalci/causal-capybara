@@ -38,7 +38,7 @@ old name is a compatibility concern, not a reason to keep the old branding.
   [installation guide](INSTALL.md), including supported platforms, known limitations,
   an issue-reporting link and checksums alongside the download. Keep the launch claims
   consistent with the formats, methods and platforms actually verified. The student path
-  now has a direct installer link, the verified setup screens, and optional checksum verification.
+  now points reviewers to the draft's Assets, the verified setup screens, and optional checksum verification.
 
 ## Final audit evidence
 
@@ -66,7 +66,8 @@ Third-party copyright notices remain intact.
   make the fresh repository public. Then apply and verify branch protection,
   repository rulesets and private vulnerability reporting before publishing the
   draft, after every release gate above is met. Confirm the direct download works
-  without a GitHub account and update the draft-status wording in README, installation
+  without a GitHub account, enable the direct installer link only after it succeeds,
+  and update the draft-status wording in README, installation
   help, and release notes. Keep the old history archive private.
 
 ## Release candidate smoke test

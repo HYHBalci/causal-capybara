@@ -12,18 +12,21 @@ once, because the disagreement between them is part of what you learned.
 
 ## Download for Windows
 
-### [Download Causal Capybara 0.1.0 — Windows 64-bit installer](https://github.com/HYHBalci/causal-capybara/releases/download/v0.1.0/Causal-Capybara-0.1.0-windows-x64-setup.exe)
+### Windows 64-bit installer
 
-**Public download opens after publication, planned for Friday, October 2, 2026.**
-The release is currently a private draft. Windows x64 is the first desktop target.
+**Private draft — public download planned for Friday, October 2, 2026.**
+Windows x64 is the first desktop target. To download the draft now, sign in as the
+repository owner or with write access, open [Releases](https://github.com/HYHBalci/causal-capybara/releases),
+open the **v0.1.0 draft**, and choose `Causal-Capybara-0.1.0-windows-x64-setup.exe`
+under **Assets**. After publication, anyone can use the Releases page without an account.
 
-1. **Download** the installer using the link above, then double-click the `.exe`.
+1. Double-click the downloaded `.exe`.
 2. Choose **Next**, review the Apache license, and choose **I Agree**.
 3. Keep the default folder for your Windows user and choose **Next**. When setup completes, choose **Next** again.
 4. Leave **Run Causal Capybara** checked and choose **Finish**. Try a worked example from Home.
 
 **Python and the analysis packages are included.** You do not need to install Python,
-R, Git, or programming tools. Once the release is public, the download needs no GitHub account.
+R, Git, or programming tools.
 The app installs for your Windows user. If Microsoft WebView2 is missing, setup installs
 it using an internet connection; university device policies may require IT assistance.
 

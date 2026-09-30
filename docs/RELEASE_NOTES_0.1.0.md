@@ -1,13 +1,15 @@
 # Causal Capybara v0.1.0
 
-### [Download for Windows 64-bit](https://github.com/HYHBalci/causal-capybara/releases/download/v0.1.0/Causal-Capybara-0.1.0-windows-x64-setup.exe)
+### Windows 64-bit installer
 
 **Private draft — public download planned for Friday, October 2, 2026.**
-The download link activates when the repository is public and this release is published.
+Download the Windows installer from **Assets** below. While this is a draft, sign
+in as the repository owner or with write access. After publication, the
+[Releases page](https://github.com/HYHBalci/causal-capybara/releases) is public.
 
 **Python and the analysis packages are included. No programming setup required.**
 
-1. Download `Causal-Capybara-0.1.0-windows-x64-setup.exe` (about 133 MB) and double-click it.
+1. Under **Assets** below, download `Causal-Capybara-0.1.0-windows-x64-setup.exe` (about 133 MB), then double-click it.
 2. Choose **Next**, review the Apache license, and choose **I Agree**.
 3. Keep the default folder for your Windows user and choose **Next**. When setup completes, choose **Next** again.
 4. Leave **Run Causal Capybara** checked and choose **Finish**. Open a worked example from Home.

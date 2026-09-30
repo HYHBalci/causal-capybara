@@ -7,8 +7,9 @@ at the end remain open.
 
 ## Student installation
 
-The README, installation guide, and release notes start with a direct Windows
-installer link. Python and the required analysis packages are included. Students
+The README and installation guide point to the repository's release list. While
+the candidate is a private draft, authorized reviewers download the installer from
+the draft's Assets. Release notes point to Assets on the current page. Python and the required analysis packages are included. Students
 do not need Python, R, Git, or programming tools to use the Windows download.
 After publication, no GitHub account will be required to download it.
 
@@ -153,5 +154,7 @@ built and tested independently; account settings were not changed.
   vulnerability reporting, then verify anonymous direct download.
 
 See the [release checklist](RELEASE_CHECKLIST.md). The old-history archive must remain
-private. The canonical repository must be public and the draft release published for
-the student download link to work.
+private. The canonical repository must be public and the draft release published before
+enabling and verifying the direct public installer URL. The earlier prominent
+`v0.1.0` download link returned 404 during the draft stage and has been removed from
+active download instructions.
