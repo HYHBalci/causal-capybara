@@ -244,7 +244,10 @@ fn spawn_sidecar(app: &tauri::AppHandle) -> Result<Option<Child>, String> {
     );
 
     let mut cmd = Command::new(&python);
-    cmd.arg("-m")
+    // Keep the installed resource tree read-only and removable by setup.
+    // Embedded Python ignores PYTHONDONTWRITEBYTECODE, so pass -B explicitly.
+    cmd.arg("-B")
+        .arg("-m")
         .arg("capy_sidecar")
         .arg("serve")
         .arg("--port")

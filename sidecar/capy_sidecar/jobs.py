@@ -236,7 +236,7 @@ class JobQueue:
         creationflags = 0
         if os.name == "nt":
             creationflags = getattr(subprocess, "CREATE_NO_WINDOW", 0)
-        cmd = [sys.executable, "-m", "capy_sidecar.runner"]
+        cmd = [sys.executable, "-B", "-m", "capy_sidecar.runner"]
         if job.engine == "r":
             try:
                 cmd = _r_command(payload, project)

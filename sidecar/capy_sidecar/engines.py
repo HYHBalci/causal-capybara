@@ -1063,7 +1063,7 @@ def _installed_python_packages(names: Iterable[str]) -> dict[str, bool]:
     )
     try:
         proc = subprocess.run(
-            [sys.executable, "-c", probe, json.dumps(wanted)],
+            [sys.executable, "-B", "-c", probe, json.dumps(wanted)],
             capture_output=True, text=True, timeout=60,
             creationflags=getattr(subprocess, "CREATE_NO_WINDOW", 0) if os.name == "nt" else 0,
         )
@@ -1176,7 +1176,7 @@ def install_stack(
         # part of why a long install looked like nothing was happening; --no-input
         # keeps it from waiting for an answer nobody can type.
         env["PYTHONUNBUFFERED"] = "1"
-        cmd = [sys.executable, "-m", "pip", "install", "--disable-pip-version-check",
+        cmd = [sys.executable, "-B", "-m", "pip", "install", "--disable-pip-version-check",
                "--no-input", *plan["packages"]]
     else:
         exe = find_rscript()
@@ -1271,7 +1271,7 @@ def write_python_lock() -> Path:
     out = LOCKS_DIR / "python.lock"
     try:
         proc = subprocess.run(
-            [sys.executable, "-m", "pip", "freeze", "--disable-pip-version-check"],
+            [sys.executable, "-B", "-m", "pip", "freeze", "--disable-pip-version-check"],
             capture_output=True, text=True, timeout=120,
         )
         body = proc.stdout or ""
