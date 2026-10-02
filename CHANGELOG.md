@@ -8,6 +8,8 @@ Publication is pending; no release is claimed by this file.
 
 See the [draft v0.1.0 release notes](docs/RELEASE_NOTES_0.1.0.md).
 
+- Documented command-line source installation from GitHub, with a local browser preview
+  and an analysis-only option alongside the Windows installer.
 - Initial Windows desktop studio for causal questions, design diagnostics, estimation,
   comparisons, reports, and a browsable method and literature catalogue.
 - Windows x64 release candidate with a bundled CPython 3.13.15 runtime and

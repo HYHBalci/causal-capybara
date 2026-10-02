@@ -17,6 +17,12 @@ in as the repository owner or with write access. After publication, the
 The app installs for your Windows user. If Microsoft WebView2 is missing, setup
 downloads that component, so keep an internet connection available during installation.
 The preview is **unsigned**; Windows may show an unknown-publisher warning.
+
+Prefer a source installation? The [command-line alternative](https://github.com/HYHBalci/causal-capybara/blob/main/docs/INSTALL.md#alternative-install-from-github-with-the-command-line)
+clones the v0.1.0 source and runs locally in a browser, using Git, Python 3.12,
+and Node.js 22.12 or newer. An analysis-only option needs Git and Python. Managed devices
+must permit these tools and local servers.
+
 See [installation help](https://github.com/HYHBalci/causal-capybara/blob/main/docs/INSTALL.md)
 for Windows warnings, troubleshooting, optional checksum verification, and developer setup.
 The SHA-256 checksum is provided in `SHA256SUMS.txt` under Assets.

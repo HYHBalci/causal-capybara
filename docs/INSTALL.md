@@ -28,6 +28,114 @@ ARM64 desktop packages are not included. To check your computer, open
 **Settings → System → About → System type** and look for an **x64-based processor**.
 Allow roughly 1 GB of free space for installation.
 
+## Alternative: install from GitHub with the command line
+
+This installs the source locally and runs the **local browser preview**. You need
+**Git, Python 3.12, and Node.js 22.12 or newer** already installed. Internet access is needed
+for the initial source and dependency downloads. Rust, C++ build tools, WebView2,
+and the desktop installer are not required for this route.
+
+The commands select the `v0.1.0` source tag. While the repository is private, Git
+must be authenticated to a GitHub account with read access. After publication,
+anyone can clone it without an account. On a university/work computer, the tools
+and local servers must be allowed by IT; this route does not grant installation
+permissions.
+
+### Windows PowerShell
+
+Open PowerShell in the folder where you want to keep Causal Capybara, such as
+Documents. Run the following commands **one at a time**, stopping if any reports
+an error. If a `causal-capybara` folder already exists, choose another parent folder.
+
+```powershell
+git clone --depth 1 --branch v0.1.0 https://github.com/HYHBalci/causal-capybara.git
+Set-Location causal-capybara
+py -3.12 -m venv .venv
+.\.venv\Scripts\python.exe -m pip install -r requirements.txt
+npm.cmd --prefix app ci
+```
+
+Use `npm.cmd` in PowerShell so the setup does not require running npm's PowerShell
+wrapper. The Python commands use the virtual environment directly; activation is
+not required. If `py -3.12` cannot find Python, install Python 3.12 or ask IT to
+provide it. Dependencies are isolated in this checkout's `.venv` and `app/node_modules`.
+
+### macOS or Linux terminal
+
+With Git, Python 3.12, and Node.js 22.12 or newer available, run the commands one at a time:
+
+```bash
+git clone --depth 1 --branch v0.1.0 https://github.com/HYHBalci/causal-capybara.git
+cd causal-capybara
+python3.12 -m venv .venv
+.venv/bin/python -m pip install -r requirements.txt
+npm --prefix app ci
+```
+
+If Python reports that `venv` is unavailable, install your distribution's Python
+3.12 virtual-environment support or ask IT. This browser route does not provide a
+macOS/Linux desktop package.
+
+### Start the local browser preview
+
+Keep **two terminals** open, both in the cloned `causal-capybara` folder.
+
+**Windows — terminal 1, analysis engine:**
+
+```powershell
+$env:PYTHONPATH = 'engines/python;sidecar'
+.\.venv\Scripts\python.exe -B -m capy_sidecar serve --host 127.0.0.1 --port 8760
+```
+
+**Windows — terminal 2, interface:**
+
+```powershell
+npm.cmd --prefix app run dev
+```
+
+**macOS/Linux — terminal 1, analysis engine:**
+
+```bash
+PYTHONPATH=engines/python:sidecar .venv/bin/python -B -m capy_sidecar serve --host 127.0.0.1 --port 8760
+```
+
+**macOS/Linux — terminal 2, interface:**
+
+```bash
+npm --prefix app run dev
+```
+
+Open **http://127.0.0.1:5173** in your browser and choose a worked example from Home.
+Both services listen on your own computer. Leave both terminals running while
+using the interface. To stop, press **Ctrl+C** in each terminal. To restart later,
+repeat only these two start commands; dependencies do not need reinstalling.
+
+If port `5173` or `8760` is already in use, close the existing Causal Capybara
+session first. The interface proxy expects the analysis engine on port `8760`.
+
+The browser preview supports the local analysis workflow and browser downloads
+for exports. For importing data or opening a project, type its full local path;
+native file pickers, desktop drag-and-drop, and automatic engine restart are
+available in the desktop app. Stop and restart terminal 1 if the engine needs
+restarting. R methods and PDF typesetting still need their optional dependencies.
+
+### Analysis from the command line only
+
+For analysis without the browser, only the Git/Python setup above is needed;
+you can omit `npm ci` and Node.js. From the checkout, this Windows example creates
+a synthetic Medicaid project and prints its location:
+
+```powershell
+$env:PYTHONPATH = 'engines/python;sidecar'
+.\.venv\Scripts\python.exe -B -m capy_sidecar example medicaid
+.\.venv\Scripts\python.exe -B -m capy_sidecar --help
+```
+
+On macOS/Linux use `.venv/bin/python` and `PYTHONPATH=engines/python:sidecar`.
+See [Command-line analysis](../README.md#command-line-analysis) for estimation,
+validation, and report commands. Source installation does not create a Start-menu
+shortcut. Keep the checkout to run it again; saved projects are stored separately.
+
 ## Your first session
 
 From Home, open a worked example such as **Job training and later earnings**.
@@ -65,7 +173,8 @@ A direct installer link may show 404 while the release is a private draft. Sign 
 as the repository owner or with write access, then open the **v0.1.0 draft** from
 [Releases](https://github.com/HYHBalci/causal-capybara/releases) and choose the
 installer under **Assets**. After publication, the same Releases page is public.
-GitHub's **Source code** ZIP is for developers; use the `.exe` to install.
+Use the `.exe` for the bundled desktop app, or follow the command-line source
+installation above for the local browser preview.
 
 ### The app cannot start its analysis engine
 
@@ -113,7 +222,7 @@ delete the downloaded file and download it again from the release page.
 <details>
 <summary>Development prerequisites and build commands</summary>
 
-On Windows, install Python 3.11 or newer in the Python 3 series, Node.js 22, Rust
+On Windows, install Python 3.12, Node.js 22.12 or newer, Rust
 with the MSVC toolchain, Microsoft C++ build tools, and WebView2. Python 3.12 is
 used in CI; the release notes identify the bundled runtime. In PowerShell from
 the repository root:

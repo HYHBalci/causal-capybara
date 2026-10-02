@@ -35,6 +35,32 @@ See [installation help](docs/INSTALL.md) for that warning, troubleshooting, and 
 checksum verification. The [release checklist](docs/RELEASE_CHECKLIST.md) records the
 remaining checks before publication.
 
+### Alternative: install from GitHub with the command line
+
+Use the **local browser preview** when you prefer a source installation. You need
+**Git, Python 3.12, and Node.js 22.12 or newer** installed first. In PowerShell, run these
+commands one at a time; stop if a command reports an error:
+
+```powershell
+git clone --depth 1 --branch v0.1.0 https://github.com/HYHBalci/causal-capybara.git
+Set-Location causal-capybara
+py -3.12 -m venv .venv
+.\.venv\Scripts\python.exe -m pip install -r requirements.txt
+npm.cmd --prefix app ci
+```
+
+Then follow [Start the local browser preview](docs/INSTALL.md#start-the-local-browser-preview)
+to start the engine and interface in two terminals. Open **http://127.0.0.1:5173**
+and try a worked example. This route uses your computer's Python environment;
+Rust, C++ build tools, and the desktop installer are not required.
+
+The [command-line installation guide](docs/INSTALL.md#alternative-install-from-github-with-the-command-line)
+also covers macOS/Linux, restarting, and analysis without the interface. Native
+file dialogs and desktop engine controls are available in the desktop app; the
+browser preview uses typed local paths. On managed devices, Git, Python, Node.js,
+and local servers must be permitted by IT. The private repository currently needs
+a GitHub account with read access; after publication, cloning is public.
+
 The full design is in [`IMPLEMENTATION_PLAN.md`](IMPLEMENTATION_PLAN.md). This README is what exists and
 how to run it.
 
@@ -47,8 +73,8 @@ and accessibility improvements, verification results and remaining release check
 
 ## Using the app
 
-Causal Capybara is a desktop application. It is not a website and it is not meant to be opened in a
-browser tab.
+Use the Windows desktop app or the local browser preview described above. Both run
+the analysis engine on your computer; projects and data stay local.
 
 ### Your first analysis
 
@@ -61,7 +87,7 @@ The [analysis guide](docs/GUIDE.md) walks through the workflow.
 
 ### Windows development setup
 
-You need Python 3.11 or newer in the Python 3 series, Node.js 22, Rust with the MSVC toolchain,
+You need Python 3.12, Node.js 22.12 or newer, Rust with the MSVC toolchain,
 Microsoft C++ build tools, and WebView2. Python 3.12 is used in CI.
 Run these commands in **PowerShell**, from the repository root:
 
