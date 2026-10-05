@@ -12,33 +12,33 @@ once, because the disagreement between them is part of what you learned.
 
 ## See the app
 
-![Causal Capybara results dashboard comparing real Python estimates and uncertainty from a simulated minimum wage example](docs/promotion/linkedin/04-results.png)
+![Causal Capybara results dashboard comparing computed Python ATT estimates and uncertainty for a synthetic child-development example](docs/promotion/linkedin/05-results.png)
 
-These images use the built-in simulated examples. The values are demonstration results.
+These images follow the built-in IHDP-inspired child-development example using generated synthetic data, with no original study records. The values are computed Python demonstration results, not published study findings.
 See the [five LinkedIn images, captions, and post draft](docs/PROMOTION.md).
 
 <details>
 <summary>View the original application screenshots</summary>
 
-**Guided examples:** start with a question and a guided example.
+**Guided introduction:** start with a guided child-development example.
 
-![Causal Capybara home screen with guided simulated examples](docs/promotion/screenshots/01-guided-examples.png)
+![Guided preview for the synthetic Early support and child development example](docs/promotion/screenshots/01-guided-examples.png)
 
-**Design board:** make the research design visible.
+**Design board:** make measured confounding explicit before adjustment.
 
-![Minimum wage example design board with assigned variables and a live diagnostic sketch](docs/promotion/screenshots/02-design-board.png)
+![Child-development design board with treatment, outcome, measured confounders, and a live overlap plot](docs/promotion/screenshots/02-design-board.png)
 
 **Diagnostics:** check overlap before estimating.
 
-![Job training example diagnostics showing overlap and the assumptions behind the design](docs/promotion/screenshots/03-diagnostics.png)
+![Synthetic child-development diagnostics showing overlap and the assumptions behind adjustment](docs/promotion/screenshots/03-diagnostics.png)
 
-**Results:** compare estimates and uncertainty across methods.
+**Method explanation:** understand why a selected method fits the question.
 
-![Results dashboard with computed Python estimates for the simulated minimum wage example](docs/promotion/screenshots/04-results.png)
+![Selected AIPW method with its rationale, caveats, and methodological references for the synthetic child-development example](docs/promotion/screenshots/04-methods.png)
 
-**Method library:** explore research designs and their assumptions.
+**Results:** compare ATT estimates and uncertainty across methods.
 
-![Method catalogue explaining difference-in-differences and its assumptions](docs/promotion/screenshots/05-method-library.png)
+![Results dashboard comparing three computed Python ATT estimates for the synthetic child-development example](docs/promotion/screenshots/05-results.png)
 
 </details>
 
