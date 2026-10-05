@@ -1,5 +1,13 @@
 # Release audit — September 30, 2026
 
+**5 October update:** this is a historical audit of the September 30 snapshot.
+The canonical repository is now public and the unsigned v0.1.0 Windows preview
+has been published; see the [current checklist](RELEASE_CHECKLIST.md). The later
+screenshot commits `fe62abd` and `a1433ab` include the maintainer's personal email
+in author and committer metadata, so the no-reply/history findings below do not
+cover those commits. Subsequent release documentation uses the GitHub no-reply
+identity. Existing history has not been rewritten.
+
 Causal Capybara v0.1.0 is being prepared for **Friday, October 2, 2026**.
 The canonical repository and old-history archive remain private. The release is a
 **draft**. The checks below establish the tested candidate; the publication gates

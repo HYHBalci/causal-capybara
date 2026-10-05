@@ -23,9 +23,9 @@ old name is a compatibility concern, not a reason to keep the old branding.
   export explains its typesetting dependency and returns the stated fallback when unavailable.
 - [x] Review redistribution notices for the actual installer contents, including frontend libraries,
   fonts and any bundled Python runtime or wheels. Include all required third-party notices.
-- [x] Audit tracked files and Git history for credentials, private paths, real project data and
-  unreleasable third-party content before changing the repository to public. Remove or revoke
-  exposed secrets and review the final source archive.
+- [x] Audit the September 30 tracked-file and history snapshot for credentials,
+  private paths, real project data, and unreleasable third-party content. Review
+  the source archive recorded in that audit. Later history is described below.
 - [x] Confirm the Apache-2.0 license and copyright notice identify Yusufhan Balci; VCESR, and
   that release archives include the required project and bundled dependency notices.
 - [ ] Enable and verify GitHub private vulnerability reporting, or publish a working private
@@ -46,16 +46,20 @@ old name is a compatibility concern, not a reason to keep the old branding.
 
 ## Final audit evidence
 
-See the [September 30 audit](RELEASE_AUDIT_2026-09-30.md) for source privacy, current
+See the [September 30 audit](RELEASE_AUDIT_2026-09-30.md) for source privacy, audited
 dependency checks, installer verification, license corrections, and outstanding gates.
-The maintainer's private email must remain absent from public source, history, and assets.
+That privacy audit covered its recorded source/history snapshot. Later screenshot
+commits `fe62abd` and `a1433ab` contain the maintainer's personal email in author
+and committer metadata. Subsequent release documentation uses the GitHub no-reply
+identity. Existing history has not been rewritten.
 Third-party copyright notices remain intact.
 
 ## Repository and release cutover
 
-- [x] Create a fresh **private** staging repository from the reviewed tracked-file
-  snapshot. Ensure every commit uses the maintainer's GitHub no-reply address or
-  a GitHub App identity. Keep the existing 19-commit repository private.
+- [x] Create the September 30 **private** staging repository from the reviewed
+  tracked-file snapshot, using GitHub no-reply or GitHub App identities in that
+  staged history. Keep the existing 19-commit repository private. Later commit
+  metadata is described in the audit evidence above.
 - [x] Inspect the staging repository's complete tree and history, Actions logs,
   artifacts and draft-release assets. Scan the exported snapshot for private commit
   IDs, email addresses, local filesystem paths, credentials and research data.
