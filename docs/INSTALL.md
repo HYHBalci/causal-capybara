@@ -7,14 +7,13 @@ Python, R, Git, or programming tools to use the Windows release.
 
 ### Windows 64-bit installer
 
-**Private draft — public download planned for Friday, October 2, 2026.**
-To download now, sign in as the repository owner or with write access. After
-publication, anyone can use the Releases page without an account. The installer
-is about **133 MB**.
+**Windows preview v0.1.0 — published 5 October 2026.**
+[Download the Windows installer (.exe, Python included)](https://github.com/HYHBalci/causal-capybara/releases/download/v0.1.0/Causal-Capybara-0.1.0-windows-x64-setup.exe).
+The installer is about **132 MB**. No GitHub account is required.
 
-1. **Download.** Open [Releases](https://github.com/HYHBalci/causal-capybara/releases),
-   open the **v0.1.0 draft**, and choose `Causal-Capybara-0.1.0-windows-x64-setup.exe`
-   under **Assets**. Your browser usually saves it in **Downloads**.
+1. **Download.** Use the installer link above, or open the [v0.1.0 release](https://github.com/HYHBalci/causal-capybara/releases/tag/v0.1.0),
+   expand **Assets**, and choose `Causal-Capybara-0.1.0-windows-x64-setup.exe`.
+   Your browser usually saves it in **Downloads**.
 2. **Open.** Double-click the downloaded file and choose **Next**.
 3. **Agree.** Review the Apache license and choose **I Agree**.
 4. **Install.** Keep the default folder for your Windows user and choose **Next**.
@@ -22,7 +21,7 @@ is about **133 MB**.
 5. **Start.** Leave **Run Causal Capybara** checked and choose **Finish**. You can
    also open the app later from the Start menu or desktop shortcut.
 
-The candidate has been tested on Windows 10 x64. Windows 11 x64 is an intended
+The preview has been tested on Windows 10 x64. Windows 11 x64 is an intended
 target with a separate clean-machine test still pending. macOS, Linux, and Windows
 ARM64 desktop packages are not included. To check your computer, open
 **Settings → System → About → System type** and look for an **x64-based processor**.
@@ -35,9 +34,8 @@ This installs the source locally and runs the **local browser preview**. You nee
 for the initial source and dependency downloads. Rust, C++ build tools, WebView2,
 and the desktop installer are not required for this route.
 
-The commands select the `v0.1.0` source tag. While the repository is private, Git
-must be authenticated to a GitHub account with read access. After publication,
-anyone can clone it without an account. On a university/work computer, the tools
+The commands select the `v0.1.0` source tag in the public repository. Anyone can
+clone it without a GitHub account. On a university/work computer, the tools
 and local servers must be allowed by IT; this route does not grant installation
 permissions.
 
@@ -167,14 +165,16 @@ The app's Python runtime and packages are already in the installer. If Microsoft
 Keep the internet connection available during setup. If university policy blocks it,
 ask IT to install WebView2 Runtime. The app and synthetic examples can then run offline.
 
-### I cannot see the draft installer
+### I cannot see the installer
 
-A direct installer link may show 404 while the release is a private draft. Sign in
-as the repository owner or with write access, then open the **v0.1.0 draft** from
-[Releases](https://github.com/HYHBalci/causal-capybara/releases) and choose the
-installer under **Assets**. After publication, the same Releases page is public.
-Use the `.exe` for the bundled desktop app, or follow the command-line source
-installation above for the local browser preview.
+Use the [direct Windows installer link](https://github.com/HYHBalci/causal-capybara/releases/download/v0.1.0/Causal-Capybara-0.1.0-windows-x64-setup.exe),
+or open the [v0.1.0 release](https://github.com/HYHBalci/causal-capybara/releases/tag/v0.1.0),
+scroll to **Assets**, and expand the list if it is collapsed. Choose
+`Causal-Capybara-0.1.0-windows-x64-setup.exe`. The automatically generated
+**Source code (zip)** and **Source code (tar.gz)** downloads contain the project
+source; choose the `.exe` to install the bundled desktop app. Downloads are public
+and do not require signing in. If GitHub reports a temporary loading error, reload
+the release page and expand **Assets** again.
 
 ### The app cannot start its analysis engine
 
@@ -260,7 +260,9 @@ Use the release workflow for the student download.
 ## Verification status
 
 A local Windows x64 installer passed isolated installation, engine startup without
-system Python, example analysis, clean exit, and uninstall checks. The latest hosted
-build is blocked by a GitHub Actions account restriction. A fresh-account
-interactive test remains pending. See the [release checklist](RELEASE_CHECKLIST.md)
-and [final audit](RELEASE_AUDIT_2026-09-30.md) for the evidence and publication gates.
+system Python, example analysis, clean exit, and uninstall checks. [Hosted CI for
+current main at `a1433ab`](https://github.com/HYHBalci/causal-capybara/actions/runs/37289193350)
+passed on 5 October 2026; the installer remains the locally audited artifact.
+A fresh-account interactive test remains pending, as do Windows 11 verification and the remaining
+native GUI and display-scaling checks. See the [release checklist](RELEASE_CHECKLIST.md)
+and [final audit](RELEASE_AUDIT_2026-09-30.md) for the evidence and remaining checks.

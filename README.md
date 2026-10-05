@@ -10,6 +10,9 @@ Point it at a dataset, state the question in ordinary language, complete a pictu
 design, look at the diagnostics that design depends on, and estimate — usually with several methods at
 once, because the disagreement between them is part of what you learned.
 
+**[Download Causal Capybara for Windows (.exe, Python included)](https://github.com/HYHBalci/causal-capybara/releases/download/v0.1.0/Causal-Capybara-0.1.0-windows-x64-setup.exe)** — v0.1.0, Windows x64, about 132 MB.
+This preview installer is unsigned. [Release notes](https://github.com/HYHBalci/causal-capybara/releases/tag/v0.1.0) and [installation help](docs/INSTALL.md).
+
 ## See the app
 
 ![Causal Capybara results dashboard comparing computed Python ATT estimates and uncertainty for a synthetic child-development example](docs/promotion/linkedin/05-results.png)
@@ -46,11 +49,11 @@ See the [five LinkedIn images, captions, and post draft](docs/PROMOTION.md).
 
 ### Windows 64-bit installer
 
-**Private draft — public download planned for Friday, October 2, 2026.**
-Windows x64 is the first desktop target. To download the draft now, sign in as the
-repository owner or with write access, open [Releases](https://github.com/HYHBalci/causal-capybara/releases),
-open the **v0.1.0 draft**, and choose `Causal-Capybara-0.1.0-windows-x64-setup.exe`
-under **Assets**. After publication, anyone can use the Releases page without an account.
+**Windows preview v0.1.0 — published 5 October 2026.**
+[Download the Windows installer (.exe)](https://github.com/HYHBalci/causal-capybara/releases/download/v0.1.0/Causal-Capybara-0.1.0-windows-x64-setup.exe) (about 132 MB).
+You can also open the [v0.1.0 release](https://github.com/HYHBalci/causal-capybara/releases/tag/v0.1.0),
+expand **Assets**, and choose `Causal-Capybara-0.1.0-windows-x64-setup.exe`.
+No GitHub account is required.
 
 1. Double-click the downloaded `.exe`.
 2. Choose **Next**, review the Apache license, and choose **I Agree**.
@@ -65,7 +68,7 @@ it using an internet connection; university device policies may require IT assis
 The preview installer is unsigned, so Windows may show an unknown-publisher warning.
 See [installation help](docs/INSTALL.md) for that warning, troubleshooting, and optional
 checksum verification. The [release checklist](docs/RELEASE_CHECKLIST.md) records the
-remaining checks before publication.
+remaining preview checks, including fresh-account installation and Windows 11 verification.
 
 ### Alternative: install from GitHub with the command line
 
@@ -90,8 +93,8 @@ The [command-line installation guide](docs/INSTALL.md#alternative-install-from-g
 also covers macOS/Linux, restarting, and analysis without the interface. Native
 file dialogs and desktop engine controls are available in the desktop app; the
 browser preview uses typed local paths. On managed devices, Git, Python, Node.js,
-and local servers must be permitted by IT. The private repository currently needs
-a GitHub account with read access; after publication, cloning is public.
+and local servers must be permitted by IT. The repository is public; cloning does
+not require a GitHub account.
 
 The full design is in [`IMPLEMENTATION_PLAN.md`](IMPLEMENTATION_PLAN.md). This README is what exists and
 how to run it.
@@ -149,7 +152,8 @@ pwsh -File tools/smoke_windows_installer.ps1
 
 The installer is written to `app/src-tauri/target/release/bundle/nsis` and appears in the
 Start menu as **Causal Capybara**. The release workflow performs these steps and adds a
-SHA-256 checksum; a fresh-account manual GUI test remains a release gate.
+SHA-256 checksum; a fresh-account manual GUI test remains pending before first-run
+readiness is claimed.
 
 The app starts its Python engine automatically and uses its bundled runtime by default.
 An explicit `CAPY_PYTHON` setting or recovery-screen override takes precedence. Development

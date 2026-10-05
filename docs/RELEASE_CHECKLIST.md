@@ -1,14 +1,16 @@
 # Causal Capybara release checklist
 
-Updated September 30, 2026. Target publication: **Friday, October 2, 2026
-(Europe/Amsterdam)**. Status: **0.1.0 release candidate in preparation;
-student installer built and audited; fresh-account verification, signing decision, and hosted CI still required**. The repository remains private until
-the public-release gates are complete.
+Updated 5 October 2026 (Europe/Amsterdam). Status: **v0.1.0 unsigned Windows
+preview published** in the public `HYHBalci/causal-capybara`
+repository. The installer has been built and audited, and current main CI passed.
+Fresh-account installation, Windows 11, the remaining native GUI checks, and
+display-scaling verification remain pending. Publication as a preview does not
+certify those checks. The older history archive remains private.
 
 The repository and all user-facing material should use **Causal Capybara**. Existing user data under the
 old name is a compatibility concern, not a reason to keep the old branding.
 
-## Required before a public download
+## Completed and remaining preview verification
 
 - [x] Bundle a managed Python runtime and required dependencies in the Windows
   installer. The isolated NSIS smoke confirmed this; the separate fresh-account
@@ -28,17 +30,19 @@ old name is a compatibility concern, not a reason to keep the old branding.
   that release archives include the required project and bundled dependency notices.
 - [ ] Enable and verify GitHub private vulnerability reporting, or publish a working private
   security contact. Check that the public bug form asks for redacted logs only.
-- [ ] Sign the Windows release installer and verify its publisher and installation experience on a
-  fresh machine. Record unsigned-distribution limitations explicitly if publishing a preview instead.
+- [x] Record unsigned-distribution limitations explicitly for this preview in the
+  README, installation guide, and release notes. Publisher signing and a
+  fresh-machine Windows-warning check remain unverified.
 - [ ] Confirm the complete CI run is green for the release commit: statistical contracts/recovery,
   application regressions, frontend tests/build, Windows desktop tests/build, and R concordance.
 - [ ] Test the interface at 900 × 600, 1280 × 800, and Windows 150%/200% display scaling. Complete the
   main workflow using only the keyboard; verify visible focus, menu/dialog escape and readable plots.
-- [x] Finalize the [v0.1.0 draft release notes](RELEASE_NOTES_0.1.0.md) and
+- [x] Finalize the [v0.1.0 release notes](RELEASE_NOTES_0.1.0.md) and
   [installation guide](INSTALL.md), including supported platforms, known limitations,
   an issue-reporting link and checksums alongside the download. Keep the launch claims
-  consistent with the formats, methods and platforms actually verified. The student path
-  now points reviewers to the draft's Assets, the verified setup screens, and optional checksum verification.
+  consistent with the formats, methods and platforms actually verified. The
+  installation path now provides a direct `.exe` link, Assets instructions,
+  verified setup screens, and optional checksum verification.
 
 ## Final audit evidence
 
@@ -62,13 +66,20 @@ Third-party copyright notices remain intact.
   form.
 - [x] Verify the exact installer, checksum, licenses, notices and release notes
   in the **draft** release. A fresh download matches the tested artifact and GitHub digest.
-- [ ] On Friday, October 2, 2026 (Europe/Amsterdam),
-  make the fresh repository public. Then apply and verify branch protection,
-  repository rulesets and private vulnerability reporting before publishing the
-  draft, after every release gate above is met. Confirm the direct download works
-  without a GitHub account, enable the direct installer link only after it succeeds,
-  and update the draft-status wording in README, installation
-  help, and release notes. Keep the old history archive private.
+- [x] Verify on 5 October that the canonical repository is public and
+  `causal-capybara-private-archive-2026` remains private.
+- [ ] Verify branch protection, repository rulesets, and private vulnerability
+  reporting for the public repository. These settings have not been established
+  by publishing the preview.
+- [x] Publish the existing v0.1.0 draft as an unsigned Windows preview, verify
+  anonymous installer and checksum downloads, and update the download links
+  and current publication status in the README, installation help, and release notes.
+
+The [v0.1.0 release](https://github.com/HYHBalci/causal-capybara/releases/tag/v0.1.0)
+was published on 5 October 2026 at 09:57 UTC and marked as the latest release.
+An unauthenticated request to the direct `.exe` link returned HTTP 200 with
+132,345,037 bytes; an unauthenticated checksum download also returned HTTP 200
+and matched the verified installer SHA-256 above. The installer remains unsigned.
 
 ## Release candidate smoke test
 
@@ -105,8 +116,12 @@ Frontend tests (38), TypeScript checking, the production UI and Rust/NSIS builds
 and the Rust test passed. The current bundled Python run passed 307 checks; its one
 harness cache-location failure passed after correcting the cache directory (308
 checks across the run and rerun). Earlier R and CI results are identified separately
-in the audit. The latest hosted CI/release jobs were not started because of a GitHub
-Actions account restriction; green CI for the release source remains required.
+in the audit. The September 30 hosted CI/release jobs were blocked by a GitHub
+Actions account restriction. [Current main CI at `a1433ab`](https://github.com/HYHBalci/causal-capybara/actions/runs/37289193350)
+passed all seven jobs on 5 October, including Windows desktop, browser workflow,
+Python engines, UI, and cross-engine concordance. This verifies current source;
+it does not establish a hosted build or a fresh-account GUI test of the published
+bundled-runtime installer. The exact release-tag CI checkbox remains open.
 
 Automatic launch from Finish was slow on this host (about 116 seconds to a healthy
 engine in the completed audit). Earlier launch deadlines expired. A fresh-machine

@@ -1,15 +1,18 @@
 # Causal Capybara v0.1.0
 
-### Windows 64-bit installer
+**[Download the Windows 64-bit installer (.exe)](https://github.com/HYHBalci/causal-capybara/releases/download/v0.1.0/Causal-Capybara-0.1.0-windows-x64-setup.exe)**
 
-**Private draft — public download planned for Friday, October 2, 2026.**
-Download the Windows installer from **Assets** below. While this is a draft, sign
-in as the repository owner or with write access. After publication, the
-[Releases page](https://github.com/HYHBalci/causal-capybara/releases) is public.
+### Windows preview — 5 October 2026
+
+The installer is also listed under **Assets** below as
+`Causal-Capybara-0.1.0-windows-x64-setup.exe` (about 132 MB).
+The download is public and does not require a GitHub account.
+Choose the `.exe` to install the desktop app; the automatically generated
+**Source code** archives are for source installation.
 
 **Python and the analysis packages are included. No programming setup required.**
 
-1. Under **Assets** below, download `Causal-Capybara-0.1.0-windows-x64-setup.exe` (about 133 MB), then double-click it.
+1. Download the `.exe` using the link above, then double-click it.
 2. Choose **Next**, review the Apache license, and choose **I Agree**.
 3. Keep the default folder for your Windows user and choose **Next**. When setup completes, choose **Next** again.
 4. Leave **Run Causal Capybara** checked and choose **Finish**. Open a worked example from Home.
@@ -50,13 +53,16 @@ uninstalled it. The current bundled Python run passed 307 checks; a cache-locati
 assertion caused by the audit harness passed after correcting its cache directory
 (308 checks across the run and rerun). Frontend tests (38), TypeScript checking,
 the Rust test, and production builds passed. The earlier local suite with R passed
-311 tests. Automatic launch from Finish was slow on this host and needs a fresh-machine
-timing check before publication.
+311 tests. Automatic launch from Finish was slow on this host; a fresh-machine
+timing check remains pending.
 
-The latest hosted build could not start because GitHub Actions is blocked by
-an Actions account restriction. The local hash above identifies the
-tested file; verify the published download against its own `SHA256SUMS.txt` asset.
-A fresh-account interactive test remains a publication gate in the
+At the September 30 audit, the hosted build could not start because of a
+GitHub Actions account restriction. [Hosted CI for current main at `a1433ab`](https://github.com/HYHBalci/causal-capybara/actions/runs/37289193350)
+passed all seven jobs on 5 October, including Windows desktop, browser workflow,
+Python engines, UI, and cross-engine concordance. This does not replace the
+installer-specific checks above: the download is the locally audited installer,
+and its checksum was checked again before publication. A fresh-account
+interactive test remains pending in the
 [release checklist](https://github.com/HYHBalci/causal-capybara/blob/main/docs/RELEASE_CHECKLIST.md).
 
 ## Known limits
@@ -69,8 +75,9 @@ A fresh-account interactive test remains a publication gate in the
 - R is optional and not bundled. PDF export needs a separate TeX toolchain;
   without it, export can provide LaTeX source. Word, HTML, and Markdown exports
   use the included dependencies.
-- Fresh-account installation, the remaining native GUI checks, and public repository
-  security settings must be completed before publication. See the
+- Fresh-account installation, the remaining native GUI checks, and Windows display
+  scaling remain pending. This is an unsigned preview,
+  and publication does not certify those checks. See the
   [final audit](https://github.com/HYHBalci/causal-capybara/blob/main/docs/RELEASE_AUDIT_2026-09-30.md).
 
 The original project is [Apache-2.0 licensed](https://github.com/HYHBalci/causal-capybara/blob/v0.1.0/LICENSE), with
