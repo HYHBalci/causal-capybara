@@ -10,6 +10,38 @@ Point it at a dataset, state the question in ordinary language, complete a pictu
 design, look at the diagnostics that design depends on, and estimate — usually with several methods at
 once, because the disagreement between them is part of what you learned.
 
+## See the app
+
+![Causal Capybara results dashboard comparing real Python estimates and uncertainty from a simulated minimum wage example](docs/promotion/linkedin/04-results.png)
+
+These images use the built-in simulated examples. The values are demonstration results.
+See the [five LinkedIn images, captions, and post draft](docs/PROMOTION.md).
+
+<details>
+<summary>View the original application screenshots</summary>
+
+**Guided examples:** start with a question and a guided example.
+
+![Causal Capybara home screen with guided simulated examples](docs/promotion/screenshots/01-guided-examples.png)
+
+**Design board:** make the research design visible.
+
+![Minimum wage example design board with assigned variables and a live diagnostic sketch](docs/promotion/screenshots/02-design-board.png)
+
+**Diagnostics:** check overlap before estimating.
+
+![Job training example diagnostics showing overlap and the assumptions behind the design](docs/promotion/screenshots/03-diagnostics.png)
+
+**Results:** compare estimates and uncertainty across methods.
+
+![Results dashboard with computed Python estimates for the simulated minimum wage example](docs/promotion/screenshots/04-results.png)
+
+**Method library:** explore research designs and their assumptions.
+
+![Method catalogue explaining difference-in-differences and its assumptions](docs/promotion/screenshots/05-method-library.png)
+
+</details>
+
 ## Download for Windows
 
 ### Windows 64-bit installer
