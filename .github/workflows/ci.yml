@@ -160,10 +160,12 @@ jobs:
           SIDECAR_PID=$!
           npm --prefix app run preview -- --host 127.0.0.1 --port 4173 --strictPort > "$CAPY_HOME/preview.log" 2>&1 &
           PREVIEW_PID=$!
-          trap 'kill "$SIDECAR_PID" "$PREVIEW_PID" 2>/dev/null || true' EXIT
+          npm --prefix app run dev -- --host 127.0.0.1 --port 5173 --strictPort > "$CAPY_HOME/dev.log" 2>&1 &
+          DEV_PID=$!
+          trap 'kill "$SIDECAR_PID" "$PREVIEW_PID" "$DEV_PID" 2>/dev/null || true' EXIT
           python - <<'PY'
           import json, time, urllib.request
-          endpoints = ['http://127.0.0.1:8760/health', 'http://127.0.0.1:4173']
+          endpoints = ['http://127.0.0.1:8760/health', 'http://127.0.0.1:4173', 'http://127.0.0.1:5173']
           for endpoint in endpoints:
               deadline = time.monotonic() + 60
               while True:
@@ -180,7 +182,10 @@ jobs:
                       time.sleep(0.5)
           PY
           npm --prefix app run test:ui
-          CAPY_ONTOLOGY_TEST_URL=http://127.0.0.1:4173 npm --prefix app run test:ontology
+          CAPY_ONTOLOGY_TEST_URL=http://127.0.0.1:4173 CAPY_ONTOLOGY_LIVE_ENGINE=http://127.0.0.1:8760 npm --prefix app run test:ontology
+          # The synthetic suite imports the live store module to create exact
+          # revision races. Exercise that suite against Vite's module server.
+          CAPY_ONTOLOGY_TEST_URL=http://127.0.0.1:5173 npm --prefix app run test:ontology
       - name: Keep browser evidence and test-service logs
         if: always()
         uses: actions/upload-artifact@v4

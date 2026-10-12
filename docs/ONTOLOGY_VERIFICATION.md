@@ -8,7 +8,7 @@ The implementation and release gates are described in
 |---|---|
 | Python integration | 418 passed, 7 Windows symlink privilege skips; assistant, adversarial privacy/approval/provenance, knowledge, publishing, benchmark, protocol, clients, readiness and project lifecycle |
 | Frontend | 49 unit tests passed; TypeScript and production build passed |
-| Browser | Research tree, context preview, proposals, failure/cancellation, revision handling and accessibility checks passed; a separate live-sidecar browser smoke exercised cited help and proposal staging |
+| Browser | Research tree, context preview, proposals, failure/cancellation, revision handling and accessibility checks passed; a separate live-sidecar browser smoke exercised cited help and proposal staging; a real Save graph pointer click and toolbar containment passed in a 360 px graph pane |
 | Pack compilation | Exact source hashes agree with Git bytes; same-runtime rebuild is byte-exact; 28 portability regressions reject altered canonical records, derivatives, SQLite/FTS contents and ranking statistics; bundled SQLite 3.50.4 verifies the shipped 3.49.1 index by strict semantic comparison |
 | Public publishing | 167 tests passed, 6 Windows symlink skips; closed file/field contracts, all 16 file rights admissions, scoped review, purpose permissions and changed installed artifacts; independent review found no outstanding issues |
 | Frozen retrieval evaluation | 30/30 answerable tasks found their expected claims in the top five; 10/10 unsupported tasks abstained; all returned citations resolved |

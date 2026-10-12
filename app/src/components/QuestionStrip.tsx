@@ -145,7 +145,7 @@ export function QuestionStrip() {
         ))}
       </div>
       <div className="qstrip-meta">
-        {savingSpec && <span className="spinner" aria-label="Saving" />}
+        {savingSpec && <span className="spinner" role="status" aria-label="Saving" />}
         {spec.estimand && (
           <button
             className="chip teal"

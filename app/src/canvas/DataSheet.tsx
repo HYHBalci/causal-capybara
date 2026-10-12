@@ -204,7 +204,7 @@ function Sheet({
           {count(total)} rows · rows load as you scroll
           {sort ? ` · sorted by ${sort.col}${sort.desc ? ', descending' : ''}` : ''}
         </span>
-        {loading && <span className="spinner" aria-label="Loading rows" />}
+        {loading && <span className="spinner" role="status" aria-label="Loading rows" />}
       </div>
       {error && <div className="banner caution" role="alert">
         <span className="grow">These rows could not be loaded. {error}</span>

@@ -820,8 +820,8 @@
    the graph is the thing being read. */
 .dag-split { position: relative; display: grid; grid-template-columns: minmax(0, 1fr) minmax(240px, 0.35fr); height: 100%; min-height: 0; }
 @media (max-width: 1100px) { .dag-split { grid-template-columns: 1fr; } }
-.dag-canvas-wrap { padding: 18px 20px; min-height: 0; }
-.dag-toolbar { gap: 6px; margin-bottom: 8px; }
+.dag-canvas-wrap { padding: 18px 20px; min-width: 0; min-height: 0; }
+.dag-toolbar { gap: 6px; margin-bottom: 8px; flex-wrap: wrap; }
 .dag-canvas { position: relative; flex: 1; min-height: 0; overflow: hidden; }
 .dag-svg { width: 100%; height: 100%; display: block; }
 /* The graph takes keyboard focus now that it can be panned and zoomed

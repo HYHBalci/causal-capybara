@@ -219,6 +219,23 @@ try {
     await page.waitForFunction(() => document.querySelector('.sheet-viewport')?.getAttribute('aria-busy') === 'false')
     assert.equal(await page.locator('th[aria-sort="ascending"]').count(), 1)
     await audit('data')
+    // Hold a real row request so the loading status is included in the audit.
+    let releaseRows, finishRows
+    const rowsPending = new Promise((resolve) => { releaseRows = resolve })
+    const rowsFinished = new Promise((resolve) => { finishRows = resolve })
+    await page.route('**/data/rows?**', async (route) => {
+      await rowsPending
+      try { await route.continue() } finally { finishRows() }
+    }, { times: 1 })
+    try {
+      await page.getByRole('button', { name: 'Sort by age', exact: true }).click()
+      await page.getByRole('status', { name: 'Loading rows', exact: true }).waitFor()
+      await audit('data-loading')
+    } finally {
+      releaseRows()
+      await rowsFinished
+    }
+    await page.waitForFunction(() => document.querySelector('.sheet-viewport')?.getAttribute('aria-busy') === 'false')
     await page.route('**/data/rows?**', (route) => route.fulfill({ status: 503, contentType: 'application/json', body: JSON.stringify({ detail: 'Audit recovery check' }) }))
     await page.getByRole('button', { name: 'Sort by age', exact: true }).click()
     await page.getByRole('alert').filter({ hasText: 'These rows could not be loaded' }).waitFor()
@@ -229,10 +246,26 @@ try {
   await step('Saved graph opens and dirty state is explicit', async () => {
     await menu('Question', 'Graph (DAG)')
     await page.locator('.dag-canvas').waitFor()
+    const divider = page.locator('.dag-split').getByRole('separator', { name: 'Panel width', exact: true })
+    await divider.focus()
+    await divider.press('Home')
+    await page.waitForFunction(() => {
+      const pane = document.querySelector('.dag-canvas-wrap')
+      return pane && pane.getBoundingClientRect().width <= 362
+    })
+    assert(await page.locator('.dag-toolbar').evaluate((toolbar) => {
+      const pane = toolbar.closest('.dag-canvas-wrap').getBoundingClientRect()
+      return [...toolbar.querySelectorAll('button')].every((button) => {
+        const bounds = button.getBoundingClientRect()
+        return bounds.left >= pane.left && bounds.right <= pane.right
+      })
+    }), 'Graph toolbar controls overflow the narrow graph pane')
+    // A real pointer click must reach Save graph, including beside the inspector.
     await page.getByRole('button', { name: 'Save graph', exact: true }).click()
     await page.getByText('Graph saved with the project.', { exact: true }).waitFor()
     const graphs = await json(`/projects/${projectId}/dags`)
     assert.equal(graphs.length, 1)
+    await divider.dblclick()
     await audit('graph')
     await menu('Analyze', 'Results dashboard')
     await page.locator('.nav-item').filter({ hasText: graphs[0].name || graphs[0].id }).first().click()

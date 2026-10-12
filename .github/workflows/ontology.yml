@@ -45,8 +45,8 @@ jobs:
           python-version: ${{ matrix.python }}
           cache: pip
           cache-dependency-path: knowledge/pyproject.toml
-      - name: Install only the companion package and checks
-        run: python -m pip install -c knowledge/constraints-mcp.txt './knowledge[mcp,test]'
+      - name: Install the companion package and build checks
+        run: python -m pip install -c knowledge/constraints-mcp.txt './knowledge[mcp,test]' PyYAML==6.0.3
       - name: Validate public pack and frozen retrieval benchmark
         run: |
           python tools/build_knowledge.py --check

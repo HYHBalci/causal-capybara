@@ -119,6 +119,10 @@ expected snapshot, and the harness confirmed unchanged scratch files. No
 successful skill-file read event was observed. The combined report therefore
 remains `not_verified` with `actual_query: passed` and
 `skill_discovery: not_verified`. Earlier scoped compatibility probes also left
-skill consumption unverified. Actual skill consumption and the unavailable
+skill consumption unverified. Fresh probes against the final snapshot in both
+read-only and isolated workspace-write modes independently recorded the native
+host rejecting the public skill-file read command through its process policy.
+Both modes returned valid MCP responses and preserved scratch files; neither
+produced a successful skill-read event. Actual skill consumption and the unavailable
 Claude Code and Antigravity hosts remain pending; a model's claim to have used a
 skill is insufficient evidence.
