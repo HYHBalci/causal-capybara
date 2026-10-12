@@ -14,6 +14,7 @@ import { AssumptionList } from './Assumptions'
 import { Resizer, usePanelSize } from './Resizer'
 import { count } from '../format'
 import { References } from './References'
+import { AskButton } from './AskButton'
 
 // The status vocabulary moved to Assumptions.tsx, where the shared list lives.
 // Re-exported so nothing that imported it from here has to change.
@@ -116,6 +117,7 @@ export function ExplainPane() {
       {entry && (
         <>
           <h3 className="explain-title">{entry.title ?? key}</h3>
+          <AskButton selection={{ kind: 'explanation', id: key, title: entry.title ?? key }} />
           {entry.short && <p className="explain-short">{entry.short}</p>}
           {entry.detail && <p className="explain-detail">{entry.detail}</p>}
           {entry.math && <pre className="mono classic-block">{entry.math}</pre>}

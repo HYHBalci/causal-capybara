@@ -1,0 +1,76 @@
+{
+  "$id": "https://causalcapybara.dev/schemas/capy.assistant.chat.request.v1.json",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "properties": {
+    "api_key": {
+      "anyOf": [
+        {
+          "maxLength": 4096,
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Api Key"
+    },
+    "cloud_consent": {
+      "default": false,
+      "title": "Cloud Consent",
+      "type": "boolean"
+    },
+    "context_id": {
+      "title": "Context Id",
+      "type": "string"
+    },
+    "endpoint": {
+      "anyOf": [
+        {
+          "maxLength": 500,
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Endpoint"
+    },
+    "model": {
+      "anyOf": [
+        {
+          "maxLength": 150,
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Model"
+    },
+    "provider": {
+      "default": "offline",
+      "enum": [
+        "offline",
+        "ollama",
+        "openai-compatible"
+      ],
+      "title": "Provider",
+      "type": "string"
+    },
+    "query": {
+      "maxLength": 4000,
+      "title": "Query",
+      "type": "string"
+    }
+  },
+  "required": [
+    "context_id",
+    "query"
+  ],
+  "title": "ChatRequest",
+  "type": "object"
+}

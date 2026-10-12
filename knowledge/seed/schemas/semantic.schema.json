@@ -1,0 +1,175 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Closed original public scientific seed",
+  "type": "object",
+  "required": [
+    "claims",
+    "notes"
+  ],
+  "properties": {
+    "claims": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "aliases",
+          "conditions",
+          "counterevidence",
+          "evidence_path",
+          "gaps",
+          "id",
+          "kind",
+          "locator",
+          "method_ids",
+          "review",
+          "rights",
+          "source_ids",
+          "summary",
+          "title"
+        ],
+        "properties": {
+          "id": {
+            "type": "string",
+            "pattern": "^claim:"
+          },
+          "kind": {
+            "const": "claim"
+          },
+          "title": {
+            "type": "string",
+            "minLength": 1
+          },
+          "summary": {
+            "type": "string",
+            "minLength": 1
+          },
+          "evidence_path": {
+            "type": "string",
+            "pattern": "^evidence/[a-z0-9][a-z0-9._-]*\\.md$"
+          },
+          "scope": {
+            "type": "string"
+          },
+          "rights": {
+            "$ref": "rights.schema.json"
+          },
+          "review": {
+            "$ref": "review.schema.json"
+          },
+          "aliases": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "method_ids": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "source_ids": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "conditions": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "counterevidence": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "gaps": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "locator": {
+            "type": "object",
+            "required": [
+              "start",
+              "end",
+              "exact_text"
+            ],
+            "properties": {
+              "start": {
+                "type": "integer",
+                "minimum": 0
+              },
+              "end": {
+                "type": "integer",
+                "minimum": 1
+              },
+              "exact_text": {
+                "type": "string",
+                "minLength": 1
+              }
+            },
+            "additionalProperties": false
+          }
+        },
+        "additionalProperties": false
+      }
+    },
+    "notes": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "path",
+          "title",
+          "rights",
+          "authorship"
+        ],
+        "properties": {
+          "path": {
+            "type": "string",
+            "pattern": "^evidence/[a-z0-9][a-z0-9._-]*\\.md$"
+          },
+          "title": {
+            "type": "string",
+            "minLength": 1
+          },
+          "rights": {
+            "$ref": "rights.schema.json"
+          },
+          "authorship": {
+            "type": "object",
+            "required": [
+              "actor",
+              "actor_type",
+              "human_review"
+            ],
+            "properties": {
+              "actor": {
+                "type": "string",
+                "minLength": 1
+              },
+              "actor_type": {
+                "enum": [
+                  "agent",
+                  "human",
+                  "project"
+                ]
+              },
+              "human_review": {
+                "const": false
+              }
+            },
+            "additionalProperties": false
+          }
+        },
+        "additionalProperties": false
+      }
+    }
+  },
+  "additionalProperties": false
+}

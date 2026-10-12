@@ -13,6 +13,7 @@ import shutil
 import sys
 import threading
 import uuid
+import weakref
 from datetime import date, datetime, timezone
 from pathlib import Path
 from typing import Any, Iterable
@@ -519,6 +520,13 @@ class Project:
     def set_data(self, df, *, original_path: str | None = None, import_options: dict[str, Any] | None = None,
                  columns: list[dict[str, Any]] | None = None, checksum: str | None = None,
                  copy_original: bool = True) -> None:
+        with self._lock:
+            self._set_data(df, original_path=original_path, import_options=import_options,
+                           columns=columns, checksum=checksum, copy_original=copy_original)
+
+    def _set_data(self, df, *, original_path: str | None = None, import_options: dict[str, Any] | None = None,
+                  columns: list[dict[str, Any]] | None = None, checksum: str | None = None,
+                  copy_original: bool = True) -> None:
         self.ensure_dirs()
         temporary = self.parquet_path.with_name(f".analysis.{uuid.uuid4().hex[:8]}.part")
         try:
@@ -616,11 +624,35 @@ def run_summary(r: dict[str, Any]) -> dict[str, Any]:
 # ---------------------------------------------------------------------------
 
 
+# A job or assistant request can outlive a Store.close(). Keep its Project,
+# lock, metadata and data cache shared with subsequent opens until the final
+# reference disappears. Directory identity also covers multiple Store objects.
+_LIVE_PROJECTS: weakref.WeakValueDictionary[str, Project] = weakref.WeakValueDictionary()
+_LIVE_PROJECTS_LOCK = threading.Lock()
+_RECENTS_LOCK = threading.Lock()
+
+
+def _live_project(path: Path) -> Project:
+    canonical = path.resolve()
+    key = os.path.normcase(str(canonical))
+    with _LIVE_PROJECTS_LOCK:
+        existing = _LIVE_PROJECTS.get(key)
+        if existing is not None:
+            # Reloading metadata here could overwrite in-flight changes.
+            return existing
+        project = Project(canonical)
+        _LIVE_PROJECTS[key] = project
+        return project
+
+
 class Store:
     """Open projects, keyed by id, plus a recents list."""
 
     def __init__(self) -> None:
         self._open: dict[str, Project] = {}
+        # Only protect map access. Never hold this while acquiring a Project
+        # lock: approved execution already holds that lock before Store.get().
+        self._map_lock = threading.Lock()
 
     # -- lifecycle --------------------------------------------------------
     def create(self, name: str, *, path: str | Path | None = None, seed: int | None = None) -> Project:
@@ -646,10 +678,11 @@ class Store:
             "profile": SETTINGS.profile,
         }
         _dump_yaml(base / "project.yaml", meta)
-        proj = Project(base)
+        proj = _live_project(base)
         proj.ensure_dirs()
         proj.save()
-        self._open[proj.id] = proj
+        with self._map_lock:
+            self._open[proj.id] = proj
         self._touch_recent(proj)
         return proj
 
@@ -659,13 +692,15 @@ class Store:
             p = p.parent
         if not (p / "project.yaml").exists():
             raise StoreError(f"{p} is not a Causal Capybara project.")
-        proj = Project(p)
-        self._open[proj.id] = proj
+        proj = _live_project(p)
+        with self._map_lock:
+            self._open[proj.id] = proj
         self._touch_recent(proj)
         return proj
 
     def get(self, project_id: str) -> Project:
-        proj = self._open.get(project_id)
+        with self._map_lock:
+            proj = self._open.get(project_id)
         if proj is not None:
             return proj
         for entry in self.recents():
@@ -674,10 +709,13 @@ class Store:
         raise StoreError(f"Project '{project_id}' is not open. Open it by path first.")
 
     def close(self, project_id: str) -> None:
-        self._open.pop(project_id, None)
+        with self._map_lock:
+            self._open.pop(project_id, None)
 
     def open_projects(self) -> list[dict[str, Any]]:
-        return [p.summary() for p in self._open.values()]
+        with self._map_lock:
+            projects = list(self._open.values())
+        return [p.summary() for p in projects]
 
     # -- recents ----------------------------------------------------------
     def recents(self) -> list[dict[str, Any]]:
@@ -702,10 +740,11 @@ class Store:
         return available
 
     def _touch_recent(self, proj: Project) -> None:
-        SETTINGS.ensure_dirs()
-        entries = [e for e in self.recents() if e.get("path") != str(proj.path)]
-        entries.insert(0, {"id": proj.id, "name": proj.name, "path": str(proj.path), "opened": now_iso()})
-        _atomic_write(SETTINGS.recents_file, json.dumps(entries[:25], indent=2))
+        with _RECENTS_LOCK:
+            SETTINGS.ensure_dirs()
+            entries = [e for e in self.recents() if e.get("path") != str(proj.path)]
+            entries.insert(0, {"id": proj.id, "name": proj.name, "path": str(proj.path), "opened": now_iso()})
+            _atomic_write(SETTINGS.recents_file, json.dumps(entries[:25], indent=2))
 
 
 STORE = Store()

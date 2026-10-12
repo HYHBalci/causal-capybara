@@ -12,6 +12,7 @@
 import { useEffect, useMemo, useState } from 'react'
 import { api } from '../api'
 import { useStore } from '../store'
+import { AskButton } from '../components/AskButton'
 import { References } from '../components/References'
 import type { MethodOption, RecoCard } from '../types'
 
@@ -363,6 +364,7 @@ function MethodCardView({
 
       <div className="method-foot row">
         <button className="btn ghost sm" onClick={() => setExplain(card.explain_key)}>Explain</button>
+        <AskButton selection={{ kind: 'method', id: card.id, title: card.title }} />
         {card.references?.length ? (
           <details className="method-references"><summary>Literature · {card.references.length} sources</summary><References references={card.references} compact /></details>
         ) : null}

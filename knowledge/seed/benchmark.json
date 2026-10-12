@@ -1,0 +1,633 @@
+{
+  "schema_version": "1",
+  "frozen_at": "2026-10-12",
+  "scope": "Original AIPW and staggered-adoption DiD seed; retrieval relevance and abstention fixtures, not proof of scientific validity.",
+  "freeze_policy": "Queries and expectations were fixed before evaluating retrieval. Change only through an explicit benchmark review, never to conceal a retrieval failure.",
+  "thresholds": {
+    "answerable_top5": 0.9,
+    "unsupported_abstention": 0.95,
+    "citation_resolution": 1
+  },
+  "tasks": [
+    {
+      "id": "aipw-identification-01",
+      "query": "AIPW identification assumptions",
+      "expected_ids": [
+        "claim:aipw-identification"
+      ],
+      "answerable": true,
+      "review": {
+        "actor": "Codex agent",
+        "actor_type": "agent",
+        "semantic": "agent_context_review",
+        "human_review": false,
+        "date": "2026-10-12"
+      },
+      "purpose": "Separate causal identification from an estimator choice."
+    },
+    {
+      "id": "aipw-identification-02",
+      "query": "Does doubly robust AIPW remove unmeasured confounding?",
+      "expected_ids": [
+        "claim:aipw-identification"
+      ],
+      "answerable": true,
+      "review": {
+        "actor": "Codex agent",
+        "actor_type": "agent",
+        "semantic": "agent_context_review",
+        "human_review": false,
+        "date": "2026-10-12"
+      },
+      "purpose": "Correct a causal identification misconception."
+    },
+    {
+      "id": "aipw-robustness-01",
+      "query": "AIPW double robustness consistency",
+      "expected_ids": [
+        "claim:aipw-double-robustness"
+      ],
+      "answerable": true,
+      "review": {
+        "actor": "Codex agent",
+        "actor_type": "agent",
+        "semantic": "agent_context_review",
+        "human_review": false,
+        "date": "2026-10-12"
+      },
+      "purpose": "Explain nuisance model consistency conditions."
+    },
+    {
+      "id": "aipw-robustness-02",
+      "query": "AIPW propensity correct outcome model wrong",
+      "expected_ids": [
+        "claim:aipw-double-robustness"
+      ],
+      "answerable": true,
+      "review": {
+        "actor": "Codex agent",
+        "actor_type": "agent",
+        "semantic": "agent_context_review",
+        "human_review": false,
+        "date": "2026-10-12"
+      },
+      "purpose": "Explain the propensity-model consistency branch with qualifications."
+    },
+    {
+      "id": "att-positivity-01",
+      "query": "ATT positivity controls treated support",
+      "expected_ids": [
+        "claim:aipw-att-positivity"
+      ],
+      "answerable": true,
+      "review": {
+        "actor": "Codex agent",
+        "actor_type": "agent",
+        "semantic": "agent_context_review",
+        "human_review": false,
+        "date": "2026-10-12"
+      },
+      "purpose": "Retrieve target-specific overlap requirements."
+    },
+    {
+      "id": "att-positivity-02",
+      "query": "ATT asymmetric overlap zero propensity",
+      "expected_ids": [
+        "claim:aipw-att-positivity"
+      ],
+      "answerable": true,
+      "review": {
+        "actor": "Codex agent",
+        "actor_type": "agent",
+        "semantic": "agent_context_review",
+        "human_review": false,
+        "date": "2026-10-12"
+      },
+      "purpose": "Distinguish treated-population support from ATE overlap."
+    },
+    {
+      "id": "att-nuisance-01",
+      "query": "ATT control outcome nuisance m0",
+      "expected_ids": [
+        "claim:aipw-att-control-nuisance"
+      ],
+      "answerable": true,
+      "review": {
+        "actor": "Codex agent",
+        "actor_type": "agent",
+        "semantic": "agent_context_review",
+        "human_review": false,
+        "date": "2026-10-12"
+      },
+      "purpose": "Retrieve the control outcome nuisance required by the ATT score."
+    },
+    {
+      "id": "att-nuisance-02",
+      "query": "Does ATT AIPW require the treated outcome model m1?",
+      "expected_ids": [
+        "claim:aipw-att-control-nuisance"
+      ],
+      "answerable": true,
+      "review": {
+        "actor": "Codex agent",
+        "actor_type": "agent",
+        "semantic": "agent_context_review",
+        "human_review": false,
+        "date": "2026-10-12"
+      },
+      "purpose": "Correct confusion between ATT and ATE outcome models."
+    },
+    {
+      "id": "aipw-clipping-01",
+      "query": "AIPW propensity clipping consistency",
+      "expected_ids": [
+        "claim:aipw-clipping"
+      ],
+      "answerable": true,
+      "review": {
+        "actor": "Codex agent",
+        "actor_type": "agent",
+        "semantic": "agent_context_review",
+        "human_review": false,
+        "date": "2026-10-12"
+      },
+      "purpose": "Explain changed weights and the restricted consistency claim."
+    },
+    {
+      "id": "aipw-clipping-02",
+      "query": "Fixed clipping with misspecified outcome regression",
+      "expected_ids": [
+        "claim:aipw-clipping"
+      ],
+      "answerable": true,
+      "review": {
+        "actor": "Codex agent",
+        "actor_type": "agent",
+        "semantic": "agent_context_review",
+        "human_review": false,
+        "date": "2026-10-12"
+      },
+      "purpose": "Retrieve the clipping bias qualification."
+    },
+    {
+      "id": "aipw-clipping-03",
+      "query": "Clipped propensity weights bias variance tradeoff",
+      "expected_ids": [
+        "claim:aipw-clipping"
+      ],
+      "answerable": true,
+      "review": {
+        "actor": "Codex agent",
+        "actor_type": "agent",
+        "semantic": "agent_context_review",
+        "human_review": false,
+        "date": "2026-10-12"
+      },
+      "purpose": "Explain why bounded weights do not repair missing support."
+    },
+    {
+      "id": "aipw-crossfit-01",
+      "query": "AIPW cross fitting inference conditions",
+      "expected_ids": [
+        "claim:aipw-cross-fitting-inference"
+      ],
+      "answerable": true,
+      "review": {
+        "actor": "Codex agent",
+        "actor_type": "agent",
+        "semantic": "agent_context_review",
+        "human_review": false,
+        "date": "2026-10-12"
+      },
+      "purpose": "Retrieve conditions beyond sample splitting."
+    },
+    {
+      "id": "aipw-crossfit-02",
+      "query": "Cross fitting nuisance product rate standard errors",
+      "expected_ids": [
+        "claim:aipw-cross-fitting-inference"
+      ],
+      "answerable": true,
+      "review": {
+        "actor": "Codex agent",
+        "actor_type": "agent",
+        "semantic": "agent_context_review",
+        "human_review": false,
+        "date": "2026-10-12"
+      },
+      "purpose": "Distinguish consistency from valid inference."
+    },
+    {
+      "id": "aipw-crossfit-03",
+      "query": "Does cross fitting guarantee confidence interval coverage?",
+      "expected_ids": [
+        "claim:aipw-cross-fitting-inference"
+      ],
+      "answerable": true,
+      "review": {
+        "actor": "Codex agent",
+        "actor_type": "agent",
+        "semantic": "agent_context_review",
+        "human_review": false,
+        "date": "2026-10-12"
+      },
+      "purpose": "Correct an unconditional inference guarantee."
+    },
+    {
+      "id": "aipw-diagnostics-01",
+      "query": "AIPW balance overlap effective sample size diagnostics",
+      "expected_ids": [
+        "claim:aipw-diagnostics"
+      ],
+      "answerable": true,
+      "review": {
+        "actor": "Codex agent",
+        "actor_type": "agent",
+        "semantic": "agent_context_review",
+        "human_review": false,
+        "date": "2026-10-12"
+      },
+      "purpose": "Retrieve useful diagnostics and their limits."
+    },
+    {
+      "id": "aipw-diagnostics-02",
+      "query": "Do good balance diagnostics prove exchangeability?",
+      "expected_ids": [
+        "claim:aipw-diagnostics"
+      ],
+      "answerable": true,
+      "review": {
+        "actor": "Codex agent",
+        "actor_type": "agent",
+        "semantic": "agent_context_review",
+        "human_review": false,
+        "date": "2026-10-12"
+      },
+      "purpose": "Correct a diagnostic identification misconception."
+    },
+    {
+      "id": "did-target-01",
+      "query": "Staggered DiD cohort time ATT",
+      "expected_ids": [
+        "claim:did-group-time-att"
+      ],
+      "answerable": true,
+      "review": {
+        "actor": "Codex agent",
+        "actor_type": "agent",
+        "semantic": "agent_context_review",
+        "human_review": false,
+        "date": "2026-10-12"
+      },
+      "purpose": "Retrieve the group-time causal target."
+    },
+    {
+      "id": "did-target-02",
+      "query": "Callaway SantAnna ATT(g,t) adoption cohort",
+      "expected_ids": [
+        "claim:did-group-time-att"
+      ],
+      "answerable": true,
+      "review": {
+        "actor": "Codex agent",
+        "actor_type": "agent",
+        "semantic": "agent_context_review",
+        "human_review": false,
+        "date": "2026-10-12"
+      },
+      "purpose": "Resolve named methodology and its target."
+    },
+    {
+      "id": "did-twfe-01",
+      "query": "TWFE heterogeneous treatment effects already treated controls",
+      "expected_ids": [
+        "claim:did-twfe-heterogeneity"
+      ],
+      "answerable": true,
+      "review": {
+        "actor": "Codex agent",
+        "actor_type": "agent",
+        "semantic": "agent_context_review",
+        "human_review": false,
+        "date": "2026-10-12"
+      },
+      "purpose": "Explain problematic staggered TWFE comparisons."
+    },
+    {
+      "id": "did-twfe-02",
+      "query": "Event study lead lag contamination Sun Abraham",
+      "expected_ids": [
+        "claim:did-twfe-heterogeneity"
+      ],
+      "answerable": true,
+      "review": {
+        "actor": "Codex agent",
+        "actor_type": "agent",
+        "semantic": "agent_context_review",
+        "human_review": false,
+        "date": "2026-10-12"
+      },
+      "purpose": "Retrieve the dynamic event-study warning."
+    },
+    {
+      "id": "did-twfe-03",
+      "query": "Are two way fixed effects always a causal average?",
+      "expected_ids": [
+        "claim:did-twfe-heterogeneity"
+      ],
+      "answerable": true,
+      "review": {
+        "actor": "Codex agent",
+        "actor_type": "agent",
+        "semantic": "agent_context_review",
+        "human_review": false,
+        "date": "2026-10-12"
+      },
+      "purpose": "Correct an unconditional TWFE interpretation."
+    },
+    {
+      "id": "did-anticipation-01",
+      "query": "Staggered DiD no anticipation before adoption",
+      "expected_ids": [
+        "claim:did-no-anticipation"
+      ],
+      "answerable": true,
+      "review": {
+        "actor": "Codex agent",
+        "actor_type": "agent",
+        "semantic": "agent_context_review",
+        "human_review": false,
+        "date": "2026-10-12"
+      },
+      "purpose": "Retrieve the treatment timing assumption."
+    },
+    {
+      "id": "did-anticipation-02",
+      "query": "DiD anticipation window untreated comparison group",
+      "expected_ids": [
+        "claim:did-no-anticipation"
+      ],
+      "answerable": true,
+      "review": {
+        "actor": "Codex agent",
+        "actor_type": "agent",
+        "semantic": "agent_context_review",
+        "human_review": false,
+        "date": "2026-10-12"
+      },
+      "purpose": "Explain eligibility when outcomes respond before adoption."
+    },
+    {
+      "id": "did-trends-01",
+      "query": "DiD conditional parallel trends untreated potential outcomes",
+      "expected_ids": [
+        "claim:did-parallel-trends"
+      ],
+      "answerable": true,
+      "review": {
+        "actor": "Codex agent",
+        "actor_type": "agent",
+        "semantic": "agent_context_review",
+        "human_review": false,
+        "date": "2026-10-12"
+      },
+      "purpose": "Retrieve the identifying trends restriction."
+    },
+    {
+      "id": "did-trends-02",
+      "query": "Does an insignificant pretrend test prove parallel trends?",
+      "expected_ids": [
+        "claim:did-parallel-trends"
+      ],
+      "answerable": true,
+      "review": {
+        "actor": "Codex agent",
+        "actor_type": "agent",
+        "semantic": "agent_context_review",
+        "human_review": false,
+        "date": "2026-10-12"
+      },
+      "purpose": "Correct inference from a pretrend non-rejection."
+    },
+    {
+      "id": "did-composition-01",
+      "query": "DiD attrition changing panel composition",
+      "expected_ids": [
+        "claim:did-composition"
+      ],
+      "answerable": true,
+      "review": {
+        "actor": "Codex agent",
+        "actor_type": "agent",
+        "semantic": "agent_context_review",
+        "human_review": false,
+        "date": "2026-10-12"
+      },
+      "purpose": "Retrieve missingness and composition qualifications."
+    },
+    {
+      "id": "did-composition-02",
+      "query": "Staggered DiD units enter leave around adoption",
+      "expected_ids": [
+        "claim:did-composition"
+      ],
+      "answerable": true,
+      "review": {
+        "actor": "Codex agent",
+        "actor_type": "agent",
+        "semantic": "agent_context_review",
+        "human_review": false,
+        "date": "2026-10-12"
+      },
+      "purpose": "Explain why panel composition affects interpretation."
+    },
+    {
+      "id": "did-aggregation-01",
+      "query": "Dynamic event time aggregation changes cohort composition",
+      "expected_ids": [
+        "claim:did-aggregation"
+      ],
+      "answerable": true,
+      "review": {
+        "actor": "Codex agent",
+        "actor_type": "agent",
+        "semantic": "agent_context_review",
+        "human_review": false,
+        "date": "2026-10-12"
+      },
+      "purpose": "Distinguish effect dynamics from changes in contributing cohorts."
+    },
+    {
+      "id": "did-aggregation-02",
+      "query": "DiD aggregation weights balanced event time cohorts",
+      "expected_ids": [
+        "claim:did-aggregation"
+      ],
+      "answerable": true,
+      "review": {
+        "actor": "Codex agent",
+        "actor_type": "agent",
+        "semantic": "agent_context_review",
+        "human_review": false,
+        "date": "2026-10-12"
+      },
+      "purpose": "Retrieve explicit aggregation and population choices."
+    },
+    {
+      "id": "did-support-01",
+      "query": "Staggered DiD no untreated comparison units",
+      "expected_ids": [
+        "claim:did-support"
+      ],
+      "answerable": true,
+      "review": {
+        "actor": "Codex agent",
+        "actor_type": "agent",
+        "semantic": "agent_context_review",
+        "human_review": false,
+        "date": "2026-10-12"
+      },
+      "purpose": "Explain unsupported group-time cells and omitted comparisons."
+    },
+    {
+      "id": "unsupported-01",
+      "query": "Explain superconducting flux quantization",
+      "expected_ids": [],
+      "answerable": false,
+      "review": {
+        "actor": "Codex agent",
+        "actor_type": "agent",
+        "semantic": "agent_context_review",
+        "human_review": false,
+        "date": "2026-10-12"
+      },
+      "purpose": "Physics content outside the causal-method seed."
+    },
+    {
+      "id": "unsupported-02",
+      "query": "Which exoplanets orbit TRAPPIST-1?",
+      "expected_ids": [],
+      "answerable": false,
+      "review": {
+        "actor": "Codex agent",
+        "actor_type": "agent",
+        "semantic": "agent_context_review",
+        "human_review": false,
+        "date": "2026-10-12"
+      },
+      "purpose": "Astronomy facts outside the causal-method seed."
+    },
+    {
+      "id": "unsupported-03",
+      "query": "Describe basalt mineralogy on Mars",
+      "expected_ids": [],
+      "answerable": false,
+      "review": {
+        "actor": "Codex agent",
+        "actor_type": "agent",
+        "semantic": "agent_context_review",
+        "human_review": false,
+        "date": "2026-10-12"
+      },
+      "purpose": "Planetary geology outside the causal-method seed."
+    },
+    {
+      "id": "unsupported-04",
+      "query": "What is Neptune's rotation period?",
+      "expected_ids": [],
+      "answerable": false,
+      "review": {
+        "actor": "Codex agent",
+        "actor_type": "agent",
+        "semantic": "agent_context_review",
+        "human_review": false,
+        "date": "2026-10-12"
+      },
+      "purpose": "An astronomical numerical fact absent from the pack."
+    },
+    {
+      "id": "unsupported-05",
+      "query": "Translate this sentence into Klingon",
+      "expected_ids": [],
+      "answerable": false,
+      "review": {
+        "actor": "Codex agent",
+        "actor_type": "agent",
+        "semantic": "agent_context_review",
+        "human_review": false,
+        "date": "2026-10-12"
+      },
+      "purpose": "Translation is outside the knowledge pack."
+    },
+    {
+      "id": "unsupported-06",
+      "query": "Prove the Riemann hypothesis",
+      "expected_ids": [],
+      "answerable": false,
+      "review": {
+        "actor": "Codex agent",
+        "actor_type": "agent",
+        "semantic": "agent_context_review",
+        "human_review": false,
+        "date": "2026-10-12"
+      },
+      "purpose": "An unresolved mathematical proof absent from the pack."
+    },
+    {
+      "id": "unsupported-07",
+      "query": "Give the amino acid sequence of human insulin",
+      "expected_ids": [],
+      "answerable": false,
+      "review": {
+        "actor": "Codex agent",
+        "actor_type": "agent",
+        "semantic": "agent_context_review",
+        "human_review": false,
+        "date": "2026-10-12"
+      },
+      "purpose": "Molecular sequence content outside the causal-method seed."
+    },
+    {
+      "id": "unsupported-08",
+      "query": "Explain quaternion multiplication for spacecraft attitude",
+      "expected_ids": [],
+      "answerable": false,
+      "review": {
+        "actor": "Codex agent",
+        "actor_type": "agent",
+        "semantic": "agent_context_review",
+        "human_review": false,
+        "date": "2026-10-12"
+      },
+      "purpose": "Engineering mathematics outside the causal-method seed."
+    },
+    {
+      "id": "unsupported-09",
+      "query": "List medieval Byzantine emperors",
+      "expected_ids": [],
+      "answerable": false,
+      "review": {
+        "actor": "Codex agent",
+        "actor_type": "agent",
+        "semantic": "agent_context_review",
+        "human_review": false,
+        "date": "2026-10-12"
+      },
+      "purpose": "Historical facts outside the causal-method seed."
+    },
+    {
+      "id": "unsupported-10",
+      "query": "Design a perpetual motion machine",
+      "expected_ids": [],
+      "answerable": false,
+      "review": {
+        "actor": "Codex agent",
+        "actor_type": "agent",
+        "semantic": "agent_context_review",
+        "human_review": false,
+        "date": "2026-10-12"
+      },
+      "purpose": "An impossible device request absent from the pack."
+    }
+  ]
+}

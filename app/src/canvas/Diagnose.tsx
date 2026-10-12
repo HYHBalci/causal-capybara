@@ -8,6 +8,7 @@
 
 import { useEffect, useMemo } from 'react'
 import { useStore } from '../store'
+import { AskButton } from '../components/AskButton'
 import type { Assumption } from '../types'
 import { AssumptionList } from '../components/Assumptions'
 import { MarkReviewedButton } from '../components/Provisional'
@@ -47,6 +48,7 @@ export function Diagnose() {
     <div className="canvas-pad scroll">
       <header className="canvas-head">
         <h2>Before you estimate</h2>
+        <AskButton selection={{ kind: 'diagnostic', id: guardrails?.core_diagnostic ?? design.id, title: `Pre-estimation checks for ${design.title}` }} />
         <p className="hint">
           The one check worth doing first for the “{design.title}” design. It is quick and rough — the
           full set of checks comes with each estimate — and its job is to show you trouble before you

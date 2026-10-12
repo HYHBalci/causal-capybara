@@ -55,6 +55,7 @@
       "../../sidecar": "sidecar",
       "../../engines": "engines",
       "../../schemas": "schemas",
+      "../../knowledge/capy_knowledge": "knowledge/capy_knowledge",
       "../../docs/explain": "docs/explain",
       "../../LICENSE": "LICENSE",
       "../../NOTICE": "NOTICE",

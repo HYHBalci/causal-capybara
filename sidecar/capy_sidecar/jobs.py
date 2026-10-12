@@ -87,7 +87,11 @@ class JobQueue:
             self._workers.append(t)
 
     # -- submission -------------------------------------------------------
-    def submit(
+    def submit(self, project: Project, spec: dict[str, Any], method_id: str, **kwargs) -> Job:
+        with project._lock:
+            return self._submit(project, spec, method_id, **kwargs)
+
+    def _submit(
         self,
         project: Project,
         spec: dict[str, Any],
@@ -137,6 +141,8 @@ class JobQueue:
             "job_id": job.id,
             "kind": kind,
         }
+        from .provenance import record_input
+        record_input(payload)
         with self._lock:
             self.jobs[job.id] = job
             self._payloads[job.id] = (payload, project)
@@ -225,8 +231,11 @@ class JobQueue:
         job.status = "running"
         job.started = now_iso()
         job.message = "Starting the engine"
+        from .provenance import verify_execution
+        verify_execution(payload)
         t0 = time.perf_counter()
         env = dict(os.environ)
+        env.pop("CAPY_APPROVAL_AUTHORITY", None)
         pythonpath = os.pathsep.join(
             [str(PY_ENGINE_DIR), str(SIDECAR_DIR)] + ([env["PYTHONPATH"]] if env.get("PYTHONPATH") else [])
         )
@@ -376,6 +385,7 @@ class JobQueue:
             return
 
         if err is None and proc.returncode == 0 and result_path and Path(result_path).exists():
+            verify_execution(payload)
             try:
                 result = json.loads(Path(result_path).read_text(encoding="utf-8"))
             except Exception as exc:
@@ -384,6 +394,8 @@ class JobQueue:
                 self._finish(job)
                 return
             result["job_id"] = job.id
+            from .provenance import result_lineage
+            result["direct_provenance"] = result_lineage(payload["workdir"], result_path)
             saved = project.save_run(result, log=stderr_text or None)
             job.run_id = saved.get("run_id")
             job.progress = 1.0

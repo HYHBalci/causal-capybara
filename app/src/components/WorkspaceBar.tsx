@@ -1,4 +1,5 @@
 import { useStore } from '../store'
+import { useResearch } from '../research/store'
 
 export function WorkspaceBar() {
   const view = useStore((state) => state.view)
@@ -11,9 +12,11 @@ export function WorkspaceBar() {
   return <nav className="workspace-bar" aria-label="Workspace">
     <div className="workspace-links">
       <button aria-current={view === 'welcome' ? 'page' : undefined} onClick={() => setView('welcome')}>Home</button>
-      {project && <button aria-current={!['welcome', 'learn', 'literature', 'settings', 'engines'].includes(view) ? 'page' : undefined} onClick={() => setView(project.has_data ? 'board' : 'data')}>Workspace</button>}
+      {project && <button aria-current={!['welcome', 'learn', 'literature', 'research', 'settings', 'engines'].includes(view) ? 'page' : undefined} onClick={() => setView(project.has_data ? 'board' : 'data')}>Workspace</button>}
       <button aria-current={view === 'learn' ? 'page' : undefined} onClick={() => setView('learn')}>Method catalogue</button>
       <button aria-current={view === 'literature' ? 'page' : undefined} onClick={() => setView('literature')}>Literature</button>
+      <button aria-current={view === 'research' ? 'page' : undefined} onClick={() => setView('research')}>Research tree</button>
+      <button onClick={() => useResearch.getState().ask()}>Research assistant</button>
     </div>
     <div className="workspace-save" role="status">
       {saveError ? <><span className="warn">Question edits not saved</span><button className="btn sm" onClick={() => void flush().catch(() => {})}>Retry save</button></>

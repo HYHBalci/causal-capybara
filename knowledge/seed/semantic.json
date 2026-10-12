@@ -1,0 +1,979 @@
+{
+  "claims": [
+    {
+      "id": "claim:aipw-identification",
+      "kind": "claim",
+      "title": "AIPW identification versus estimation",
+      "aliases": [
+        "causal identification",
+        "causal assumptions",
+        "unmeasured confounding"
+      ],
+      "summary": "AIPW estimates an effect only after the observational identification assumptions justify the target; double robustness does not remove unmeasured confounding.",
+      "method_ids": [
+        "obs.aipw"
+      ],
+      "source_ids": [
+        "hernan2020",
+        "bang2005"
+      ],
+      "evidence_path": "evidence/aipw.md",
+      "locator": {
+        "start": 459,
+        "end": 930,
+        "exact_text": "AIPW is an estimation strategy, not an identification argument. A causal ATE requires a well-defined intervention, consistency, appropriate noninterference, conditional exchangeability given pre-treatment covariates, and overlap in the target population. For ATT, the required counterfactual comparison concerns untreated potential outcomes among treated units. Double robustness does not remove unmeasured confounding or justify adjustment for a post-treatment variable."
+      },
+      "conditions": [
+        "Well-defined intervention, consistency and appropriate noninterference.",
+        "Conditional exchangeability of the potential outcomes needed for the target.",
+        "Target-population positivity and pre-treatment adjustment covariates."
+      ],
+      "counterevidence": [
+        "Balance on measured covariates cannot establish exchangeability."
+      ],
+      "gaps": [
+        "No empirical identification claim is made for a user's study."
+      ],
+      "review": {
+        "actor": "Codex agent",
+        "actor_type": "agent",
+        "structural": "validated",
+        "semantic": "agent_context_review",
+        "human_review": false,
+        "basis": [
+          "engines/python/capy_py/observational.py",
+          "tests/python/test_observational.py",
+          "https://miguelhernan.org/whatifbook",
+          "https://doi.org/10.1111/j.1541-0420.2005.00377.x"
+        ],
+        "date": "2026-10-12"
+      },
+      "rights": {
+        "license_id": "Apache-2.0",
+        "license_url": "https://www.apache.org/licenses/LICENSE-2.0",
+        "attribution": "Causal Capybara contributors; Yusufhan Balci; VCESR",
+        "modified": true,
+        "content_type": "original_project_content",
+        "review_basis": "Original or imported Apache-2.0 project material; no third-party paper body included.",
+        "permissions": {
+          "cache": true,
+          "display": true,
+          "adapt": true,
+          "model_context": true,
+          "public_export": true
+        }
+      }
+    },
+    {
+      "id": "claim:aipw-double-robustness",
+      "kind": "claim",
+      "title": "AIPW double robustness and its scope",
+      "aliases": [
+        "doubly robust consistency",
+        "augmented inverse probability weighting",
+        "one nuisance correct",
+        "propensity model correctness",
+        "outcome model correctness"
+      ],
+      "summary": "For an identified target and valid score weights, AIPW consistency can survive one consistently estimated nuisance branch; inference needs additional conditions.",
+      "method_ids": [
+        "obs.aipw"
+      ],
+      "source_ids": [
+        "bang2005",
+        "chernozhukov2018"
+      ],
+      "evidence_path": "evidence/aipw.md",
+      "locator": {
+        "start": 973,
+        "end": 1438,
+        "exact_text": "For an identified target, an unmodified AIPW score is consistent under suitable regularity when either the propensity nuisance or the relevant outcome nuisance is consistently estimated. ATE uses both outcome means; ATT uses the control outcome mean. This consistency statement assumes the score's weights remain valid. It does not guarantee finite-sample accuracy, valid standard errors under one misspecified nuisance, or robustness when both nuisances are wrong."
+      },
+      "conditions": [
+        "The target is identified.",
+        "Propensity or relevant outcome nuisance converges appropriately.",
+        "Clipping must not invalidate the claimed propensity branch; regularity and integrability remain necessary."
+      ],
+      "counterevidence": [
+        "Both nuisances may be wrong.",
+        "Consistency under one correct nuisance does not automatically justify the reported interval."
+      ],
+      "gaps": [
+        "No finite-sample coverage guarantee is supplied."
+      ],
+      "review": {
+        "actor": "Codex agent",
+        "actor_type": "agent",
+        "structural": "validated",
+        "semantic": "agent_context_review",
+        "human_review": false,
+        "basis": [
+          "engines/python/capy_py/observational.py",
+          "tests/python/test_observational.py",
+          "https://doi.org/10.1111/j.1541-0420.2005.00377.x",
+          "https://arxiv.org/html/1608.00060v7"
+        ],
+        "date": "2026-10-12"
+      },
+      "rights": {
+        "license_id": "Apache-2.0",
+        "license_url": "https://www.apache.org/licenses/LICENSE-2.0",
+        "attribution": "Causal Capybara contributors; Yusufhan Balci; VCESR",
+        "modified": true,
+        "content_type": "original_project_content",
+        "review_basis": "Original or imported Apache-2.0 project material; no third-party paper body included.",
+        "permissions": {
+          "cache": true,
+          "display": true,
+          "adapt": true,
+          "model_context": true,
+          "public_export": true
+        }
+      }
+    },
+    {
+      "id": "claim:aipw-att-positivity",
+      "kind": "claim",
+      "title": "ATT asymmetric positivity and treated support",
+      "aliases": [
+        "ATT overlap",
+        "treated support",
+        "asymmetric positivity",
+        "zero propensity"
+      ],
+      "summary": "ATT positivity is asymmetric: controls are needed on treated covariate support; control-only zero-treatment strata are not themselves an ATT identification failure.",
+      "method_ids": [
+        "obs.aipw"
+      ],
+      "source_ids": [
+        "hernan2020",
+        "chernozhukov2018"
+      ],
+      "evidence_path": "evidence/aipw.md",
+      "locator": {
+        "start": 1490,
+        "end": 1990,
+        "exact_text": "ATT targets people who were treated. Identification therefore requires controls with the covariate profiles represented among treated people: P(T=0 | X=x) must be positive on treated support. A control-only stratum with P(T=1 | X=x)=0 does not itself violate ATT identification. Uniform bounds away from one, adequate effective control sample size, and moment restrictions may still be needed for stable estimation and inference. ATE generally needs both treatment arms throughout its target support."
+      },
+      "conditions": [
+        "ATT is the declared target.",
+        "Untreated counterfactual outcomes are exchangeable conditional on the adjustment set.",
+        "Controls have positive probability on treated support."
+      ],
+      "counterevidence": [
+        "Stable estimation and inference can require stronger bounds or moment conditions than minimal identification.",
+        "ATE has a different support requirement."
+      ],
+      "gaps": [
+        "The fitted propensity plot cannot certify population support."
+      ],
+      "review": {
+        "actor": "Codex agent",
+        "actor_type": "agent",
+        "structural": "validated",
+        "semantic": "agent_context_review",
+        "human_review": false,
+        "basis": [
+          "engines/python/capy_py/observational.py",
+          "tests/python/test_observational.py",
+          "https://miguelhernan.org/whatifbook",
+          "https://arxiv.org/html/1608.00060v7"
+        ],
+        "date": "2026-10-12"
+      },
+      "rights": {
+        "license_id": "Apache-2.0",
+        "license_url": "https://www.apache.org/licenses/LICENSE-2.0",
+        "attribution": "Causal Capybara contributors; Yusufhan Balci; VCESR",
+        "modified": true,
+        "content_type": "original_project_content",
+        "review_basis": "Original or imported Apache-2.0 project material; no third-party paper body included.",
+        "permissions": {
+          "cache": true,
+          "display": true,
+          "adapt": true,
+          "model_context": true,
+          "public_export": true
+        }
+      }
+    },
+    {
+      "id": "claim:aipw-att-control-nuisance",
+      "kind": "claim",
+      "title": "ATT control outcome nuisance m0",
+      "aliases": [
+        "control outcome regression",
+        "m0",
+        "ATTE nuisance",
+        "treated outcome model m1"
+      ],
+      "summary": "The ATT AIPW score uses the control outcome nuisance m0 and propensity odds for controls; it does not require a treated outcome nuisance m1 in that score.",
+      "method_ids": [
+        "obs.aipw"
+      ],
+      "source_ids": [
+        "chernozhukov2018",
+        "bang2005"
+      ],
+      "evidence_path": "evidence/aipw.md",
+      "locator": {
+        "start": 2028,
+        "end": 2464,
+        "exact_text": "Let e(X)=P(T=1|X), p=P(T=1), and m0(X)=E[Y|T=0,X]. The ATT augmented score combines treated residuals Y-m0(X) with control residuals weighted by e(X)/(1-e(X)), divided by p. It needs the control outcome nuisance m0, not the treated outcome nuisance m1. The public engine fits both outcome models for shared code, but its ATT estimate uses m0 alone. This distinction matters when explaining the outcome-model branch of double robustness."
+      },
+      "conditions": [
+        "Binary treatment and nonzero treated population probability.",
+        "The described ATT score, not the ATE score.",
+        "Relevant ATT identification and support assumptions."
+      ],
+      "counterevidence": [
+        "ATE normally needs both treatment-arm outcome means.",
+        "Fitting both models in shared engine code does not make m1 an ATT score input."
+      ],
+      "gaps": [
+        "This describes the inspected public Python engine, not every estimator called doubly robust."
+      ],
+      "review": {
+        "actor": "Codex agent",
+        "actor_type": "agent",
+        "structural": "validated",
+        "semantic": "agent_context_review",
+        "human_review": false,
+        "basis": [
+          "engines/python/capy_py/observational.py",
+          "tests/python/test_observational.py",
+          "https://arxiv.org/html/1608.00060v7",
+          "https://doi.org/10.1111/j.1541-0420.2005.00377.x"
+        ],
+        "date": "2026-10-12"
+      },
+      "rights": {
+        "license_id": "Apache-2.0",
+        "license_url": "https://www.apache.org/licenses/LICENSE-2.0",
+        "attribution": "Causal Capybara contributors; Yusufhan Balci; VCESR",
+        "modified": true,
+        "content_type": "original_project_content",
+        "review_basis": "Original or imported Apache-2.0 project material; no third-party paper body included.",
+        "permissions": {
+          "cache": true,
+          "display": true,
+          "adapt": true,
+          "model_context": true,
+          "public_export": true
+        }
+      }
+    },
+    {
+      "id": "claim:aipw-clipping",
+      "kind": "claim",
+      "title": "Finite propensity clipping, weighting and consistency",
+      "aliases": [
+        "propensity score clipping",
+        "truncated propensity",
+        "clipped weights",
+        "bias variance tradeoff"
+      ],
+      "summary": "Finite fixed propensity clipping changes weights and can destroy propensity-only consistency with a misspecified outcome nuisance; bounded weights do not repair missing support.",
+      "method_ids": [
+        "obs.aipw"
+      ],
+      "source_ids": [
+        "bang2005",
+        "chernozhukov2018",
+        "10.1093/aje/kwn164"
+      ],
+      "evidence_path": "evidence/aipw.md",
+      "locator": {
+        "start": 2524,
+        "end": 3127,
+        "exact_text": "Fixed propensity clipping changes the weighting calculation wherever it binds. It does not manufacture missing controls or generally preserve the correct-propensity branch of consistency when the outcome nuisance is misspecified. For ATT, with true propensity e, clipped limit c, and limiting control regression g0, the score bias is E[((e-c)/(1-c))*(m0-g0)]/p. A correct m0 makes this term zero; a correct raw e does not when c differs from e. If clipping never binds asymptotically, that particular objection disappears. Clipping is distinct from trimming units, which changes the analyzed population."
+      },
+      "conditions": [
+        "Clipping binds in the limiting propensity function.",
+        "The outcome nuisance is misspecified for the propensity-only failure example.",
+        "The bias expression describes the stated ATT score."
+      ],
+      "counterevidence": [
+        "A correct ATT control outcome nuisance makes the stated clipping-bias term zero.",
+        "If clipping never binds asymptotically, this particular consistency objection disappears.",
+        "Trimming observations changes the target population; clipping propensities does not automatically define that target."
+      ],
+      "gaps": [
+        "No universally optimal clipping threshold is asserted.",
+        "The engine reports clipping but its short double-robustness wording requires this qualification."
+      ],
+      "review": {
+        "actor": "Codex agent",
+        "actor_type": "agent",
+        "structural": "validated",
+        "semantic": "agent_context_review",
+        "human_review": false,
+        "basis": [
+          "engines/python/capy_py/observational.py",
+          "tests/python/test_observational.py",
+          "https://doi.org/10.1111/j.1541-0420.2005.00377.x",
+          "https://arxiv.org/html/1608.00060v7",
+          "https://pmc.ncbi.nlm.nih.gov/articles/PMC2732954/"
+        ],
+        "date": "2026-10-12"
+      },
+      "rights": {
+        "license_id": "Apache-2.0",
+        "license_url": "https://www.apache.org/licenses/LICENSE-2.0",
+        "attribution": "Causal Capybara contributors; Yusufhan Balci; VCESR",
+        "modified": true,
+        "content_type": "original_project_content",
+        "review_basis": "Original or imported Apache-2.0 project material; no third-party paper body included.",
+        "permissions": {
+          "cache": true,
+          "display": true,
+          "adapt": true,
+          "model_context": true,
+          "public_export": true
+        }
+      }
+    },
+    {
+      "id": "claim:aipw-cross-fitting-inference",
+      "kind": "claim",
+      "title": "Cross-fitting and inference conditions",
+      "aliases": [
+        "cross-fitting",
+        "sample splitting",
+        "product rate",
+        "influence function inference",
+        "confidence interval coverage"
+      ],
+      "summary": "Cross-fitting limits score reuse; valid inference still needs support, sampling, moments and nuisance convergence or rate conditions, not just a split into folds.",
+      "method_ids": [
+        "obs.aipw"
+      ],
+      "source_ids": [
+        "chernozhukov2018"
+      ],
+      "evidence_path": "evidence/aipw.md",
+      "locator": {
+        "start": 3172,
+        "end": 3775,
+        "exact_text": "Cross-fitting trains nuisance models on one fold and evaluates scores on another to reduce reuse and overfitting. Valid influence-function inference also requires identification, support, moments, suitable sampling or dependence assumptions, and nuisance estimation conditions. A common sufficient condition is that both nuisance errors converge and their product is o(n^(-1/2)). Cross-fitting alone does not guarantee confidence-interval coverage, and double-robust consistency alone does not establish double-robust inference. Clustered or serial data require an appropriate dependence-aware analysis."
+      },
+      "conditions": [
+        "Identification and support hold.",
+        "Inference respects the sampling or dependence structure.",
+        "Suitable nuisance convergence and regularity hold; a standard sufficient error-product rate is o(n^(-1/2))."
+      ],
+      "counterevidence": [
+        "Double-robust consistency is weaker than valid double-robust inference.",
+        "Cross-fitting is not a universal coverage guarantee."
+      ],
+      "gaps": [
+        "Independent-unit cross-fitting theory does not automatically cover serial or clustered designs.",
+        "No statistical adapter was run during this knowledge review."
+      ],
+      "review": {
+        "actor": "Codex agent",
+        "actor_type": "agent",
+        "structural": "validated",
+        "semantic": "agent_context_review",
+        "human_review": false,
+        "basis": [
+          "engines/python/capy_py/observational.py",
+          "tests/python/test_observational.py",
+          "https://arxiv.org/html/1608.00060v7"
+        ],
+        "date": "2026-10-12"
+      },
+      "rights": {
+        "license_id": "Apache-2.0",
+        "license_url": "https://www.apache.org/licenses/LICENSE-2.0",
+        "attribution": "Causal Capybara contributors; Yusufhan Balci; VCESR",
+        "modified": true,
+        "content_type": "original_project_content",
+        "review_basis": "Original or imported Apache-2.0 project material; no third-party paper body included.",
+        "permissions": {
+          "cache": true,
+          "display": true,
+          "adapt": true,
+          "model_context": true,
+          "public_export": true
+        }
+      }
+    },
+    {
+      "id": "claim:aipw-diagnostics",
+      "kind": "claim",
+      "title": "AIPW diagnostics do not prove exchangeability",
+      "aliases": [
+        "covariate balance",
+        "overlap diagnostics",
+        "effective sample size",
+        "ESS",
+        "exchangeability diagnostics"
+      ],
+      "summary": "Balance, overlap, effective sample size, clipping and nuisance diagnostics help find weak adjustment; they cannot prove unmeasured exchangeability or causal identification.",
+      "method_ids": [
+        "obs.aipw"
+      ],
+      "source_ids": [
+        "hernan2020",
+        "10.1093/aje/kwn164"
+      ],
+      "evidence_path": "evidence/aipw.md",
+      "locator": {
+        "start": 3827,
+        "end": 4339,
+        "exact_text": "Overlap plots, balance statistics, effective sample size, weight concentration, clipping counts, held-out nuisance prediction errors, and fold stability describe weaknesses in the fitted analysis. They cannot verify absence of unmeasured confounding or identify a causal effect by themselves. Good balance on measured covariates is useful evidence about adjustment, not a certificate of conditional exchangeability. Poor overlap should trigger target-population and design review as well as sensitivity analysis."
+      },
+      "conditions": [
+        "Diagnostics concern the fitted analysis and measured variables.",
+        "Scientific identification assumptions are assessed separately."
+      ],
+      "counterevidence": [
+        "Good measured balance can coexist with unmeasured confounding.",
+        "A stable fitted estimate can remain causally unidentified."
+      ],
+      "gaps": [
+        "Diagnostic thresholds in the public engine are conventions, not scientific confidence probabilities."
+      ],
+      "review": {
+        "actor": "Codex agent",
+        "actor_type": "agent",
+        "structural": "validated",
+        "semantic": "agent_context_review",
+        "human_review": false,
+        "basis": [
+          "engines/python/capy_py/observational.py",
+          "tests/python/test_observational.py",
+          "https://miguelhernan.org/whatifbook",
+          "https://pmc.ncbi.nlm.nih.gov/articles/PMC2732954/"
+        ],
+        "date": "2026-10-12"
+      },
+      "rights": {
+        "license_id": "Apache-2.0",
+        "license_url": "https://www.apache.org/licenses/LICENSE-2.0",
+        "attribution": "Causal Capybara contributors; Yusufhan Balci; VCESR",
+        "modified": true,
+        "content_type": "original_project_content",
+        "review_basis": "Original or imported Apache-2.0 project material; no third-party paper body included.",
+        "permissions": {
+          "cache": true,
+          "display": true,
+          "adapt": true,
+          "model_context": true,
+          "public_export": true
+        }
+      }
+    },
+    {
+      "id": "claim:did-group-time-att",
+      "kind": "claim",
+      "title": "Staggered DiD cohort-time ATT",
+      "aliases": [
+        "ATT(g,t)",
+        "group time average treatment effect",
+        "Callaway SantAnna",
+        "adoption cohort"
+      ],
+      "summary": "Staggered-adoption DiD separates cohort-time ATT(g,t) from overall, cohort and dynamic averages and uses eligible untreated comparisons for each cell.",
+      "method_ids": [
+        "did.callaway_santanna"
+      ],
+      "source_ids": [
+        "callaway2021"
+      ],
+      "evidence_path": "evidence/did.md",
+      "locator": {
+        "start": 474,
+        "end": 946,
+        "exact_text": "In staggered adoption, ATT(g,t) is the average effect at calendar time t for units first treated in cohort g. Callaway-Sant'Anna estimates eligible cohort-time comparisons using never-treated or not-yet-treated controls under the chosen identification conditions. These cells are distinct from an overall ATT, a cohort average, or a dynamic event-time average. The public engine records estimable cells and reports skipped cells instead of filling unsupported comparisons."
+      },
+      "conditions": [
+        "Absorbing treatment adoption.",
+        "Chosen control-group and parallel-trends assumptions.",
+        "Suitable baseline, support and no-anticipation or declared anticipation conditions."
+      ],
+      "counterevidence": [
+        "An aggregate's interpretation depends on which cells and weights contribute."
+      ],
+      "gaps": [
+        "The card supplies no empirical effect for an absent study dataset."
+      ],
+      "review": {
+        "actor": "Codex agent",
+        "actor_type": "agent",
+        "structural": "validated",
+        "semantic": "agent_context_review",
+        "human_review": false,
+        "basis": [
+          "engines/python/capy_py/did_modern.py",
+          "tests/python/test_did_modern.py",
+          "https://arxiv.org/html/1803.09015v4"
+        ],
+        "date": "2026-10-12"
+      },
+      "rights": {
+        "license_id": "Apache-2.0",
+        "license_url": "https://www.apache.org/licenses/LICENSE-2.0",
+        "attribution": "Causal Capybara contributors; Yusufhan Balci; VCESR",
+        "modified": true,
+        "content_type": "original_project_content",
+        "review_basis": "Original or imported Apache-2.0 project material; no third-party paper body included.",
+        "permissions": {
+          "cache": true,
+          "display": true,
+          "adapt": true,
+          "model_context": true,
+          "public_export": true
+        }
+      }
+    },
+    {
+      "id": "claim:did-twfe-heterogeneity",
+      "kind": "claim",
+      "title": "TWFE heterogeneity and already-treated controls",
+      "aliases": [
+        "two way fixed effects",
+        "TWFE",
+        "already treated controls",
+        "Sun Abraham",
+        "lead lag contamination"
+      ],
+      "summary": "Staggered TWFE can use already-treated controls; heterogeneous dynamic effects can distort the intended average and contaminate event-study leads and lags.",
+      "method_ids": [
+        "did.twfe",
+        "did.event_study",
+        "did.sun_abraham",
+        "did.goodman_bacon"
+      ],
+      "source_ids": [
+        "bacon2021",
+        "sun2021"
+      ],
+      "evidence_path": "evidence/did.md",
+      "locator": {
+        "start": 1000,
+        "end": 1571,
+        "exact_text": "With staggered adoption, a two-way fixed-effects regression can compare later-treated units with units already treated. Changes in those controls may include evolving treatment effects. Under heterogeneous or dynamic effects, its coefficient need not equal the desired treated-population average. Conventional lead-lag event studies can also mix effects from other relative periods, producing misleading apparent pretrends. TWFE is not universally invalid, but its causal interpretation needs restrictions on effects and comparisons beyond merely including fixed effects."
+      },
+      "conditions": [
+        "Staggered adoption with the described two-way fixed-effects comparisons.",
+        "Heterogeneous or time-varying treatment effects can affect interpretation."
+      ],
+      "counterevidence": [
+        "TWFE can be appropriate under additional restrictions; it is not universally invalid.",
+        "Adding unit and period fixed effects alone does not establish the desired causal average."
+      ],
+      "gaps": [
+        "A specific regression's weights and comparison structure require study-level inspection."
+      ],
+      "review": {
+        "actor": "Codex agent",
+        "actor_type": "agent",
+        "structural": "validated",
+        "semantic": "agent_context_review",
+        "human_review": false,
+        "basis": [
+          "engines/python/capy_py/did_modern.py",
+          "tests/python/test_did_modern.py",
+          "https://doi.org/10.1016/j.jeconom.2021.03.014",
+          "https://arxiv.org/html/1804.05785v2"
+        ],
+        "date": "2026-10-12"
+      },
+      "rights": {
+        "license_id": "Apache-2.0",
+        "license_url": "https://www.apache.org/licenses/LICENSE-2.0",
+        "attribution": "Causal Capybara contributors; Yusufhan Balci; VCESR",
+        "modified": true,
+        "content_type": "original_project_content",
+        "review_basis": "Original or imported Apache-2.0 project material; no third-party paper body included.",
+        "permissions": {
+          "cache": true,
+          "display": true,
+          "adapt": true,
+          "model_context": true,
+          "public_export": true
+        }
+      }
+    },
+    {
+      "id": "claim:did-no-anticipation",
+      "kind": "claim",
+      "title": "DiD no anticipation and control eligibility",
+      "aliases": [
+        "anticipation window",
+        "not yet treated",
+        "no anticipation"
+      ],
+      "summary": "DiD no anticipation concerns pre-adoption response; an anticipation window can change the baseline and eligibility of not-yet-treated controls.",
+      "method_ids": [
+        "did.callaway_santanna"
+      ],
+      "source_ids": [
+        "callaway2021"
+      ],
+      "evidence_path": "evidence/did.md",
+      "locator": {
+        "start": 1621,
+        "end": 2145,
+        "exact_text": "No anticipation means outcomes do not respond to a future treatment before the assigned adoption date. If behavior changes earlier, a declared anticipation window and earlier baseline or revised control eligibility may be necessary. A not-yet-treated unit is a usable control only while it remains unaffected over the comparison periods. A quiet pre-adoption plot does not prove no anticipation, and the public engine's ordinary adoption-date implementation does not automatically implement every anticipation-window design."
+      },
+      "conditions": [
+        "The adoption date and intervention are well defined.",
+        "Controls remain unaffected over the comparison periods.",
+        "Any anticipation horizon is declared and implemented."
+      ],
+      "counterevidence": [
+        "Non-significant leads do not prove no anticipation.",
+        "Not-yet-treated status alone need not imply no treatment-related response."
+      ],
+      "gaps": [
+        "The ordinary public engine adoption-date path does not establish support for every anticipation-window design."
+      ],
+      "review": {
+        "actor": "Codex agent",
+        "actor_type": "agent",
+        "structural": "validated",
+        "semantic": "agent_context_review",
+        "human_review": false,
+        "basis": [
+          "engines/python/capy_py/did_modern.py",
+          "tests/python/test_did_modern.py",
+          "https://arxiv.org/html/1803.09015v4"
+        ],
+        "date": "2026-10-12"
+      },
+      "rights": {
+        "license_id": "Apache-2.0",
+        "license_url": "https://www.apache.org/licenses/LICENSE-2.0",
+        "attribution": "Causal Capybara contributors; Yusufhan Balci; VCESR",
+        "modified": true,
+        "content_type": "original_project_content",
+        "review_basis": "Original or imported Apache-2.0 project material; no third-party paper body included.",
+        "permissions": {
+          "cache": true,
+          "display": true,
+          "adapt": true,
+          "model_context": true,
+          "public_export": true
+        }
+      }
+    },
+    {
+      "id": "claim:did-parallel-trends",
+      "kind": "claim",
+      "title": "DiD parallel trends and pretrend tests",
+      "aliases": [
+        "conditional parallel trends",
+        "pretrend test",
+        "pre-trends",
+        "untreated potential outcomes"
+      ],
+      "summary": "Parallel trends concerns untreated counterfactual changes, possibly conditional on covariates; an insignificant pretrend test cannot prove the identifying restriction.",
+      "method_ids": [
+        "did.callaway_santanna"
+      ],
+      "source_ids": [
+        "callaway2021",
+        "sun2021",
+        "roth2023",
+        "10.1257/aeri.20210236"
+      ],
+      "evidence_path": "evidence/did.md",
+      "locator": {
+        "start": 2190,
+        "end": 2731,
+        "exact_text": "Parallel trends restricts changes in untreated potential outcomes for a treated cohort and the eligible comparison group, possibly conditional on pre-treatment covariates. It concerns the missing counterfactual trend after adoption, not equality of observed outcome levels. Pretrend evidence can challenge the assumption, but a test that fails to reject cannot prove it; low power and selection after pretesting remain concerns. Heterogeneous-effect contamination in a conventional TWFE event study can further complicate interpreting leads."
+      },
+      "conditions": [
+        "Eligible comparison group and declared outcome scale.",
+        "Conditional or unconditional trends restriction matches the estimator.",
+        "Pre-treatment covariates and no-anticipation policy are explicit."
+      ],
+      "counterevidence": [
+        "Low-power tests may fail to reveal important divergence.",
+        "TWFE lead contamination can create apparent pretrends under effect heterogeneity.",
+        "Equal observed levels are not required by parallel trends."
+      ],
+      "gaps": [
+        "Roth et al. (2023) is metadata/link-only further reading; Roth (2022) was reviewed through its published abstract, with no copied full text.",
+        "Observed pre-period evidence does not verify the missing post-adoption counterfactual."
+      ],
+      "review": {
+        "actor": "Codex agent",
+        "actor_type": "agent",
+        "structural": "validated",
+        "semantic": "agent_context_review",
+        "human_review": false,
+        "basis": [
+          "engines/python/capy_py/did_modern.py",
+          "tests/python/test_did_modern.py",
+          "https://arxiv.org/html/1803.09015v4",
+          "https://arxiv.org/html/1804.05785v2",
+          "https://doi.org/10.1016/j.jeconom.2023.03.008",
+          "https://www.aeaweb.org/articles?id=10.1257%2Faeri.20210236"
+        ],
+        "date": "2026-10-12"
+      },
+      "rights": {
+        "license_id": "Apache-2.0",
+        "license_url": "https://www.apache.org/licenses/LICENSE-2.0",
+        "attribution": "Causal Capybara contributors; Yusufhan Balci; VCESR",
+        "modified": true,
+        "content_type": "original_project_content",
+        "review_basis": "Original or imported Apache-2.0 project material; no third-party paper body included.",
+        "permissions": {
+          "cache": true,
+          "display": true,
+          "adapt": true,
+          "model_context": true,
+          "public_export": true
+        }
+      }
+    },
+    {
+      "id": "claim:did-composition",
+      "kind": "claim",
+      "title": "DiD attrition and changing panel composition",
+      "aliases": [
+        "panel attrition",
+        "changing panel composition",
+        "units enter leave",
+        "missing outcomes"
+      ],
+      "summary": "Attrition, entry and missing outcomes can change observed DiD composition; complete-pair comparison and panel-balance diagnostics do not prove ignorable selection.",
+      "method_ids": [
+        "did.callaway_santanna"
+      ],
+      "source_ids": [
+        "callaway2021"
+      ],
+      "evidence_path": "evidence/did.md",
+      "locator": {
+        "start": 2782,
+        "end": 3352,
+        "exact_text": "Changing panel composition can move observed cohort means even without a treatment effect. Attrition, entry, missing outcomes, and changes in the units contributing to a comparison need explicit assessment. Requiring observations in both comparison periods changes the contributing sample and may change its interpretation; a balanced observed panel does not prove ignorable selection. The public engine reports panel balance and builds cohort-time blocks from units observed in both periods. Population and missing-data assumptions remain separate scientific judgments."
+      },
+      "conditions": [
+        "Target units and missing-data scope are declared.",
+        "Changes in the units contributing to each comparison are inspected."
+      ],
+      "counterevidence": [
+        "A balanced observed panel can still be selectively observed.",
+        "A complete-pair sample can differ from the intended target population."
+      ],
+      "gaps": [
+        "The missing-data mechanism remains a study-level assumption.",
+        "The attrition explanation is an original reading of public engine behavior, not a claim of a general missingness theorem in the referenced paper."
+      ],
+      "review": {
+        "actor": "Codex agent",
+        "actor_type": "agent",
+        "structural": "validated",
+        "semantic": "agent_context_review",
+        "human_review": false,
+        "basis": [
+          "engines/python/capy_py/did_modern.py",
+          "tests/python/test_did_modern.py",
+          "https://arxiv.org/html/1803.09015v4"
+        ],
+        "date": "2026-10-12"
+      },
+      "rights": {
+        "license_id": "Apache-2.0",
+        "license_url": "https://www.apache.org/licenses/LICENSE-2.0",
+        "attribution": "Causal Capybara contributors; Yusufhan Balci; VCESR",
+        "modified": true,
+        "content_type": "original_project_content",
+        "review_basis": "Original or imported Apache-2.0 project material; no third-party paper body included.",
+        "permissions": {
+          "cache": true,
+          "display": true,
+          "adapt": true,
+          "model_context": true,
+          "public_export": true
+        }
+      }
+    },
+    {
+      "id": "claim:did-aggregation",
+      "kind": "claim",
+      "title": "DiD aggregation weights and event-time composition",
+      "aliases": [
+        "event time",
+        "dynamic aggregation",
+        "aggregation weights",
+        "balanced event time cohorts",
+        "cohort composition"
+      ],
+      "summary": "Event-time DiD curves may combine different cohorts at different exposure durations; aggregation weights and a fixed cohort window make the target explicit.",
+      "method_ids": [
+        "did.callaway_santanna"
+      ],
+      "source_ids": [
+        "callaway2021"
+      ],
+      "evidence_path": "evidence/did.md",
+      "locator": {
+        "start": 3409,
+        "end": 3903,
+        "exact_text": "An overall or event-time DiD estimate is defined by its eligible cohort-time cells and aggregation weights. At longer exposure durations, later cohorts may no longer contribute, so changes along a dynamic curve can reflect different cohort composition as well as effect dynamics. Holding the cohort set fixed across an event window improves that comparison but changes the target population and can reduce precision. Report the contributing cohorts, exposure window, weights, and omitted cells."
+      },
+      "conditions": [
+        "Eligible cohort-time cells are declared.",
+        "Aggregation weights and exposure window are reported.",
+        "Any fixed-cohort restriction is reflected in the target population."
+      ],
+      "counterevidence": [
+        "Changing event-time composition can mimic changes in effects.",
+        "Holding cohort composition fixed reduces the available cohorts and may reduce precision."
+      ],
+      "gaps": [
+        "A single overall average does not reveal all cohort heterogeneity."
+      ],
+      "review": {
+        "actor": "Codex agent",
+        "actor_type": "agent",
+        "structural": "validated",
+        "semantic": "agent_context_review",
+        "human_review": false,
+        "basis": [
+          "engines/python/capy_py/did_modern.py",
+          "tests/python/test_did_modern.py",
+          "https://arxiv.org/html/1803.09015v4"
+        ],
+        "date": "2026-10-12"
+      },
+      "rights": {
+        "license_id": "Apache-2.0",
+        "license_url": "https://www.apache.org/licenses/LICENSE-2.0",
+        "attribution": "Causal Capybara contributors; Yusufhan Balci; VCESR",
+        "modified": true,
+        "content_type": "original_project_content",
+        "review_basis": "Original or imported Apache-2.0 project material; no third-party paper body included.",
+        "permissions": {
+          "cache": true,
+          "display": true,
+          "adapt": true,
+          "model_context": true,
+          "public_export": true
+        }
+      }
+    },
+    {
+      "id": "claim:did-support",
+      "kind": "claim",
+      "title": "DiD comparison support and omitted cells",
+      "aliases": [
+        "no untreated comparison",
+        "comparison support",
+        "skipped cells",
+        "not yet treated controls"
+      ],
+      "summary": "A staggered DiD cell needs an eligible untreated comparison, baseline and outcome observations and conditional overlap; unsupported cells must remain omitted.",
+      "method_ids": [
+        "did.callaway_santanna"
+      ],
+      "source_ids": [
+        "callaway2021"
+      ],
+      "evidence_path": "evidence/did.md",
+      "locator": {
+        "start": 3950,
+        "end": 4483,
+        "exact_text": "A cohort-time effect requires an admissible untreated comparison and the relevant baseline and outcome observations; conditional adjustment also requires overlap. If no comparison survives, the effect is not supplied by choosing a different label or by extrapolating an empty cell. The public engine excludes ineligible or unestimable cells, discloses skipped cells, and reports when a never-treated control choice falls back to not-yet-treated controls. Each resulting aggregate must be interpreted for the cells actually supported."
+      },
+      "conditions": [
+        "Comparison units are unaffected over relevant periods.",
+        "Baseline and target outcomes are observed for the chosen comparison.",
+        "Conditional adjustment has relevant overlap."
+      ],
+      "counterevidence": [
+        "Changing labels cannot supply an absent comparison.",
+        "A fallback to not-yet-treated controls changes the comparison contract and must be disclosed."
+      ],
+      "gaps": [
+        "Aggregates cover supported cells rather than an invented complete panel of effects."
+      ],
+      "review": {
+        "actor": "Codex agent",
+        "actor_type": "agent",
+        "structural": "validated",
+        "semantic": "agent_context_review",
+        "human_review": false,
+        "basis": [
+          "engines/python/capy_py/did_modern.py",
+          "tests/python/test_did_modern.py",
+          "https://arxiv.org/html/1803.09015v4"
+        ],
+        "date": "2026-10-12"
+      },
+      "rights": {
+        "license_id": "Apache-2.0",
+        "license_url": "https://www.apache.org/licenses/LICENSE-2.0",
+        "attribution": "Causal Capybara contributors; Yusufhan Balci; VCESR",
+        "modified": true,
+        "content_type": "original_project_content",
+        "review_basis": "Original or imported Apache-2.0 project material; no third-party paper body included.",
+        "permissions": {
+          "cache": true,
+          "display": true,
+          "adapt": true,
+          "model_context": true,
+          "public_export": true
+        }
+      }
+    }
+  ],
+  "notes": [
+    {
+      "path": "evidence/aipw.md",
+      "title": "Original AIPW explanation and public review basis",
+      "rights": {
+        "license_id": "Apache-2.0",
+        "license_url": "https://www.apache.org/licenses/LICENSE-2.0",
+        "attribution": "Causal Capybara contributors; Yusufhan Balci; VCESR",
+        "modified": true,
+        "content_type": "original_project_content",
+        "review_basis": "Original or imported Apache-2.0 project material; no third-party paper body included.",
+        "permissions": {
+          "cache": true,
+          "display": true,
+          "adapt": true,
+          "model_context": true,
+          "public_export": true
+        }
+      },
+      "authorship": {
+        "actor": "Codex agent",
+        "actor_type": "agent",
+        "human_review": false
+      }
+    },
+    {
+      "path": "evidence/did.md",
+      "title": "Original staggered-adoption DiD explanation and public review basis",
+      "rights": {
+        "license_id": "Apache-2.0",
+        "license_url": "https://www.apache.org/licenses/LICENSE-2.0",
+        "attribution": "Causal Capybara contributors; Yusufhan Balci; VCESR",
+        "modified": true,
+        "content_type": "original_project_content",
+        "review_basis": "Original or imported Apache-2.0 project material; no third-party paper body included.",
+        "permissions": {
+          "cache": true,
+          "display": true,
+          "adapt": true,
+          "model_context": true,
+          "public_export": true
+        }
+      },
+      "authorship": {
+        "actor": "Codex agent",
+        "actor_type": "agent",
+        "human_review": false
+      }
+    }
+  ]
+}

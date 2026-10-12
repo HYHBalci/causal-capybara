@@ -19,7 +19,7 @@ import type {
 
 export type CanvasView =
   | 'welcome' | 'data' | 'design' | 'board' | 'diagnose' | 'recommend' | 'dashboard'
-  | 'compare' | 'sim' | 'dag' | 'report' | 'code' | 'engines' | 'settings' | 'learn' | 'literature'
+  | 'compare' | 'sim' | 'dag' | 'report' | 'code' | 'engines' | 'settings' | 'learn' | 'literature' | 'research'
 
 export type DashboardTab = 'estimates' | 'diagnostics' | 'assumptions' | 'sample' | 'probe' | 'code' | 'classic'
 

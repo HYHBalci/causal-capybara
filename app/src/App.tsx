@@ -6,6 +6,8 @@ import { useDialogFocus } from './components/useDialogFocus'
 import { Literature } from './canvas/Literature'
 import { ProjectNavigator } from './components/ProjectNavigator'
 import { QuestionStrip } from './components/QuestionStrip'
+import { ResearchAssistant } from './components/ResearchAssistant'
+import { ResearchTree } from './canvas/ResearchTree'
 import { Compare } from './canvas/Compare'
 import { Dashboard } from './canvas/Dashboard'
 import { DagEditor } from './canvas/DagEditor'
@@ -27,7 +29,7 @@ import { useStore } from './store'
  * are replaced by the screen that explains how to get one -- rather than by a
  * spinner, an empty panel, or the error toast the request would otherwise
  * produce. */
-const WORKS_WITHOUT_ENGINE = new Set(['learn', 'literature', 'settings', 'engines'])
+const WORKS_WITHOUT_ENGINE = new Set(['learn', 'literature', 'research', 'settings', 'engines'])
 
 /** Screens that are about the application rather than about a project.
  *
@@ -36,7 +38,7 @@ const WORKS_WITHOUT_ENGINE = new Set(['learn', 'literature', 'settings', 'engine
  * and "Select a variable and its details appear here" beside a page that has
  * neither, spending over 500px of a 1440px window on two apologies. On a 1280px
  * laptop that left the catalogue article too narrow to read comfortably. */
-const FULL_WIDTH_VIEWS = new Set(['welcome', 'learn', 'literature', 'settings', 'engines'])
+const FULL_WIDTH_VIEWS = new Set(['welcome', 'learn', 'literature', 'research', 'settings', 'engines'])
 
 export default function App() {
   const booted = useStore((s) => s.booted)
@@ -115,6 +117,7 @@ export default function App() {
       <CommandPalette />
       <Toasts />
       {wide && <ExplanationDialog />}
+      <ResearchAssistant />
     </div>
   )
 }
@@ -126,6 +129,7 @@ function CanvasView({ view }: { view: string }) {
   switch (view) {
     case 'learn': return <Learn />
     case 'literature': return <Literature />
+    case 'research': return <ResearchTree />
     case 'settings': return <Settings />
     case 'engines': return <Engines />
     default: break

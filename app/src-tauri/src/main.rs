@@ -26,6 +26,41 @@ const STARTUP_BUDGET: Duration = Duration::from_secs(45);
 
 struct Sidecar(Mutex<Option<Child>>);
 
+// Kept only in the native host and its child environment; never served over
+// localhost HTTP or persisted in configuration or logs.
+struct AssistantAuthority(String);
+
+#[tauri::command]
+fn assistant_approval_authority(
+    window: tauri::WebviewWindow,
+    state: State<Sidecar>,
+    authority: State<AssistantAuthority>,
+) -> Result<String, String> {
+    let url = window.url().map_err(|_| "Cannot verify this window.")?;
+    let trusted = match url.scheme() {
+        "tauri" => url.host_str() == Some("localhost"),
+        "http" | "https" => {
+            url.host_str() == Some("tauri.localhost")
+                || (cfg!(debug_assertions)
+                    && url.host_str() == Some("127.0.0.1")
+                    && url.port() == Some(5173))
+        }
+        _ => false,
+    };
+    if window.label() != "main" || !trusted {
+        return Err("Only the application window may approve a study proposal.".into());
+    }
+    if state
+        .0
+        .lock()
+        .map_err(|_| "Engine state is unavailable.")?
+        .is_none()
+    {
+        return Err("Approval requires the engine started by this desktop session.".into());
+    }
+    Ok(authority.0.clone())
+}
+
 /// Why the engine is not running, in the words of the process that tried to
 /// start it.
 ///
@@ -237,10 +272,12 @@ fn spawn_sidecar(app: &tauri::AppHandle) -> Result<Option<Child>, String> {
 
     let sep = if cfg!(windows) { ";" } else { ":" };
     let pythonpath = format!(
-        "{}{}{}",
+        "{}{}{}{}{}",
         engine_dir.to_string_lossy(),
         sep,
-        sidecar_dir.to_string_lossy()
+        sidecar_dir.to_string_lossy(),
+        sep,
+        root.join("knowledge").to_string_lossy()
     );
 
     let mut cmd = Command::new(&python);
@@ -256,6 +293,10 @@ fn spawn_sidecar(app: &tauri::AppHandle) -> Result<Option<Child>, String> {
         .env("PYTHONPATH", pythonpath)
         .env("PYTHONUNBUFFERED", "1")
         .env("PYTHONIOENCODING", "utf-8")
+        .env(
+            "CAPY_APPROVAL_AUTHORITY",
+            &app.state::<AssistantAuthority>().0,
+        )
         .stdout(Stdio::piped())
         .stderr(Stdio::piped());
 
@@ -509,11 +550,17 @@ fn main() {
         .plugin(tauri_plugin_shell::init())
         .manage(Sidecar(Mutex::new(None)))
         .manage(LastError(Mutex::new(None)))
+        .manage(AssistantAuthority(format!(
+            "{}{}",
+            uuid::Uuid::new_v4(),
+            uuid::Uuid::new_v4()
+        )))
         .invoke_handler(tauri::generate_handler![
             engine_status,
             restart_engine,
             probe_python,
-            set_python_path
+            set_python_path,
+            assistant_approval_authority
         ])
         .setup(|app| {
             // Fit the window to the screen it is opening on.

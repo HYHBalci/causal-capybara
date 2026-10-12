@@ -43,7 +43,7 @@ export class ApiError extends Error {
   }
 }
 
-async function request<T>(path: string, init?: RequestInit): Promise<T> {
+export async function request<T>(path: string, init?: RequestInit): Promise<T> {
   let res: Response
   try {
     res = await fetch(BASE + path, {
@@ -61,7 +61,9 @@ async function request<T>(path: string, init?: RequestInit): Promise<T> {
     let detail = `${res.status} ${res.statusText}`
     try {
       const body = await res.json()
-      detail = typeof body?.detail === 'string' ? body.detail : JSON.stringify(body?.detail ?? body)
+      detail = typeof body?.detail === 'string' ? body.detail
+        : typeof body?.detail?.message === 'string' ? body.detail.message
+        : JSON.stringify(body?.detail ?? body)
     } catch {
       /* keep the status line */
     }

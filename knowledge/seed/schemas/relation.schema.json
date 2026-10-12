@@ -1,0 +1,69 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Qualified relationship",
+  "type": "object",
+  "required": [
+    "id",
+    "subject_id",
+    "predicate",
+    "object_id",
+    "scope",
+    "conditions",
+    "provenance",
+    "rights",
+    "review"
+  ],
+  "properties": {
+    "id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "subject_id": {
+      "type": "string"
+    },
+    "object_id": {
+      "type": "string"
+    },
+    "predicate": {
+      "enum": [
+        "targets_estimand",
+        "compatible_with_design",
+        "requires_assumption",
+        "checked_by_diagnostic",
+        "implemented_by",
+        "supports",
+        "qualifies",
+        "contradicts",
+        "cites",
+        "prerequisite_of",
+        "related_to",
+        "broader",
+        "narrower",
+        "close_match",
+        "exact_match"
+      ]
+    },
+    "scope": {
+      "type": "string"
+    },
+    "conditions": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "provenance": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "rights": {
+      "$ref": "rights.schema.json"
+    },
+    "review": {
+      "$ref": "review.schema.json"
+    }
+  },
+  "additionalProperties": true
+}

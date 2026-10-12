@@ -18,6 +18,8 @@ import { JobProgress } from '../components/Chrome'
 import { ProvisionalNotice } from '../components/Provisional'
 import { count } from '../format'
 import { References } from '../components/References'
+import { AskButton } from '../components/AskButton'
+import { ReproductionPanel } from '../components/ReproductionPanel'
 
 export function Dashboard() {
   const runs = useStore((s) => s.runs)
@@ -63,6 +65,7 @@ export function Dashboard() {
   return (
     <div className="dashboard col grow">
       <HeroBand results={ok} allRuns={shown} />
+      <div className="row dashboard-ask"><AskButton selection={{ kind: 'results', id: selectedRunIds.join(','), title: 'Selected study results' }} query="Explain these selected results, their estimands, assumptions, diagnostic limitations and methodological sources. Distinguish computed results from interpretation." /></div>
       {live.length > 0 && (
         <div className="banner info dash-running" role="status">
           <span className="spinner" />
@@ -83,6 +86,7 @@ export function Dashboard() {
       </div>
       <div className="scroll grow canvas-pad">
         {tab === 'estimates' && <EstimatesTab results={shown} />}
+        {tab === 'estimates' && <ReproductionPanel />}
         {tab === 'diagnostics' && <DiagnosticsTab results={ok} />}
         {tab === 'assumptions' && <AssumptionsTab results={ok} />}
         {tab === 'sample' && <SampleTab results={ok} />}
@@ -472,6 +476,7 @@ function DiagnosticCard({
         <span aria-hidden>{expanded ? '−' : '+'}</span>
       </button>
       {diagnostic.summary && <p className="diag-summary">{diagnostic.summary}</p>}
+      <AskButton selection={{ kind: 'diagnostic', id: diagnostic.id, title: diagnostic.title }} />
       {artifacts.slice(0, expanded ? artifacts.length : 1).map((a) => (
         <ArtifactView key={a.id} artifact={a} height={expanded ? 300 : 180} onExplain={onExplain} compact />
       ))}

@@ -1004,5 +1004,10 @@ def main() -> None:  # pragma: no cover
     uvicorn.run(app, host="127.0.0.1", port=8760, log_level="info")
 
 
+from .ontology_api import router as ontology_router
+
+app.include_router(ontology_router)
+
+
 if __name__ == "__main__":  # pragma: no cover
     main()

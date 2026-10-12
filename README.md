@@ -15,6 +15,24 @@ This preview installer is unsigned. [Release notes](https://github.com/HYHBalci/
 
 ## See the app
 
+The `ontology` development branch adds an open, offline [ontological research tree](docs/ONTOLOGY.md),
+local MCP tools and a portable agent skill. Browse method requirements, qualified claims, source
+versions, evidence gaps and rights decisions alongside the existing literature catalogue.
+“Ask about this” assembles context you can inspect and redact before using offline help, Ollama,
+or an explicitly selected cloud provider. Study proposals require the desktop's approval of the
+exact diff; estimation still uses the existing R/Python job pipeline.
+
+Install only the lightweight knowledge service, without the statistical engines:
+
+```powershell
+python -m pip install './knowledge[mcp]'
+capy-knowledge validate
+capy-knowledge-mcp
+```
+
+See [client and skill setup](docs/ONTOLOGY_CLIENTS.md) and [rights and provenance](docs/ONTOLOGY_RIGHTS.md).
+
+
 ![Causal Capybara results dashboard comparing computed Python ATT estimates and uncertainty for a synthetic child-development example](docs/promotion/linkedin/05-results.png)
 
 These images follow the built-in IHDP-inspired child-development example using generated synthetic data, with no original study records. The values are computed Python demonstration results, not published study findings.
