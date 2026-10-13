@@ -81,7 +81,7 @@ PROMPTS = {
     "compare_methods": ("Compare methods for a stated question and estimand.", "question"),
     "cited_research_brief": ("Build a cited brief preserving qualifications and coverage gaps.", "question"),
     "audit_research_design": ("Plan an evidence-based causal design or implementation audit without assessing or approving study actions.", "design"),
-    "map_method_ideas": ("Map a research question to designs, estimands, assumptions, methods, survival concepts and explicit ontology gaps.", "question"),
+    "map_method_ideas": ("Map a research question to designs, estimands, assumptions, outcome-specific heterogeneity and survival concepts with explicit ontology gaps.", "question"),
 }
 GUIDANCE = ("Use search_knowledge, get_method_requirements and get_source_evidence or build_research_context. "
             "Preserve complete qualifications and counterevidence; distinguish sourced claims, study assumptions, "
@@ -96,7 +96,11 @@ PROMPT_GUIDANCE = {
         "use the host's tools only for authorized files and execution scope; this MCP cannot read those files. "
         "Trace estimand, target population, design and time zero through adjustment, estimation, censoring, "
         "uncertainty and reproducibility. For survival distinguish survival/risk and RMST contrasts, hazard ratios "
-        "and conditional AFT time ratios; model fit alone does not establish causality. Record each finding's "
+        "and conditional AFT time ratios. For heterogeneity audit baseline modifier timing, outcome family, "
+        "tested scale, direct contrasts, support, evaluation leakage and multiplicity; comparing subgroup "
+        "significance labels is not a heterogeneity test. Separate link-scale interactions from marginal "
+        "effect equality and disclose fixed-profile or learned-ranking uncertainty limits. Model fit alone "
+        "does not establish causality. Record each finding's "
         "file and line or supplied evidence location, observation, threatened assumption or estimand, consequence, "
         "correction, citations and verification status. Label missing evidence as unresolved. Do not manufacture "
         "human review, diagnostic acceptance or study approval."),
@@ -104,7 +108,10 @@ PROMPT_GUIDANCE = {
         "Use get_ontology_coverage, search_knowledge, get_method_requirements and get_source_evidence. "
         "Map the question and target population to an explicit estimand, design, observation process, "
         "identification assumptions and estimator. Keep survival probability, RMST, hazards, ordinary AFT "
-        "regression and structural failure-time models distinct. Explain scoped conceptual mappings and "
+        "regression and structural failure-time models distinct. For heterogeneity distinguish continuous "
+        "means, binary risks/odds, count means/rates, categorical probabilities and survival horizons. "
+        "Separate conditional interactions, marginal contrast tests, CATE calibration, GATES and ranking "
+        "evaluation, and check which are actually implemented. Explain scoped conceptual mappings and "
         "remaining evidence gaps; coverage and software support do not establish identification or universal "
         "ontology completeness."),
 }

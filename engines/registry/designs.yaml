@@ -19,7 +19,7 @@ designs:
     board_caption: Put the column that says who was offered the programme in Assignment, and what it was meant to change in Outcome. Blocks and clusters describe how the assignment was actually done, so they are facts about the study rather than choices you make here.
     zones:
       - { role: treatment, label: Assignment, help: "Who was offered or given the programme.", accepts: [binary, categorical], required: true }
-      - { role: outcome, label: Outcome, help: "What the programme was meant to change.", accepts: [continuous, binary], required: true }
+      - { role: outcome, label: Outcome, help: "What the programme was meant to change. Select a method appropriate to continuous, binary, count or categorical outcomes.", accepts: [continuous, binary, categorical], required: true }
       - { role: strata, label: Blocks, help: "If randomisation happened within blocks or strata.", accepts: [categorical, binary], multiple: true }
       - { role: cluster, label: Randomised in clusters of, help: "If whole schools, clinics or villages were assigned together.", accepts: [id, categorical] }
       - { role: confounders, label: Baseline covariates, help: "Measured before assignment. Used for precision, not for identification.", accepts: [continuous, binary, categorical], multiple: true }
@@ -40,7 +40,7 @@ designs:
     board_caption: Every column you put in "measured confounders" is a claim that it was recorded before treatment was decided. Anything measured afterwards belongs in the box below it instead.
     zones:
       - { role: treatment, label: Treatment, help: "Who got the programme.", accepts: [binary, categorical], required: true }
-      - { role: outcome, label: Outcome, accepts: [continuous, binary], required: true }
+      - { role: outcome, label: Outcome, accepts: [continuous, binary, categorical], required: true }
       - { role: confounders, label: Measured confounders, help: "Causes of both treatment and outcome, measured before treatment.", accepts: [continuous, binary, categorical, datetime], multiple: true, required: true }
       - { role: forbidden, label: "Do not adjust for (post-treatment / colliders)", help: "Anything measured after treatment. Adjusting for it blocks part of the effect.", accepts: [continuous, binary, categorical], multiple: true, tone: forbidden }
       - { role: cluster, label: Cluster standard errors by, accepts: [id, categorical] }

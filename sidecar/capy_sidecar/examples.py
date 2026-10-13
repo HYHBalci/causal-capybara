@@ -38,6 +38,14 @@ SYNTHETIC_RIGHTS = ("Generated locally by Causal Capybara from original simulati
 
 EXAMPLES: list[dict[str, Any]] = [
     {
+        "id": "heterogeneous_outcomes", "title": "Treatment heterogeneity across outcome types",
+        "design": "rct", "blurb": "One randomized baseline study with continuous, binary, count and categorical outcomes. Compare prespecified effect scales and direct interaction tests.",
+        "teaches": "direct heterogeneity tests, scale dependence and multiplicity",
+        "n": 1800, "difficulty": "medium", "source": "simulated",
+        "citation": "Methodological context: Altman and Bland (2003), Knol and VanderWeele (2012).",
+        "truth": "Continuous subgroup effects are 0.5 and 2.0. Other outcomes have distinct nonlinear contrasts; no individual treatment effects are observed.",
+    },
+    {
         "id": "survival_followup", "title": "Baseline treatment and event-free follow-up",
         "design": "survival", "blurb": "Confounded baseline treatment, right censoring and a prespecified eight-month horizon. Compare raw RMST with AFT standardization over the same baseline population.",
         "teaches": "event definition, time zero, censoring and conditional versus marginal contrasts",
@@ -197,6 +205,7 @@ EXAMPLES: list[dict[str, Any]] = [
 ]
 
 _CITATION_URLS = {
+    "heterogeneous_outcomes": "https://doi.org/10.1136/bmj.326.7382.219",
     "survival_followup": "https://doi.org/10.1097/EDE.0b013e3181c1ea43",
     "lalonde": "https://doi.org/10.2307/2529249",
     "minimum_wage": "https://doi.org/10.1257/aer.84.4.772",
@@ -782,7 +791,8 @@ def _survival_followup() -> tuple[pd.DataFrame, dict[str, Any], dict[str, Any], 
         return np.exp(mu + sigma**2 / 2) * ndtr(z - sigma) + tau * ndtr(-z)
     truth = float(np.mean(restricted(mu0 + beta) - restricted(mu0)))
     df = pd.DataFrame({"person": [f"person_{i}" for i in range(n)], "treatment": a,
-                       "followup_months": duration, "event": event, "baseline_risk": x})
+                       "followup_months": duration, "event": event, "baseline_risk": x,
+                       "baseline_group": np.where(x >= 0, "higher baseline risk", "lower baseline risk")})
     role = {"unit": "person", "treatment": "treatment", "duration": "followup_months",
             "event": "event", "confounders": ["baseline_risk"]}
     target = {"value": truth, "estimand": "RMST_difference", "horizon": tau,
@@ -797,7 +807,37 @@ def _survival_followup() -> tuple[pd.DataFrame, dict[str, Any], dict[str, Any], 
     return df, role, target, notes
 
 
+def _heterogeneous_outcomes():
+    """Original synthetic baseline study with multiple outcome families."""
+    from scipy.special import expit, softmax
+    rng = np.random.default_rng(20261014)
+    n = 1800
+    z = rng.binomial(1, .5, n)
+    x = rng.normal(size=n)
+    a = rng.binomial(1, .5, n)
+    exposure = rng.uniform(.5, 2., n)
+    y = 1 + .6*x + .8*z + a*(.5+1.5*z) + rng.normal(size=n)
+    binary = rng.binomial(1, expit(-.8 + .4*x + .6*z + a*(.2+.9*z)))
+    count = rng.poisson(exposure*np.exp(.4+.2*x+.2*z+a*(.1+.5*z)))
+    probabilities = softmax(np.column_stack([np.zeros(n), .1+.3*x+.2*z+.2*a, -.2-.1*x+.4*z+a*(.1+.8*z)]), axis=1)
+    category = (rng.random(n)[:,None] > probabilities.cumsum(axis=1)).sum(axis=1)
+    df = pd.DataFrame({"id":np.arange(n), "treatment":a, "baseline_group":np.where(z==0,"group A","group B"),
+        "baseline_score":x, "exposure":exposure, "continuous_outcome":y, "binary_outcome":binary,
+        "count_outcome":count, "category_outcome":np.asarray(["category A","category B","category C"])[category]})
+    assigned = {"treatment":"treatment", "outcome":"continuous_outcome", "unit":"id", "confounders":["baseline_score"], "effect_modifiers":["baseline_group"]}
+    return df, assigned, {"value":float(np.mean(.5+1.5*z)), "estimand":"GATE", "subgroup_effects":{"group A":.5,"group B":2.},
+        "note":"The continuous-outcome treatment effects are 0.5 in group A and 2.0 in group B. "
+               "The headline truth averages those effects over this sample's baseline groups. "
+               "Binary, count and categorical outcomes have different generated effects and scales."}, [
+        "Original simulated independent-person randomized data; no external study rows are included.",
+        "The categorical modifier, continuous modifier values and outcome scales should be specified before viewing effects. The built-in baseline_group was specified in the generating code.",
+        "Start with the continuous outcome. Change the Outcome role and select the matching binary, count or categorical method to compare outcome types. Count outcomes use the fixed exposure column for rates.",
+        "Subgroup significance is not an interaction test. Use the direct omnibus comparison and report the complete family of outcomes and scales explored.",
+    ]
+
+
 GENERATORS = {
+    "heterogeneous_outcomes": _heterogeneous_outcomes,
     "survival_followup": _survival_followup,
     "lalonde": _lalonde,
     "minimum_wage": _minimum_wage,
@@ -837,6 +877,7 @@ def _build(example_id: str) -> tuple[pd.DataFrame, dict[str, Any], dict[str, Any
 
 
 METHOD_OPTIONS: dict[str, dict[str, dict[str, Any]]] = {
+    "heterogeneous_outcomes": {"heterogeneity.continuous": {"subgroups":["baseline_group"], "subgroups_prespecified":True}},
     "survival_followup": {"survival.aft": {"distribution": "lognormal", "time_unit": "months", "horizon": 8.0, "bootstrap_reps": 100},
                           "survival.rmst": {"time_unit": "months", "horizon": 8.0, "bootstrap_reps": 100}},
     "rct_noncompliance": {"rct.cace": {"takeup": "attended"}},
@@ -847,6 +888,7 @@ METHOD_OPTIONS: dict[str, dict[str, dict[str, Any]]] = {
 }
 
 DEFAULT_METHODS: dict[str, list[str]] = {
+    "heterogeneous_outcomes": ["heterogeneity.continuous"],
     "survival_followup": ["survival.aft", "survival.rmst"],
     "lalonde": ["obs.aipw", "obs.weighting.ipw", "obs.matching.nn", "obs.outcome_regression"],
     "minimum_wage": ["did.twoway_2x2", "did.twfe"],
@@ -863,6 +905,7 @@ DEFAULT_METHODS: dict[str, list[str]] = {
 }
 
 DEFAULT_ESTIMAND: dict[str, str] = {
+    "heterogeneous_outcomes": "GATE",
     "survival_followup": "RMST_difference",
     "lalonde": "ATT", "minimum_wage": "ATT", "medicaid": "ATT", "close_elections": "LATE",
     "basque": "ATT", "encouragement": "LATE", "its_public_health": "ATT", "rct_noncompliance": "ITT",

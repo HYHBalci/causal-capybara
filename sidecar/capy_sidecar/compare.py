@@ -80,6 +80,13 @@ def _label(r: dict[str, Any]) -> str:
 
 
 def _effect_axis(results: list[dict[str, Any]]) -> str:
+    if results and all(r.get("heterogeneity_target") for r in results):
+        targets = [r["heterogeneity_target"] for r in results]
+        if len({(t.get("scale"), t.get("exposure")) for t in targets}) == 1:
+            if targets[0].get("exposure"):
+                return ("Rate ratio (dimensionless; null = 1)" if targets[0]["scale"] == "mean_ratio"
+                        else "Rate difference (counts per exposure unit)")
+            return targets[0]["scale"].replace("_", " ")
     estimands = {r.get("estimand") for r in results}
     if any(r.get("design") == "survival" for r in results):
         units = {(r.get("survival_target") or {}).get("time_unit") for r in results}
@@ -108,9 +115,9 @@ def _forest(results: list[dict[str, Any]]) -> dict[str, Any]:
               "n_effective": r.get("n_effective"), "provisional": bool(r.get("provisional"))}
              for r in runs if r.get("estimate") is not None],
             x_title=_effect_axis(runs),
-            zero_line=1.0 if runs and all(r.get("estimand") == "time_ratio" for r in runs) else 0.0,
+            zero_line=1.0 if runs and all(_null(r) == 1 for r in runs) else 0.0,
         )
-    if any(r.get("design") == "survival" for r in results) and any(
+    if any(r.get("design") == "survival" or r.get("heterogeneity_target") for r in results) and any(
         not c["ok"] for c in _comparability(results) if c["check"] != "Same inference?"
     ):
         panels = []
@@ -145,6 +152,7 @@ def _row(r: dict[str, Any]) -> dict[str, Any]:
         "horizon": (r.get("survival_target") or {}).get("horizon"),
         "time_unit": (r.get("survival_target") or {}).get("time_unit"),
         "target_population": (r.get("survival_target") or {}).get("population"),
+        "heterogeneity_target": r.get("heterogeneity_target"),
         "estimate": r.get("estimate"),
         "se": r.get("se"),
         "ci_low": r.get("ci_low"),
@@ -214,6 +222,12 @@ def _comparability(results: list[dict[str, Any]]) -> list[dict[str, Any]]:
         checks.append({"check": "Same survival interpretation?", "ok": len(meanings) <= 1,
                        "detail": None if len(meanings) <= 1 else "Observed-group associations, conditional model time factors and counterfactual standardization under assumptions answer different questions.",
                        "offending_run_ids": [] if len(meanings) <= 1 else [r.get("run_id") for r in results]})
+    if any(r.get("heterogeneity_target") for r in results):
+        for field in ("outcome_family", "scale", "population", "exposure", "inference_target", "modifier", "modifier_type"):
+            values = {str((r.get("heterogeneity_target") or {}).get(field)) for r in results}
+            checks.append({"check": "Same heterogeneity " + field.replace("_", " ") + "?", "ok": len(values) <= 1,
+                "detail": None if len(values) <= 1 else "These heterogeneity results use different " + field.replace("_", " ") + "; inspect each declared target separately.",
+                "offending_run_ids": [] if len(values) <= 1 else [r.get("run_id") for r in results]})
     checks.append({
         "check": "Same inference?",
         "ok": len(clusters) <= 1,
@@ -224,8 +238,12 @@ def _comparability(results: list[dict[str, Any]]) -> list[dict[str, Any]]:
     return checks
 
 
+def _null(result):
+    return (result.get("heterogeneity_target") or {}).get("null", 1 if result.get("estimand") == "time_ratio" else 0)
+
+
 def _spread(results: list[dict[str, Any]]) -> dict[str, Any] | None:
-    if any(r.get("design") == "survival" for r in results) and any(
+    if any(r.get("design") == "survival" or r.get("heterogeneity_target") for r in results) and any(
         not c["ok"] for c in _comparability(results) if c["check"] != "Same inference?"
     ):
         return None
@@ -233,7 +251,7 @@ def _spread(results: list[dict[str, Any]]) -> dict[str, Any] | None:
     if len(ests) < 2:
         return None
     lo, hi = min(ests), max(ests)
-    null = 1 if all(r.get("estimand") == "time_ratio" for r in results) else 0
+    null = 1 if all(_null(r) == 1 for r in results) else 0
     signs = {1 if e > null else (-1 if e < null else 0) for e in ests}
     return {
         "min": lo,
@@ -257,10 +275,17 @@ def _summary(results: list[dict[str, Any]], spread: dict[str, Any] | None,
             return (f"{len(estimates)} estimates answer different targets. "
                     "Their scales, units, horizons or populations are not directly comparable; "
                     "inspect each estimate separately. " + "; ".join(bad))
-        r = ok[0]
-        return (f"One method ran: {r.get('method_label')} gives {r.get('estimate'):.4g} "
-                f"({r.get('ci_low'):.4g} to {r.get('ci_high'):.4g}).") if r.get("ci_low") is not None else (
-            f"One method ran: {r.get('method_label')} gives {r.get('estimate'):.4g}.")
+        if not estimates:
+            return (f"{len(ok)} successful run(s) report category-specific contrasts. "
+                    "Inspect their probability vectors and direct heterogeneity tests; no scalar estimate is pooled.")
+        r = estimates[0]
+        text = f"One scalar estimate: {r.get('method_label')} gives {r['estimate']:.4g}"
+        if r.get("ci_low") is not None and r.get("ci_high") is not None:
+            text += f" ({r['ci_low']:.4g} to {r['ci_high']:.4g})"
+        text += "."
+        if len(ok) > 1:
+            text += " Additional runs report category-specific contrasts; inspect their vectors separately."
+        return text
     bad = [c["check"] for c in checks if not c["ok"]]
     text = (f"{spread['n_methods']} methods span {spread['min']:.4g} to {spread['max']:.4g}. ")
     quantity = "contrast" if any(r.get("design") == "survival" for r in ok) else "effect"

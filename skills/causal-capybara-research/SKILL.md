@@ -1,6 +1,6 @@
 ---
 name: causal-capybara-research
-description: Explain or compare causal methods and survival estimands, or audit authorized causal code and terminology using the local Causal Capybara knowledge pack. Produce cited design guidance and findings with explicit evidence gaps.
+description: Explain causal methods, survival estimands and treatment-effect heterogeneity across outcome types, or audit authorized causal code and terminology using the local Causal Capybara knowledge pack. Produce cited guidance with explicit evidence gaps.
 license: Apache-2.0
 ---
 
@@ -34,13 +34,22 @@ computed results and AI interpretations. AIPW's double robustness does not remov
 identification assumptions; inspect target-specific overlap and clipping caveats.
 
 For a requested design or implementation audit, read
-[causal-audit.md](references/causal-audit.md). For event-time outcomes, AFT,
+[causal-audit.md](references/causal-audit.md), including its heterogeneity section
+for continuous, binary, count, categorical or learned CATE comparisons. For event-time outcomes, AFT,
 hazard ratios, censoring, RMST or competing events, also read
 [survival-aft.md](references/survival-aft.md). Use the host's file and execution
 tools within the user's authorized scope to inspect code and run appropriate
 checks. The knowledge MCP supplies public methodology and cannot inspect those
 files. A design audit can use supplied study material without pretending code
 was inspected.
+
+For heterogeneity, name the direct contrast or joint null, outcome scale,
+modifier timing and target population. Compare effects directly; a difference
+between subgroup significance labels is not an interaction test. Keep model-link
+interaction tests distinct from marginal contrast tests. Check the registry for
+supported outcome and modifier types; a sourced concept does not imply an
+implemented estimator. Use `get_audit_checklist` for the chosen method to retrieve
+the outcome-specific checks and citations.
 
 Trace the question, estimand and time structure into the actual implementation.
 Separate observed code behavior from unresolved study assumptions. Each material

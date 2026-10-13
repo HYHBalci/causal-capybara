@@ -574,6 +574,27 @@ def honest_paragraph(results: Sequence[Mapping[str, Any]], *, tone: str = "stand
         )
 
     f = _facts(results)
+    if any(r.get("heterogeneity_target") for r in results):
+        lines = []
+        for r in results:
+            if not r.get("heterogeneity_target"):
+                lines.append(honest_paragraph([r], tone=tone))
+                continue
+            target = r["heterogeneity_target"]
+            if r.get("status") != "ok":
+                lines.append(f"{f['lab'](r)} did not produce a usable result.")
+                continue
+            headline = ("The category-probability vector is reported in the subgroup table; no scalar effect is substituted."
+                        if r.get("estimate") is None else f"The overall standardized contrast is {_fmt(r['estimate'])} ({_fmt_ci(r)}).")
+            lines.append(_para(f"{f['lab'](r)} uses {target.get('outcome_family')} outcomes on the {target.get('scale')} scale",
+                               headline, f"Modifier: {target.get('modifier')}; target: {target.get('population')}; inference: {target.get('inference_target')}",
+                               f"Interpretation: {r.get('interpretation')}",
+                               ("The numerator and denominator are standardized rates at one fixed exposure unit; their ratio is dimensionless"
+                                if target.get("scale") == "mean_ratio" else "The contrast is a rate difference in outcome counts per fixed exposure unit")
+                               if target.get("exposure") else ""))
+            lines.extend(_heterogeneity_test_text(r))
+        return "\n\n".join([*lines,
+            "The conditional-link interaction and the selected marginal-scale equality null answer different questions. Differing subgroup significance does not establish effect modification. A non-significant direct test does not establish homogeneous effects. Pointwise confidence intervals and omnibus tests are unadjusted; Holm correction covers only the displayed pairwise family. Baseline timing, model form, support and causal identification remain subject to substantive review."])
     survival_runs = [r for r in results if r.get("design") == "survival"]
     if survival_runs:
         lines = []
@@ -581,11 +602,12 @@ def honest_paragraph(results: Sequence[Mapping[str, Any]], *, tone: str = "stand
             if r.get("status") != "ok":
                 continue
             target = r.get("survival_target") or {}
-            scope = "conditional on baseline covariates" if r.get("estimand") == "time_ratio" else f"through horizon {_fmt(target.get('horizon'))} {target.get('time_unit', 'duration units')} in {target.get('population', 'the recorded target population')}"
+            scope = target.get("population", "conditional on baseline covariates") if r.get("estimand") == "time_ratio" else f"through horizon {_fmt(target.get('horizon'))} {target.get('time_unit', 'duration units')} in {target.get('population', 'the recorded target population')}"
             lines.append(_para(f"{f['lab'](r)} reports {r.get('estimand_label') or r.get('estimand')} = {_fmt(r.get('estimate'))} ({_fmt_ci(r)})",
                                f"Interpretation: {r.get('interpretation') or 'survival contrast'}; {scope}"))
+            lines.extend(_heterogeneity_test_text(r))
         return "\n\n".join([*lines,
-            "Raw Kaplan–Meier/RMST compares observed treatment groups and does not adjust baseline confounding. AFT marginal survival/RMST standardization requires justified consistency, no interference, exchangeability, positivity, conditional independent censoring and correct model form. These remain untested. Its exp(beta) is a conditional common time factor, not a hazard ratio, marginal causal effect or finite-horizon RMST ratio.",
+            "Raw Kaplan–Meier/RMST compares observed treatment groups and does not adjust baseline confounding. AFT marginal survival/RMST standardization requires justified consistency, no interference, exchangeability, positivity, conditional independent censoring and correct model form. These remain untested. Without treatment interactions, exp(beta) is a conditional common time factor. With interactions the factor also depends on the modifier level, and the headline names its reference subgroup. It is not a hazard ratio, marginal causal effect or finite-horizon RMST ratio.",
             "A common observed follow-up horizon does not establish conditional covariate or censoring support. Complete-case analysis may change the target population. Mixed horizons, units or observed-group and standardized targets cannot be averaged into one effect.",
             _assumption_para(f, tone), _caveat_para(f, tone), _closing_para(f, tone)])
     paras: list[str] = [
@@ -602,6 +624,20 @@ def honest_paragraph(results: Sequence[Mapping[str, Any]], *, tone: str = "stand
         for word in set(offences):
             text = re.sub(r"\b" + re.escape(word) + r"\b", "was not contradicted by", text)
     return text
+
+
+def _heterogeneity_test_text(result):
+    lines = []
+    for diagnostic in result.get("diagnostics") or []:
+        if diagnostic.get("id") not in ("outcome_heterogeneity", "link_heterogeneity", "survival_heterogeneity"):
+            continue
+        v = diagnostic.get("values") or {}
+        p = v.get("p_value")
+        test = v.get("test") or diagnostic.get("title")
+        lines.append(f"{test}: scale {v.get('scale', 'recorded scale')}; statistic {_fmt(v.get('statistic'))}; df {_fmt(v.get('df'))}; "
+                     + (f"p = {_fmt(p, 4)}." if p is not None else "p-value unavailable; no equality conclusion is supported.")
+                     + f" {v.get('multiplicity', 'Report the declared multiplicity scope.')}.")
+    return lines
 
 
 def _question_para(f: dict[str, Any], tone: str) -> str:
@@ -1106,6 +1142,9 @@ def _question_text(spec: Mapping[str, Any], primary: Mapping[str, Any]) -> str:
             bits.append(f"Reported as {estimand}; interpretation: {primary.get('interpretation') or 'survival contrast'}; target: {target.get('population', 'recorded population')}")
             if target.get("horizon") is not None:
                 bits.append(f"Common horizon {_fmt(target['horizon'])} {target.get('time_unit', 'duration units')}")
+        elif primary.get("heterogeneity_target"):
+            h = primary["heterogeneity_target"]
+            bits.append(f"Reported subgroup contrasts on the {h.get('scale')} scale for {h.get('outcome_family')} outcomes; modifier {h.get('modifier')}; {h.get('inference_target')}")
         else:
             bits.append(f"Reported as the {estimand}, an average over "
                         f"{ESTIMAND_POPULATION.get(estimand, 'the analysis sample')}")
@@ -1130,14 +1169,18 @@ def _prose_fields(results: Sequence[Mapping[str, Any]]) -> dict[str, Any]:
     if not results:
         return {}
     f = _facts(results)
+    comparable = not any(not check["ok"] for check in compare._comparability(list(results))
+                         if check["check"] != "Same inference?")
+    directions = {1 if r["estimate"] > compare._null(r) else
+                  (-1 if r["estimate"] < compare._null(r) else 0) for r in f["ok"]}
     return {
         "n_methods": len(f["ok"]),
-        "estimate_min": f["min"],
-        "estimate_max": f["max"],
-        "estimate_median": f["median"],
-        "ci_min": f["ci_min"],
-        "ci_max": f["ci_max"],
-        "sign_agreement": f["sign_agreement"],
+        "estimate_min": f["min"] if comparable else None,
+        "estimate_max": f["max"] if comparable else None,
+        "estimate_median": f["median"] if comparable else None,
+        "ci_min": f["ci_min"] if comparable else None,
+        "ci_max": f["ci_max"] if comparable else None,
+        "sign_agreement": len(directions) == 1 if comparable and directions else None,
         "n_provisional": len(f["provisional"]),
         "n_weakened": sum(1 for r in f["ledger"].values() if r["status"] == "weakened"),
         "estimand": f["estimand"],
@@ -1645,6 +1688,7 @@ ESTIMATE_COLUMNS = [
 
 def _blocks_estimates(sec: Mapping[str, Any], ctx: _Ctx) -> list[dict[str, Any]]:
     runs = ctx.runs(sec)
+    heterogeneity = any(r.get("heterogeneity_target") for r in runs)
     if not runs:
         return [_b("note", text="No run is bound to this table.")]
     rows = []
@@ -1667,18 +1711,28 @@ def _blocks_estimates(sec: Mapping[str, Any], ctx: _Ctx) -> list[dict[str, Any]]
             "Provisional": ("yes -- " + "; ".join(r.get("provisional_reasons") or [])
                             if r.get("provisional") else "no"),
         }
+        if survival or heterogeneity:
+            row["Interval"] = row.pop("95% interval")
+            row["Confidence level"] = _fmt(r.get("ci_level") or 0.95)
         if survival:
             target = r.get("survival_target") or {}
-            row["Interval"] = row.pop("95% interval")
-            row.update({"Confidence level": _fmt(r.get("ci_level") or 0.95),
-                        "Interpretation": r.get("interpretation") or "not recorded", "Horizon": _fmt(target.get("horizon")),
+            row.update({"Interpretation": r.get("interpretation") or "not recorded", "Horizon": _fmt(target.get("horizon")),
                         "Duration unit": target.get("time_unit") or "not recorded", "Target population": target.get("population") or "not recorded"})
+        if heterogeneity:
+            target = r.get("heterogeneity_target") or {}
+            row.update({"Outcome family": target.get("outcome_family") or "not recorded", "Effect scale": target.get("scale") or "not recorded",
+                        "Modifier": target.get("modifier") or "not recorded", "Exposure unit": target.get("exposure") or "not used",
+                        "Inference target": target.get("inference_target") or "not recorded", "Interpretation": r.get("interpretation") or "not recorded"})
         rows.append(row)
     caption = ("One row per method and engine. A row marked provisional is a number the software "
                "does not stand behind as it stands.")
     columns = [c[1] for c in ESTIMATE_COLUMNS]
+    if survival or heterogeneity:
+        columns = ["Interval" if c == "95% interval" else c for c in columns] + ["Confidence level"]
     if survival:
-        columns = ["Interval" if c == "95% interval" else c for c in columns] + ["Confidence level", "Interpretation", "Horizon", "Duration unit", "Target population"]
+        columns += ["Interpretation", "Horizon", "Duration unit", "Target population"]
+    if heterogeneity:
+        columns += [c for c in ("Outcome family", "Effect scale", "Modifier", "Exposure unit", "Inference target", "Interpretation") if c not in columns]
     return _text_blocks(sec) + [_b("table", columns=columns, rows=rows,
                                    caption=caption)]
 

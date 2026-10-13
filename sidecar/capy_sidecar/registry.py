@@ -241,6 +241,11 @@ def recommend(spec: dict[str, Any], facts: dict[str, Any] | None = None) -> dict
         why: list[str] = []
         against: list[str] = []
         status = m.get("status", "reasonable")
+        if m["id"].startswith("heterogeneity."):
+            # The measurement scale is a study decision: integer codes can be
+            # counts or categories. Never auto-select an incompatible family.
+            status = "reasonable"
+            against.append("Choose this method only after declaring the matching outcome family and a baseline modifier; outcome measurement is not inferred automatically.")
 
         if missing:
             unsuitable.append(_card(m, blocked=True,
@@ -288,8 +293,9 @@ def recommend(spec: dict[str, Any], facts: dict[str, Any] | None = None) -> dict
 
     recommended.sort(key=lambda c: (-len(c["why"]), c["id"]))
     if not recommended and reasonable:
-        recommended = reasonable[:2]
-        reasonable = reasonable[2:]
+        recommended = [c for c in reasonable if not c["id"].startswith("heterogeneity.")][:2]
+        promoted = {c["id"] for c in recommended}
+        reasonable = [c for c in reasonable if c["id"] not in promoted]
     return {
         "design": design_id,
         "estimand": estimand_id,

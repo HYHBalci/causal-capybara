@@ -22,6 +22,9 @@ The expanded tree covers all registered methods and probes, with causal practice
 and implementation audit questions. The app also supports [right-censored
 survival analysis](docs/SURVIVAL.md): Kaplan–Meier, RMST and log-normal/Weibull AFT,
 with explicit causal assumptions and association versus standardization labels.
+The [heterogeneity workspace](docs/HETEROGENEITY.md) adds direct tests for continuous,
+binary, count/rate, nominal/ordinal and survival outcomes, with explicit effect
+scales, prespecified baseline modifiers, joint inference and multiplicity guidance.
 “Ask about this” assembles context you can inspect and redact before using offline help, Ollama,
 or an explicitly selected cloud provider. Study proposals require the desktop's approval of the
 exact diff; estimation still uses the existing R/Python job pipeline.

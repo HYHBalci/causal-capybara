@@ -13,7 +13,7 @@ from urllib.parse import urlsplit
 
 SCHEMA_VERSION = "capy.knowledge.v1"
 RESPONSE_VERSION = "capy.knowledge.response.v1"
-RELEASE = "0.2.0"
+RELEASE = "0.3.0"
 KINDS = {"concept", "design", "estimand", "method", "probe", "assumption",
          "diagnostic", "softwarepackage", "example", "study", "source",
          "evidencelocator", "claim", "review"}

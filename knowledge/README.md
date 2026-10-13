@@ -20,7 +20,7 @@ python -m capy_knowledge audit-checklist --method survival.aft
 
 An independent installation uses `pip install ./knowledge`; optional MCP support
 uses `pip install './knowledge[mcp]'`. The ordinary library has no dependencies.
-The 0.2.0 wheel bundles the graph, MCP entry point and portable four-file audit
+The 0.3.0 wheel bundles the graph, MCP entry point and portable four-file audit
 skill. From any project after installation, use `capy-knowledge install-skill
 codex --project /absolute/project` (also `claude` or `antigravity`) and
 `capy-knowledge configure-client codex` to print configuration for the current
@@ -62,8 +62,13 @@ one hop; explicit depth is bounded at three and does not establish entailment.
 Context retrieval preserves complete claim/evidence/qualification groups under
 a byte budget, reporting omissions. Every registry method/probe has an explicit
 coverage row, including concepts, references, audit questions, scope and gaps.
-Broad sourced explanations cover causal design and estimation families and
-survival/AFT; a smaller set of claims links exact original evidence notes.
+Broad sourced explanations cover causal design and estimation families,
+survival/AFT and heterogeneity across continuous, binary, count/rate and
+categorical outcomes. Exact original notes distinguish direct interaction
+tests, marginal effect contrasts, CATE calibration, GATES and ranking evaluation.
+The method-scoped audit checklist supplies cited questions about baseline
+modifiers, scale, support, multiplicity and inference limits. These capabilities
+work in the standalone package and MCP without importing statistical adapters.
 Catalogue metadata, editorial context and scoped evidence retain different
 review states. The graph is complete against its declared registry inventory;
 it does not claim exhaustive scientific or literature coverage.

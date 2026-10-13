@@ -596,6 +596,7 @@ def run_summary(r: dict[str, Any]) -> dict[str, Any]:
         "estimand_label": r.get("estimand_label"),
         "interpretation": r.get("interpretation"),
         "survival_target": r.get("survival_target"),
+        "heterogeneity_target": r.get("heterogeneity_target"),
         "method": r.get("method"),
         "method_label": r.get("method_label"),
         "engine": r.get("engine"),

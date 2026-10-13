@@ -30,7 +30,7 @@ from capy_py.contracts import ADAPTERS, _ensure_loaded, run_method  # noqa: E402
 _ensure_loaded()
 
 FAMILIES = ["observational", "rct", "did", "did_modern", "rd", "iv", "synth", "its",
-            "causalml", "longitudinal", "probes", "sensitivity", "survival"]
+            "causalml", "longitudinal", "probes", "sensitivity", "survival", "heterogeneity"]
 
 BANNED = ("passed the test", "proves that", "establishes causality", "confirms causation")
 

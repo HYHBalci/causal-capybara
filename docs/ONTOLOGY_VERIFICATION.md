@@ -1,69 +1,87 @@
-# Ontology and survival verification
+# Ontology, survival and outcome heterogeneity verification
 
-Checked on 13 October 2026 against public `main` at `2f8fd3e` on the `ontology` branch.
+Checked on 14 October 2026 against public `main` at `2f8fd3e` on the `ontology` branch.
 This record distinguishes software checks from the [remaining release gates](ONTOLOGY_READINESS.md).
 
 | Check | Observed result |
 |---|---|
-| Registry coverage | All 89 records mapped: 75 methods and 14 probes; 189 concepts, 29 scoped claims, 223 sources and 21 audit questions |
-| Review scope | 89 editorial mappings, 39 records with scoped evidence, zero human-reviewed records; unresolved references and gaps remain explicit |
-| Compiler | Same-runtime byte-exact rebuild; all 16 imported source hashes match staged Git bytes; closed rights/file/schema contracts |
-| Frozen evaluation | 45/45 answerable tasks retrieved expected claims in the top five; 10/10 unsupported tasks abstained; all returned citations resolved. Original 40 fixtures preserved and 15 new fixtures separately frozen |
-| Core ontology and benchmark tests | 71 ontology tests and 34 benchmark tests passed against the final snapshot |
-| Full knowledge/publishing/client suite | 411 passed and seven Windows symlink privilege skips; the added legacy-code-page UTF-8 regression also passed in the 11-test installation suite |
-| Protocol | 55 wire fixtures and 16 real-pack resource/budget/immutability tests passed; eight read tools, five prompts and sourced unassessed audit questions |
-| Application/report regression | All 259 unique checks verified passing, including 56 survival and 22 report checks; one cache-location fixture was rerun with its required isolated home outside the checkout, where the entire 10-test dataset module passed |
-| Adapter contract | All eight groups passed: 66 adapters/cards, 24 recovery configurations, 24 determinism configurations and 142 explanatory failure paths |
-| Standalone distribution | Fresh isolated wheel installation with no desktop, statistics or MCP dependencies; graph queries, skill installation/idempotence and configuration generation passed for all three hosts |
-| Frontend | 53 unit checks, TypeScript and production build passed; survival target labels use distinct quantities and time-ratio null = 1 |
-| Live browser | Sourced AFT audit guidance, context redaction, cited answer, proposal staging and computed survival example passed; checked survival guidance/result screens had zero accessibility violations |
-| Production browser | Twelve workflows passed; all 22 recorded accessibility screens had zero violations; synthetic ontology interaction/race tests also passed |
-| Installed MCP | Independent 0.2.0 wheel served eight tools, three static resources and five prompts over official SDK stdio; cited context, coverage and nine unassessed AFT questions carried the final snapshot |
+| Registry coverage | All 93 records mapped: 79 methods and 14 probes; 208 concepts, 38 scoped claims, 253 sources and 26 audit questions |
+| Review scope | Original explanations and qualified evidence links; zero human-reviewed records; unresolved references and gaps remain explicit |
+| Compiler | Same-runtime byte-exact rebuild, all 21 imported/runtime source hashes matched staged Git bytes, closed rights/file/schema contracts and matching bundled skill files |
+| Frozen evaluation | 45/45 answerable tasks retrieved expected claims in the top five; 10/10 unsupported tasks abstained; all returned citations resolved. Original 40 fixtures preserved and 15 additional fixtures separately frozen |
+| Knowledge/publishing/protocol/client suite | 445 unique tests verified passing and seven Windows symlink privilege skips across the full run and targeted reruns; 33 outcome-heterogeneity ontology checks also passed after the final content changes |
+| Application/report regression | Targeted survival, outcome heterogeneity, reporting, examples, assistant and Learn checks passed across the combined runs; independent numerical oracles and integration review are described below |
+| CLI output | Eight focused regressions passed: categorical/no-scalar results, actual confidence levels, zero or missing standard errors, JSON output and failure handling |
+| Adapter contract | All eight groups passed: 70 adapters/cards, 24 recovery configurations, 24 determinism configurations and 154 explanatory failure paths |
+| Standalone distribution | Fresh isolated 0.3.0 wheel installation without desktop, statistical, MCP or JSON Schema dependencies; graph validation, all seven method audits, the 55-task benchmark, and skill/configuration installation for all three hosts passed |
+| Frontend | 58 unit tests, TypeScript and the final production build passed |
+| Local live browser | Final preflight was incomplete: the service became healthy, then the single 180-second adapter-catalogue warm-up expired before any of the eight workflow cases started. Hosted browser CI exercises all eight cases against the committed tree |
+| Installed MCP | Final 0.3.0 wheel served eight tools, three static resources and five prompts over official SDK stdio; all seven sourced, unassessed method audits and six requested claim groups passed against the final snapshot |
 
 Final public knowledge snapshot:
 
 ```text
-sha256:c93a9619a9644cd65fa915f869855617c05f062fa834decbfd2a8b10150da521
+sha256:7768553369cb3d0d207b2125e5d7e870cd0fc0f7f73b52ff677619a9de957701
 ```
 
-The local independent `capy_knowledge-0.2.0-py3-none-any.whl` has SHA-256:
+The independently installed local wheel has SHA-256:
 
 ```text
-962b99387f49909743e03e0446606feb90bf7ed4562c06750c3f43ee1a7b7695
+d8cc0c3fc261beef6048d10d19d9a5d39ed9b43585864b0cf4039f0ce3fcae97
 ```
 
-Wheel builds can have different archive hashes while carrying the same verified
-pack snapshot. The wheel includes the public graph, JSON-LD/RDF projections,
-read-only MCP entry point and four original Apache-2.0 skill files. The ordinary
-library and skill installer have no runtime dependencies; MCP dependencies are
-optional and constrained separately.
+The independent `capy-knowledge` 0.3.0 wheel includes the public graph,
+JSON-LD/RDF projections, read-only MCP entry point and four original Apache-2.0
+skill files. The ordinary library and skill installer have no runtime
+dependencies; MCP dependencies are optional and constrained separately. Wheel
+archive hashes can differ while carrying the same verified pack snapshot.
 
-Survival checks use independent tied-event KM arithmetic, distribution
-quadrature, uncensored log-time OLS and independently optimized censored
-likelihoods. Regression checks cover bootstrap refitting, terminal zero-survival
-tails, sparse/unsupported observations, marginal standardization, complete-case
-population, unlike horizons/units/scales, report fallback and the time-ratio null.
-The synthetic example is generated locally. These checks establish numerical
+The full local knowledge run passed 439 tests, skipped seven Windows symlink
+checks and exposed six failures. One obsolete registry-count assertion was
+updated for the four new adapters. Five protocol fixtures exceeded their
+existing startup budgets while heavy local checks ran concurrently; all five
+passed when run sequentially without increasing those budgets. The application
+run similarly exposed a cold-start job timeout and three missing diagnostic
+catalogue entries. The diagnostic entries were added; the exact timed-out job
+and the entire Learn module passed on rerun. These are combined-run results,
+not a claim that the first full local invocation was green. Hosted workflows
+run the complete suites against the committed tree.
+
+Non-survival checks cover independent OLS/GLM/multinomial interaction oracles,
+full covariance of direct subgroup contrasts, standardized nonlinear effect
+scales, robust and cluster inference, unit/category invariance, Holm adjustment,
+unsupported inputs and separation/rank failures. Survival checks use independent
+tied-event KM arithmetic, truncated means, distribution quadrature, uncensored
+log-time OLS and independently optimized censored likelihoods. They cover
+bootstrap refitting, terminal zero-survival tails, sparse support, censoring,
+common horizons and units, subgroup interactions and the time-factor null.
+The synthetic examples are generated locally. These checks establish numerical
 behavior in specified cases, not identification in a real study.
 
-Grok 4.7 at xhigh provided a tool-free conceptual research critique. Primary
-references and code were checked independently. The implementation review found
-and corrected a KM bootstrap support bug and a comparison summary that mixed
-incompatible survival scales. Original explanations, references and qualified
-relations have explicit rights and review state. Paper bodies and private
-research material are absent from the public pack.
+Reports and comparisons retain the outcome family, selected scale, modifier,
+exposure, analysis population and inference target. Conditional link-scale
+tests remain supporting diagnostics. Ratio quantities have null one and rate
+ratios are dimensionless. Unlike quantities are not pooled into one spread or
+summary. Categorical outcomes preserve a probability-difference vector instead
+of fabricating a scalar effect.
 
-The previous 0.1.0 actual Codex MCP probe is historical compatibility evidence,
+Grok 4.7 at xhigh provided a tool-free conceptual research critique. Primary
+references and implementation behavior were checked independently. Original
+explanations, references and qualified relations have explicit rights and review
+state. External paper bodies and private research material are absent from the
+public pack.
+
+The previous actual Codex MCP probe is historical compatibility evidence,
 recorded in [ONTOLOGY_CLIENTS.md](ONTOLOGY_CLIENTS.md). It does not verify actual
-host behavior against this 0.2.0 snapshot. Codex skill consumption, authenticated
+host behavior against this 0.3.0 snapshot. Codex skill consumption, authenticated
 Claude Code/Antigravity/provider checks, human scientific review, and a native
 approval interaction on a clean Windows installation remain documented gates as
 requested. Generated configuration and skill installation do not satisfy those
-gates.
+gates. The earlier local self-contained Windows installer predates this change;
+it is not an installer for the current outcome-heterogeneity sources.
 
 Automated checks are defined in [CI](../.github/workflows/ci.yml),
 [the standalone workflow](../.github/workflows/ontology.yml) and
 [Windows release checks](../.github/workflows/release.yml). Consult the PR's exact
-commit and workflow runs for hosted results. Local wheel and self-contained
-Windows build evidence is also recorded in the PR; no release publication or
-fresh-account installation is inferred from compilation.
+commit and workflow runs for hosted results. No release publication or clean
+installation is inferred from a passing build.

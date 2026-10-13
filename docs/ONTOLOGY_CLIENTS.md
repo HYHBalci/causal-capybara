@@ -1,8 +1,8 @@
 # MCP clients and portable research skill
 
 Install `knowledge[mcp]` into an environment accessible to the selected client.
-The 0.2.0 wheel includes the compiled graph and all four skill files. Install a
-downloaded wheel with `python -m pip install 'capy_knowledge-0.2.0-py3-none-any.whl[mcp]'`.
+The 0.3.0 wheel includes the compiled graph and all four skill files. Install a
+downloaded wheel with `python -m pip install 'capy_knowledge-0.3.0-py3-none-any.whl[mcp]'`.
 The graph/library and skill installer also work without the optional `[mcp]`
 dependencies. A desktop installation or source checkout is unnecessary after
 wheel installation.

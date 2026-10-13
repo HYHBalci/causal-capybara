@@ -205,7 +205,7 @@ class AssistantService:
                     raise AssistantError("Selected run does not belong to this study.")
                 # Whitelist immutable summaries: no rows, paths, prose logs or charts.
                 selected_runs.append(redact({k: run.get(k) for k in
-                    ("run_id", "spec_id", "method", "engine", "status", "estimand", "estimate", "se", "ci_low", "ci_high", "n", "seed", "package", "package_version", "inference", "provisional")}))
+                    ("run_id", "spec_id", "method", "engine", "status", "estimand", "estimate", "se", "ci_low", "ci_high", "n", "seed", "package", "package_version", "inference", "provisional", "estimand_label", "interpretation", "survival_target", "heterogeneity_target")}))
                 run_revisions[run_id] = digest(run)
             if selection.get("kind") == "dag" and selection.get("id"):
                 dag = project.json_object("dag", selection["id"])
@@ -557,6 +557,13 @@ def validate_methods(methods: Any, spec: dict, require_nonempty=False):
                     raise AssistantError(f"Option {key} is outside its published bounds.")
             elif kind in {"boolean", "bool", "checkbox"} and not isinstance(value, bool):
                 raise AssistantError(f"Invalid boolean option {key}.")
+            elif kind == "columns":
+                if (not isinstance(value, list) or len(value) > rule.get("max_items", 50)
+                        or any(not isinstance(column, str) or not column or len(column) > 150 for column in value)
+                        or len(set(value)) != len(value)):
+                    raise AssistantError(f"Invalid column selection option {key}.")
+            elif kind == "column" and (not isinstance(value, str) or len(value) > 150):
+                raise AssistantError(f"Invalid column option {key}.")
             elif not isinstance(value, (str, int, float, bool, type(None))):
                 raise AssistantError(f"Invalid option {key}.")
 

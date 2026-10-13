@@ -161,6 +161,7 @@ export interface RunResult {
   estimand_label?: string | null
   interpretation?: string
   survival_target?: { horizon?: number | null; time_unit: string; population: string; contrast: string; distribution?: string; scale?: string; common_log_time_scale?: number }
+  heterogeneity_target?: { outcome_family: string; scale: string; null: number; modifier: string; modifier_type: string; population: string; exposure?: string | null; inference_target: string }
   treatment?: string | null
   outcome?: string | null
   roles_used?: Roles
@@ -208,7 +209,7 @@ export type RunSummary = Pick<
   'run_id' | 'spec_id' | 'timestamp' | 'status' | 'design' | 'estimand' | 'estimand_label'
   | 'method' | 'method_label' | 'engine' | 'package' | 'package_version' | 'treatment' | 'outcome'
   | 'estimate' | 'se' | 'ci_low' | 'ci_high' | 'ci_level' | 'p_value' | 'n' | 'n_treated' | 'n_control'
-  | 'interpretation' | 'survival_target'
+  | 'interpretation' | 'survival_target' | 'heterogeneity_target'
   | 'n_effective' | 'inference' | 'provisional' | 'provisional_reasons' | 'elapsed_ms' | 'error'
 > & { n_warnings?: number }
 
@@ -271,7 +272,7 @@ export interface DiagnosticBrief {
 
 export interface MethodOption {
   name: string
-  type: 'number' | 'int' | 'bool' | 'select' | 'string' | 'columns'
+  type: 'number' | 'int' | 'bool' | 'select' | 'string' | 'column' | 'columns'
   default?: unknown
   label: string
   help?: string
@@ -279,6 +280,7 @@ export interface MethodOption {
   choices?: string[]
   min?: number
   max?: number
+  max_items?: number
 }
 
 export interface MethodCard {

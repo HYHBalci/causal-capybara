@@ -17,6 +17,20 @@
     "estimand": { "type": ["string", "null"] },
     "estimand_label": { "type": ["string", "null"], "description": "The plain-language sentence shown on the glass" },
     "interpretation": { "type": ["string", "null"], "description": "Observed association, conditional model quantity or counterfactual standardization under recorded assumptions" },
+    "heterogeneity_target": {
+      "type": ["object", "null"],
+      "properties": {
+        "outcome_family": { "enum": ["continuous", "binary", "count", "categorical"] },
+        "scale": { "enum": ["mean_difference", "risk_difference", "risk_ratio", "odds_ratio", "mean_ratio", "category_probability_difference"] },
+        "null": { "enum": [0, 1] },
+        "modifier": { "type": "string" },
+        "modifier_type": { "enum": ["categorical", "continuous"] },
+        "population": { "type": "string" },
+        "exposure": { "type": ["string", "null"] },
+        "inference_target": { "type": "string" }
+      },
+      "additionalProperties": false
+    },
     "survival_target": {
       "type": ["object", "null"],
       "properties": {

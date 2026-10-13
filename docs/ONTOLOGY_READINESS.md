@@ -22,9 +22,9 @@ structurally valid graph, resolvable citation and green retrieval score cannot
 establish passage entailment, causal identification or unrestricted corpus
 coverage. Contradictions, qualifications and explicit gaps are required outputs.
 
-The expansion adds 189 concepts, 29 scoped claims, 223 source records and 21 audit
-questions, covering 89 registry records (75 methods and 14 probes). Every registry
-record has a mapping; 39 link scoped evidence. Those counts describe this release's
+The expansion contains 208 concepts, 38 scoped claims, 253 source records and 26 audit
+questions, covering 93 registry records (79 methods and 14 probes). Every registry
+record has a mapping, with evidence links and gaps recorded per method. These counts describe this release's
 inventory and do not establish scientific completeness. Grok 4.7 at xhigh supplied
 a conceptual research critique; primary references and implementation behavior
 were checked separately. Original explanations and metadata retain explicit rights;
@@ -32,6 +32,11 @@ external publication bodies are excluded.
 
 The [survival implementation](SURVIVAL.md) includes independent numerical oracles,
 bootstrap refitting, horizon/support checks and explicit result interpretation.
+The [outcome heterogeneity implementation](HETEROGENEITY.md) adds continuous,
+binary, count/rate and nominal/ordinal models, direct selected-scale tests and
+separate conditional interaction diagnostics. KM, RMST and AFT support
+prespecified baseline subgroup comparisons. Existing causal-ML diagnostics keep
+their distinct calibration, grouped-effect and ranking interpretations.
 The audit skill requires scoped evidence, code locations and verification; it
 cannot manufacture diagnostic acknowledgements, human review or study approval.
 

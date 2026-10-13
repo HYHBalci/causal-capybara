@@ -1916,6 +1916,599 @@
           "source:ontology:sandve2013"
         ]
       }
+    },
+    {
+      "id": "claim:heterogeneity-direct",
+      "kind": "claim",
+      "title": "Heterogeneity requires a direct comparison on a declared scale",
+      "summary": "Compare subgroup treatment contrasts directly; do not compare their separate significance labels. A joint Wald test needs an estimable contrast vector and covariance of full rank. Its null is equality on the stated effect scale, for the stated population and horizon. Failure to reject is not an equivalence result, and rejecting the null does not establish causal identification.",
+      "aliases": [
+        "heterogeneity",
+        "interaction test",
+        "subgroup significance",
+        "omnibus Wald"
+      ],
+      "method_ids": [
+        "survival.kaplan_meier",
+        "survival.rmst",
+        "survival.aft",
+        "ml.dml_plr",
+        "ml.dml_irm",
+        "ml.causal_forest",
+        "ml.metalearner",
+        "ml.policy_tree",
+        "obs.tmle",
+        "heterogeneity.continuous",
+        "heterogeneity.binary",
+        "heterogeneity.count",
+        "heterogeneity.categorical"
+      ],
+      "source_ids": [
+        "source:ontology:altman2003",
+        "source:ontology:statsmodels-wald"
+      ],
+      "evidence_path": "evidence/heterogeneity-direct.md",
+      "locator": {
+        "start": 218,
+        "end": 598,
+        "exact_text": "Compare subgroup treatment contrasts directly; do not compare their separate significance labels. A joint Wald test needs an estimable contrast vector and covariance of full rank. Its null is equality on the stated effect scale, for the stated population and horizon. Failure to reject is not an equivalence result, and rejecting the null does not establish causal identification."
+      },
+      "conditions": [
+        "Prespecified contrast and appropriate joint covariance.",
+        "Causal interpretation additionally requires design-specific identification."
+      ],
+      "counterevidence": [
+        "Significance of one subgroup and non-significance of another can occur without a statistically discernible difference."
+      ],
+      "gaps": [
+        "This scoped methodological note does not validate a particular study or certify the local statistical implementation."
+      ],
+      "rights": {
+        "license_id": "Apache-2.0",
+        "license_url": "https://www.apache.org/licenses/LICENSE-2.0",
+        "attribution": "Causal Capybara contributors; Yusufhan Balci; VCESR",
+        "modified": true,
+        "content_type": "original_project_content",
+        "review_basis": "Original or imported Apache-2.0 project material; no third-party paper body included.",
+        "permissions": {
+          "cache": true,
+          "display": true,
+          "adapt": true,
+          "model_context": true,
+          "public_export": true
+        }
+      },
+      "review": {
+        "actor": "Codex agent",
+        "actor_type": "agent",
+        "structural": "validated",
+        "semantic": "agent_context_review",
+        "human_review": false,
+        "date": "2026-10-14",
+        "basis": [
+          "Original methodological explanation checked against linked primary sources; no independent human review or study audit."
+        ]
+      }
+    },
+    {
+      "id": "claim:heterogeneity-prespecification",
+      "kind": "claim",
+      "title": "Subgroup discovery and confirmatory analysis have different evidence requirements",
+      "summary": "Define baseline modifiers and the family of hypotheses before looking for outcome patterns. Report all attempted modifiers, scales and horizons, with a multiplicity strategy or explicit exploratory status. Preserve main effects when adding treatment interactions. Baseline timing and prespecification declarations are study assertions to audit, not facts verified by a checkbox. Rejecting one omnibus null neither adjusts pointwise subgroup intervals nor establishes every subgroup difference.",
+      "aliases": [
+        "subgroup prespecification",
+        "baseline modifiers",
+        "multiple testing",
+        "multiplicity"
+      ],
+      "method_ids": [
+        "survival.kaplan_meier",
+        "survival.rmst",
+        "survival.aft",
+        "ml.dml_plr",
+        "ml.dml_irm",
+        "ml.causal_forest",
+        "ml.metalearner",
+        "ml.policy_tree",
+        "obs.tmle",
+        "heterogeneity.continuous",
+        "heterogeneity.binary",
+        "heterogeneity.count",
+        "heterogeneity.categorical"
+      ],
+      "source_ids": [
+        "source:ontology:sun2010",
+        "source:ontology:kent2020"
+      ],
+      "evidence_path": "evidence/heterogeneity-prespecification.md",
+      "locator": {
+        "start": 237,
+        "end": 730,
+        "exact_text": "Define baseline modifiers and the family of hypotheses before looking for outcome patterns. Report all attempted modifiers, scales and horizons, with a multiplicity strategy or explicit exploratory status. Preserve main effects when adding treatment interactions. Baseline timing and prespecification declarations are study assertions to audit, not facts verified by a checkbox. Rejecting one omnibus null neither adjusts pointwise subgroup intervals nor establishes every subgroup difference."
+      },
+      "conditions": [
+        "Observed modifier precedes treatment or has an explicitly justified alternative causal target."
+      ],
+      "counterevidence": [
+        "Post-treatment stratification can induce selection bias even in a randomized trial."
+      ],
+      "gaps": [
+        "This scoped methodological note does not validate a particular study or certify the local statistical implementation."
+      ],
+      "rights": {
+        "license_id": "Apache-2.0",
+        "license_url": "https://www.apache.org/licenses/LICENSE-2.0",
+        "attribution": "Causal Capybara contributors; Yusufhan Balci; VCESR",
+        "modified": true,
+        "content_type": "original_project_content",
+        "review_basis": "Original or imported Apache-2.0 project material; no third-party paper body included.",
+        "permissions": {
+          "cache": true,
+          "display": true,
+          "adapt": true,
+          "model_context": true,
+          "public_export": true
+        }
+      },
+      "review": {
+        "actor": "Codex agent",
+        "actor_type": "agent",
+        "structural": "validated",
+        "semantic": "agent_context_review",
+        "human_review": false,
+        "date": "2026-10-14",
+        "basis": [
+          "Original methodological explanation checked against linked primary sources; no independent human review or study audit."
+        ]
+      }
+    },
+    {
+      "id": "claim:heterogeneity-outcome-scales",
+      "kind": "claim",
+      "title": "Outcome families require distinct interaction targets",
+      "summary": "An identity-link interaction concerns a conditional mean difference, a logit interaction concerns conditional log odds ratios, and a log-link interaction concerns conditional mean ratios. Standardized risk or mean differences are different functionals and require contrasts of their own predictions and covariance. A count-rate model additionally defines exposure and an offset; compare predictions at a stated exposure. Robust standard errors cannot repair a wrong mean model, inadequate overlap or unmeasured confounding.",
+      "aliases": [
+        "continuous binary count heterogeneity",
+        "logistic interaction",
+        "Poisson interaction",
+        "risk difference",
+        "exposure offset"
+      ],
+      "method_ids": [
+        "heterogeneity.continuous",
+        "heterogeneity.binary",
+        "heterogeneity.count",
+        "heterogeneity.categorical"
+      ],
+      "source_ids": [
+        "source:ontology:knol2012",
+        "source:ontology:statsmodels-glm",
+        "hernan2020"
+      ],
+      "evidence_path": "evidence/heterogeneity-outcome-scales.md",
+      "locator": {
+        "start": 209,
+        "end": 732,
+        "exact_text": "An identity-link interaction concerns a conditional mean difference, a logit interaction concerns conditional log odds ratios, and a log-link interaction concerns conditional mean ratios. Standardized risk or mean differences are different functionals and require contrasts of their own predictions and covariance. A count-rate model additionally defines exposure and an offset; compare predictions at a stated exposure. Robust standard errors cannot repair a wrong mean model, inadequate overlap or unmeasured confounding."
+      },
+      "conditions": [
+        "Outcome encoding, link, target covariate distribution and exposure are declared.",
+        "Main effects and treatment interactions use a full-rank design."
+      ],
+      "counterevidence": [
+        "A null multiplicative interaction does not imply equal additive effects."
+      ],
+      "gaps": [
+        "This scoped methodological note does not validate a particular study or certify the local statistical implementation."
+      ],
+      "rights": {
+        "license_id": "Apache-2.0",
+        "license_url": "https://www.apache.org/licenses/LICENSE-2.0",
+        "attribution": "Causal Capybara contributors; Yusufhan Balci; VCESR",
+        "modified": true,
+        "content_type": "original_project_content",
+        "review_basis": "Original or imported Apache-2.0 project material; no third-party paper body included.",
+        "permissions": {
+          "cache": true,
+          "display": true,
+          "adapt": true,
+          "model_context": true,
+          "public_export": true
+        }
+      },
+      "review": {
+        "actor": "Codex agent",
+        "actor_type": "agent",
+        "structural": "validated",
+        "semantic": "agent_context_review",
+        "human_review": false,
+        "date": "2026-10-14",
+        "basis": [
+          "Original methodological explanation checked against linked primary sources; no independent human review or study audit."
+        ]
+      }
+    },
+    {
+      "id": "claim:survival-heterogeneity",
+      "kind": "claim",
+      "title": "KM and RMST heterogeneity depend on common horizons and subgroup support",
+      "summary": "Compare KM survival differences at a fixed horizon or RMST differences integrated through the same horizon across baseline subgroups. Raw within-cell KM requires a defensible censoring assumption within each treatment-by-subgroup cell; conditioning only in a later interpretation does not adjust that estimator. Estimate the joint covariance of the subgroup contrasts, preserve the sampling unit when resampling, and disclose failed replicates. A log-rank test is not a test of equality of those fixed-horizon treatment contrasts.",
+      "aliases": [
+        "survival heterogeneity",
+        "KM subgroup test",
+        "RMST interaction",
+        "Kaplan Meier heterogeneity"
+      ],
+      "method_ids": [
+        "survival.kaplan_meier",
+        "survival.rmst",
+        "survival.aft"
+      ],
+      "source_ids": [
+        "source:ontology:cole2004",
+        "source:ontology:uno2014",
+        "source:ontology:altman2003"
+      ],
+      "evidence_path": "evidence/survival-heterogeneity.md",
+      "locator": {
+        "start": 228,
+        "end": 758,
+        "exact_text": "Compare KM survival differences at a fixed horizon or RMST differences integrated through the same horizon across baseline subgroups. Raw within-cell KM requires a defensible censoring assumption within each treatment-by-subgroup cell; conditioning only in a later interpretation does not adjust that estimator. Estimate the joint covariance of the subgroup contrasts, preserve the sampling unit when resampling, and disclose failed replicates. A log-rank test is not a test of equality of those fixed-horizon treatment contrasts."
+      },
+      "conditions": [
+        "The same time units and horizon are supported in each required treatment-by-subgroup cell.",
+        "Both treatment arms occur in every target subgroup."
+      ],
+      "counterevidence": [
+        "Large total sample size does not guarantee within-subgroup treatment or censoring support."
+      ],
+      "gaps": [
+        "This scoped methodological note does not validate a particular study or certify the local statistical implementation."
+      ],
+      "rights": {
+        "license_id": "Apache-2.0",
+        "license_url": "https://www.apache.org/licenses/LICENSE-2.0",
+        "attribution": "Causal Capybara contributors; Yusufhan Balci; VCESR",
+        "modified": true,
+        "content_type": "original_project_content",
+        "review_basis": "Original or imported Apache-2.0 project material; no third-party paper body included.",
+        "permissions": {
+          "cache": true,
+          "display": true,
+          "adapt": true,
+          "model_context": true,
+          "public_export": true
+        }
+      },
+      "review": {
+        "actor": "Codex agent",
+        "actor_type": "agent",
+        "structural": "validated",
+        "semantic": "agent_context_review",
+        "human_review": false,
+        "date": "2026-10-14",
+        "basis": [
+          "Original methodological explanation checked against linked primary sources; no independent human review or study audit."
+        ]
+      }
+    },
+    {
+      "id": "claim:aft-heterogeneity",
+      "kind": "claim",
+      "title": "AFT interactions and marginal effect modification are different tests",
+      "summary": "For log T = alpha + beta A + gamma Z + delta A Z + other baseline terms + sigma epsilon with a shared residual distribution, the conditional time factor at Z=z is exp(beta + delta z). Retain modifier main effects and define the reference level. A pooled fit can standardize both treatment predictions over each subgroup target population. Test equality of those survival or RMST differences using their joint uncertainty if that is the question: a zero delta is not the null of equal marginal additive effects. Refit the censored model and recompute standardization in each model-bootstrap replicate.",
+      "aliases": [
+        "AFT interaction",
+        "AFT heterogeneity",
+        "time factor heterogeneity",
+        "accelerated failure time subgroup"
+      ],
+      "method_ids": [
+        "survival.aft"
+      ],
+      "source_ids": [
+        "source:ontology:r-survreg",
+        "source:ontology:wei1992",
+        "source:ontology:kent2020"
+      ],
+      "evidence_path": "evidence/aft-heterogeneity.md",
+      "locator": {
+        "start": 225,
+        "end": 825,
+        "exact_text": "For log T = alpha + beta A + gamma Z + delta A Z + other baseline terms + sigma epsilon with a shared residual distribution, the conditional time factor at Z=z is exp(beta + delta z). Retain modifier main effects and define the reference level. A pooled fit can standardize both treatment predictions over each subgroup target population. Test equality of those survival or RMST differences using their joint uncertainty if that is the question: a zero delta is not the null of equal marginal additive effects. Refit the censored model and recompute standardization in each model-bootstrap replicate."
+      },
+      "conditions": [
+        "Common residual scale and distribution, correct likelihood and appropriate observation conditions.",
+        "Treatment and modifier coding and target subgroup population are explicit."
+      ],
+      "counterevidence": [
+        "The algebraic conditional time factor is not an individual causal effect or a finite-horizon RMST ratio."
+      ],
+      "gaps": [
+        "This scoped methodological note does not validate a particular study or certify the local statistical implementation."
+      ],
+      "rights": {
+        "license_id": "Apache-2.0",
+        "license_url": "https://www.apache.org/licenses/LICENSE-2.0",
+        "attribution": "Causal Capybara contributors; Yusufhan Balci; VCESR",
+        "modified": true,
+        "content_type": "original_project_content",
+        "review_basis": "Original or imported Apache-2.0 project material; no third-party paper body included.",
+        "permissions": {
+          "cache": true,
+          "display": true,
+          "adapt": true,
+          "model_context": true,
+          "public_export": true
+        }
+      },
+      "review": {
+        "actor": "Codex agent",
+        "actor_type": "agent",
+        "structural": "validated",
+        "semantic": "agent_context_review",
+        "human_review": false,
+        "date": "2026-10-14",
+        "basis": [
+          "Original methodological explanation checked against linked primary sources; no independent human review or study audit."
+        ]
+      }
+    },
+    {
+      "id": "claim:cate-heterogeneity-evaluation",
+      "kind": "claim",
+      "title": "CATE projection, calibration and GATES require honest evaluation",
+      "summary": "A CATE is a conditional average contrast, not an observed individual treatment effect. BLP summarizes it through specified features, calibration evaluates learned predictions, and GATES summarizes groups induced by a learned score. Keep their estimands and nulls distinct. Formal guarantees require the stated score construction, independence or sample-splitting and covariance procedure; plotting bins or regressing fitted predictions does not by itself implement the published estimator. Report simplifications of the local adapter and distinguish exploratory diagnostics from validated inference.",
+      "aliases": [
+        "CATE heterogeneity",
+        "BLP",
+        "GATES",
+        "calibration",
+        "causal forest"
+      ],
+      "method_ids": [
+        "ml.dml_plr",
+        "ml.dml_irm",
+        "ml.causal_forest",
+        "ml.metalearner",
+        "ml.policy_tree",
+        "obs.tmle"
+      ],
+      "source_ids": [
+        "source:ontology:genericml",
+        "source:ontology:grf-blp",
+        "source:ontology:grf-calibration"
+      ],
+      "evidence_path": "evidence/cate-heterogeneity-evaluation.md",
+      "locator": {
+        "start": 220,
+        "end": 819,
+        "exact_text": "A CATE is a conditional average contrast, not an observed individual treatment effect. BLP summarizes it through specified features, calibration evaluates learned predictions, and GATES summarizes groups induced by a learned score. Keep their estimands and nulls distinct. Formal guarantees require the stated score construction, independence or sample-splitting and covariance procedure; plotting bins or regressing fitted predictions does not by itself implement the published estimator. Report simplifications of the local adapter and distinguish exploratory diagnostics from validated inference."
+      },
+      "conditions": [
+        "Learning/evaluation separation, suitable target scores and overlap.",
+        "Evidence matches the implemented score and inference, not only the method label."
+      ],
+      "counterevidence": [
+        "Dispersion of estimated CATEs can reflect estimation noise."
+      ],
+      "gaps": [
+        "This scoped methodological note does not validate a particular study or certify the local statistical implementation."
+      ],
+      "rights": {
+        "license_id": "Apache-2.0",
+        "license_url": "https://www.apache.org/licenses/LICENSE-2.0",
+        "attribution": "Causal Capybara contributors; Yusufhan Balci; VCESR",
+        "modified": true,
+        "content_type": "original_project_content",
+        "review_basis": "Original or imported Apache-2.0 project material; no third-party paper body included.",
+        "permissions": {
+          "cache": true,
+          "display": true,
+          "adapt": true,
+          "model_context": true,
+          "public_export": true
+        }
+      },
+      "review": {
+        "actor": "Codex agent",
+        "actor_type": "agent",
+        "structural": "validated",
+        "semantic": "agent_context_review",
+        "human_review": false,
+        "date": "2026-10-14",
+        "basis": [
+          "Original methodological explanation checked against linked primary sources; no independent human review or study audit."
+        ]
+      }
+    },
+    {
+      "id": "claim:rate-evaluation",
+      "kind": "claim",
+      "title": "Ranking tests assess a rule with a specified evaluation design",
+      "summary": "RATE and its AUTOC or Qini weighting summarize treatment-effect differences along a prioritization rule. A valid evaluation design separates construction of the ranking from its evaluation outcomes. Holding an estimated ranking fixed during row bootstrap omits learning uncertainty unless the inferential target is explicitly conditional on an independently learned rule. A non-significant ranking test can mean limited power or a poor rule, even when true effects vary. Do not equate it with evidence of no heterogeneity.",
+      "aliases": [
+        "RATE",
+        "AUTOC",
+        "Qini",
+        "rank heterogeneity"
+      ],
+      "method_ids": [
+        "ml.dml_plr",
+        "ml.dml_irm",
+        "ml.causal_forest",
+        "ml.metalearner",
+        "ml.policy_tree",
+        "obs.tmle"
+      ],
+      "source_ids": [
+        "source:ontology:grf-rate",
+        "source:ontology:genericml"
+      ],
+      "evidence_path": "evidence/rate-evaluation.md",
+      "locator": {
+        "start": 218,
+        "end": 740,
+        "exact_text": "RATE and its AUTOC or Qini weighting summarize treatment-effect differences along a prioritization rule. A valid evaluation design separates construction of the ranking from its evaluation outcomes. Holding an estimated ranking fixed during row bootstrap omits learning uncertainty unless the inferential target is explicitly conditional on an independently learned rule. A non-significant ranking test can mean limited power or a poor rule, even when true effects vary. Do not equate it with evidence of no heterogeneity."
+      },
+      "conditions": [
+        "Ranking independence or an explicitly justified cross-fitting design.",
+        "Resampling respects the actual unit of independence."
+      ],
+      "counterevidence": [
+        "A useful CATE ranking need not be numerically calibrated and a calibrated average need not identify a useful ranking."
+      ],
+      "gaps": [
+        "This scoped methodological note does not validate a particular study or certify the local statistical implementation."
+      ],
+      "rights": {
+        "license_id": "Apache-2.0",
+        "license_url": "https://www.apache.org/licenses/LICENSE-2.0",
+        "attribution": "Causal Capybara contributors; Yusufhan Balci; VCESR",
+        "modified": true,
+        "content_type": "original_project_content",
+        "review_basis": "Original or imported Apache-2.0 project material; no third-party paper body included.",
+        "permissions": {
+          "cache": true,
+          "display": true,
+          "adapt": true,
+          "model_context": true,
+          "public_export": true
+        }
+      },
+      "review": {
+        "actor": "Codex agent",
+        "actor_type": "agent",
+        "structural": "validated",
+        "semantic": "agent_context_review",
+        "human_review": false,
+        "date": "2026-10-14",
+        "basis": [
+          "Original methodological explanation checked against linked primary sources; no independent human review or study audit."
+        ]
+      }
+    },
+    {
+      "id": "claim:categorical-outcome-interaction",
+      "kind": "claim",
+      "title": "Categorical-outcome probability heterogeneity",
+      "summary": "A multinomial model represents a probability for each outcome category. Nominal labels are not numerical scores; applying this model to ordered labels does not impose proportional odds or estimate a common ordinal shift. Category probabilities sum to one, so joint tests must account for their dependent contrasts.",
+      "aliases": [
+        "categorical heterogeneity",
+        "nominal outcome",
+        "ordinal outcome",
+        "multinomial interaction"
+      ],
+      "method_ids": [
+        "heterogeneity.categorical"
+      ],
+      "source_ids": [
+        "source:ontology:statsmodels-mnlogit",
+        "source:ontology:statsmodels-wald"
+      ],
+      "evidence_path": "evidence/categorical-outcome-interaction.md",
+      "locator": {
+        "start": 154,
+        "end": 468,
+        "exact_text": "A multinomial model represents a probability for each outcome category. Nominal labels are not numerical scores; applying this model to ordered labels does not impose proportional odds or estimate a common ordinal shift. Category probabilities sum to one, so joint tests must account for their dependent contrasts."
+      },
+      "conditions": [
+        "Sampling covariance and prediction target must match the declared null."
+      ],
+      "counterevidence": [
+        "A conditional coefficient test does not automatically answer a different marginal probability or population target."
+      ],
+      "gaps": [
+        "This scoped methodological note does not validate a particular study or certify the local statistical implementation."
+      ],
+      "rights": {
+        "license_id": "Apache-2.0",
+        "license_url": "https://www.apache.org/licenses/LICENSE-2.0",
+        "attribution": "Causal Capybara contributors; Yusufhan Balci; VCESR",
+        "modified": true,
+        "content_type": "original_project_content",
+        "review_basis": "Original or imported Apache-2.0 project material; no third-party paper body included.",
+        "permissions": {
+          "cache": true,
+          "display": true,
+          "adapt": true,
+          "model_context": true,
+          "public_export": true
+        }
+      },
+      "review": {
+        "actor": "Codex agent",
+        "actor_type": "agent",
+        "structural": "validated",
+        "semantic": "agent_context_review",
+        "human_review": false,
+        "date": "2026-10-14",
+        "basis": [
+          "Original methodological explanation checked against linked primary sources; no independent human review or study audit."
+        ]
+      }
+    },
+    {
+      "id": "claim:fixed-profile-inference",
+      "kind": "claim",
+      "title": "Fixed-profile standardization inference",
+      "summary": "A delta-method contrast based on fitted-parameter covariance conditions on the empirical profiles used for standardization. Inference for a superpopulation target additionally needs the relevant uncertainty from estimating its covariate distribution. Explicitly distinguish subgroup-restricted averages from controlled comparisons setting a continuous modifier to chosen values.",
+      "aliases": [
+        "delta method standardization",
+        "fixed empirical profiles",
+        "continuous moderator"
+      ],
+      "method_ids": [
+        "heterogeneity.continuous",
+        "heterogeneity.binary",
+        "heterogeneity.count",
+        "heterogeneity.categorical"
+      ],
+      "source_ids": [
+        "hernan2020",
+        "source:ontology:statsmodels-wald"
+      ],
+      "evidence_path": "evidence/fixed-profile-inference.md",
+      "locator": {
+        "start": 148,
+        "end": 526,
+        "exact_text": "A delta-method contrast based on fitted-parameter covariance conditions on the empirical profiles used for standardization. Inference for a superpopulation target additionally needs the relevant uncertainty from estimating its covariate distribution. Explicitly distinguish subgroup-restricted averages from controlled comparisons setting a continuous modifier to chosen values."
+      },
+      "conditions": [
+        "Sampling covariance and prediction target must match the declared null."
+      ],
+      "counterevidence": [
+        "A conditional coefficient test does not automatically answer a different marginal probability or population target."
+      ],
+      "gaps": [
+        "This scoped methodological note does not validate a particular study or certify the local statistical implementation."
+      ],
+      "rights": {
+        "license_id": "Apache-2.0",
+        "license_url": "https://www.apache.org/licenses/LICENSE-2.0",
+        "attribution": "Causal Capybara contributors; Yusufhan Balci; VCESR",
+        "modified": true,
+        "content_type": "original_project_content",
+        "review_basis": "Original or imported Apache-2.0 project material; no third-party paper body included.",
+        "permissions": {
+          "cache": true,
+          "display": true,
+          "adapt": true,
+          "model_context": true,
+          "public_export": true
+        }
+      },
+      "review": {
+        "actor": "Codex agent",
+        "actor_type": "agent",
+        "structural": "validated",
+        "semantic": "agent_context_review",
+        "human_review": false,
+        "date": "2026-10-14",
+        "basis": [
+          "Original methodological explanation checked against linked primary sources; no independent human review or study audit."
+        ]
+      }
     }
   ],
   "notes": [
@@ -2306,6 +2899,222 @@
     {
       "path": "evidence/audit-reproducibility.md",
       "title": "Implementation audits require traceable evidence",
+      "rights": {
+        "license_id": "Apache-2.0",
+        "license_url": "https://www.apache.org/licenses/LICENSE-2.0",
+        "attribution": "Causal Capybara contributors; Yusufhan Balci; VCESR",
+        "modified": true,
+        "content_type": "original_project_content",
+        "review_basis": "Original or imported Apache-2.0 project material; no third-party paper body included.",
+        "permissions": {
+          "cache": true,
+          "display": true,
+          "adapt": true,
+          "model_context": true,
+          "public_export": true
+        }
+      },
+      "authorship": {
+        "actor": "Codex agent",
+        "actor_type": "agent",
+        "human_review": false
+      }
+    },
+    {
+      "path": "evidence/heterogeneity-direct.md",
+      "title": "Heterogeneity requires a direct comparison on a declared scale",
+      "rights": {
+        "license_id": "Apache-2.0",
+        "license_url": "https://www.apache.org/licenses/LICENSE-2.0",
+        "attribution": "Causal Capybara contributors; Yusufhan Balci; VCESR",
+        "modified": true,
+        "content_type": "original_project_content",
+        "review_basis": "Original or imported Apache-2.0 project material; no third-party paper body included.",
+        "permissions": {
+          "cache": true,
+          "display": true,
+          "adapt": true,
+          "model_context": true,
+          "public_export": true
+        }
+      },
+      "authorship": {
+        "actor": "Codex agent",
+        "actor_type": "agent",
+        "human_review": false
+      }
+    },
+    {
+      "path": "evidence/heterogeneity-prespecification.md",
+      "title": "Subgroup discovery and confirmatory analysis have different evidence requirements",
+      "rights": {
+        "license_id": "Apache-2.0",
+        "license_url": "https://www.apache.org/licenses/LICENSE-2.0",
+        "attribution": "Causal Capybara contributors; Yusufhan Balci; VCESR",
+        "modified": true,
+        "content_type": "original_project_content",
+        "review_basis": "Original or imported Apache-2.0 project material; no third-party paper body included.",
+        "permissions": {
+          "cache": true,
+          "display": true,
+          "adapt": true,
+          "model_context": true,
+          "public_export": true
+        }
+      },
+      "authorship": {
+        "actor": "Codex agent",
+        "actor_type": "agent",
+        "human_review": false
+      }
+    },
+    {
+      "path": "evidence/heterogeneity-outcome-scales.md",
+      "title": "Outcome families require distinct interaction targets",
+      "rights": {
+        "license_id": "Apache-2.0",
+        "license_url": "https://www.apache.org/licenses/LICENSE-2.0",
+        "attribution": "Causal Capybara contributors; Yusufhan Balci; VCESR",
+        "modified": true,
+        "content_type": "original_project_content",
+        "review_basis": "Original or imported Apache-2.0 project material; no third-party paper body included.",
+        "permissions": {
+          "cache": true,
+          "display": true,
+          "adapt": true,
+          "model_context": true,
+          "public_export": true
+        }
+      },
+      "authorship": {
+        "actor": "Codex agent",
+        "actor_type": "agent",
+        "human_review": false
+      }
+    },
+    {
+      "path": "evidence/survival-heterogeneity.md",
+      "title": "KM and RMST heterogeneity depend on common horizons and subgroup support",
+      "rights": {
+        "license_id": "Apache-2.0",
+        "license_url": "https://www.apache.org/licenses/LICENSE-2.0",
+        "attribution": "Causal Capybara contributors; Yusufhan Balci; VCESR",
+        "modified": true,
+        "content_type": "original_project_content",
+        "review_basis": "Original or imported Apache-2.0 project material; no third-party paper body included.",
+        "permissions": {
+          "cache": true,
+          "display": true,
+          "adapt": true,
+          "model_context": true,
+          "public_export": true
+        }
+      },
+      "authorship": {
+        "actor": "Codex agent",
+        "actor_type": "agent",
+        "human_review": false
+      }
+    },
+    {
+      "path": "evidence/aft-heterogeneity.md",
+      "title": "AFT interactions and marginal effect modification are different tests",
+      "rights": {
+        "license_id": "Apache-2.0",
+        "license_url": "https://www.apache.org/licenses/LICENSE-2.0",
+        "attribution": "Causal Capybara contributors; Yusufhan Balci; VCESR",
+        "modified": true,
+        "content_type": "original_project_content",
+        "review_basis": "Original or imported Apache-2.0 project material; no third-party paper body included.",
+        "permissions": {
+          "cache": true,
+          "display": true,
+          "adapt": true,
+          "model_context": true,
+          "public_export": true
+        }
+      },
+      "authorship": {
+        "actor": "Codex agent",
+        "actor_type": "agent",
+        "human_review": false
+      }
+    },
+    {
+      "path": "evidence/cate-heterogeneity-evaluation.md",
+      "title": "CATE projection, calibration and GATES require honest evaluation",
+      "rights": {
+        "license_id": "Apache-2.0",
+        "license_url": "https://www.apache.org/licenses/LICENSE-2.0",
+        "attribution": "Causal Capybara contributors; Yusufhan Balci; VCESR",
+        "modified": true,
+        "content_type": "original_project_content",
+        "review_basis": "Original or imported Apache-2.0 project material; no third-party paper body included.",
+        "permissions": {
+          "cache": true,
+          "display": true,
+          "adapt": true,
+          "model_context": true,
+          "public_export": true
+        }
+      },
+      "authorship": {
+        "actor": "Codex agent",
+        "actor_type": "agent",
+        "human_review": false
+      }
+    },
+    {
+      "path": "evidence/rate-evaluation.md",
+      "title": "Ranking tests assess a rule with a specified evaluation design",
+      "rights": {
+        "license_id": "Apache-2.0",
+        "license_url": "https://www.apache.org/licenses/LICENSE-2.0",
+        "attribution": "Causal Capybara contributors; Yusufhan Balci; VCESR",
+        "modified": true,
+        "content_type": "original_project_content",
+        "review_basis": "Original or imported Apache-2.0 project material; no third-party paper body included.",
+        "permissions": {
+          "cache": true,
+          "display": true,
+          "adapt": true,
+          "model_context": true,
+          "public_export": true
+        }
+      },
+      "authorship": {
+        "actor": "Codex agent",
+        "actor_type": "agent",
+        "human_review": false
+      }
+    },
+    {
+      "path": "evidence/categorical-outcome-interaction.md",
+      "title": "Categorical-outcome probability heterogeneity",
+      "rights": {
+        "license_id": "Apache-2.0",
+        "license_url": "https://www.apache.org/licenses/LICENSE-2.0",
+        "attribution": "Causal Capybara contributors; Yusufhan Balci; VCESR",
+        "modified": true,
+        "content_type": "original_project_content",
+        "review_basis": "Original or imported Apache-2.0 project material; no third-party paper body included.",
+        "permissions": {
+          "cache": true,
+          "display": true,
+          "adapt": true,
+          "model_context": true,
+          "public_export": true
+        }
+      },
+      "authorship": {
+        "actor": "Codex agent",
+        "actor_type": "agent",
+        "human_review": false
+      }
+    },
+    {
+      "path": "evidence/fixed-profile-inference.md",
+      "title": "Fixed-profile standardization inference",
       "rights": {
         "license_id": "Apache-2.0",
         "license_url": "https://www.apache.org/licenses/LICENSE-2.0",

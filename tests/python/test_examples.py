@@ -112,6 +112,7 @@ MISSES_ON_PURPOSE = {
 # (relative tolerance, absolute floor) on the built-in effect, for a method that is aiming at it.
 # Sized to the spread the shipped seeds actually produce, so that a regression trips them.
 TOLERANCES = {
+    "heterogeneous_outcomes": (0.15, 0.20),
     "survival_followup": (0.15, 0.25),
     "lalonde": (0.40, 450.0),          # terrible overlap: the methods genuinely spread out
     "minimum_wage": (0.15, 0.25),

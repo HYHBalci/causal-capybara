@@ -928,3 +928,24 @@ diagnostics:
   summary: A common observed follow-up horizon does not establish treatment support in baseline covariate profiles or conditional censoring positivity.
   explain_key: diagnostic.aft_support
   engine: python
+
+- id: outcome_heterogeneity
+  title: Direct heterogeneity test on the selected outcome scale
+  designs: [rct, observational]
+  summary: Test equality of the prespecified subgroup treatment contrasts with their full joint covariance. Pairwise Holm adjustment covers the displayed comparison family; pointwise intervals and other analysis choices are outside that adjustment.
+  explain_key: diagnostic.outcome_heterogeneity
+  engine: python
+
+- id: link_heterogeneity
+  title: Conditional treatment-by-modifier interaction
+  designs: [rct, observational]
+  summary: Test treatment-by-baseline-modifier coefficients jointly on the fitted model's conditional link scale while retaining main effects. This null differs from equality of marginal treatment contrasts and does not verify causal identification.
+  explain_key: diagnostic.link_heterogeneity
+  engine: python
+
+- id: survival_heterogeneity
+  title: Baseline subgroup heterogeneity in survival contrasts
+  designs: [survival]
+  summary: Compare subgroup contrasts directly on one prespecified survival, RMST or log time-factor scale using joint bootstrap covariance. Check treatment and censoring support in every subgroup; separate significance labels are not an interaction test.
+  explain_key: diagnostic.survival_heterogeneity
+  engine: python

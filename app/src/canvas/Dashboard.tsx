@@ -20,6 +20,7 @@ import { count } from '../format'
 import { References } from '../components/References'
 import { AskButton } from '../components/AskButton'
 import { ReproductionPanel } from '../components/ReproductionPanel'
+import { comparableResultGroups, HeterogeneityResults, heterogeneityDiagnostics, heterogeneityScaleLabel } from '../components/Heterogeneity'
 
 export function Dashboard() {
   const runs = useStore((s) => s.runs)
@@ -157,8 +158,8 @@ function HeroBand({ results, allRuns }: { results: RunResult[]; allRuns: RunResu
   const buildComparison = useStore((s) => s.buildComparison)
   const single = results.length === 1
   const failed = allRuns.filter((r) => r.status !== 'ok')
-
-  const rows = results.map((r) => ({
+  const groups = comparableResultGroups(results)
+  const rowsFor = (runs: RunResult[]) => runs.filter((r) => typeof r.estimate === 'number').map((r) => ({
     label: `${r.method_label ?? r.method} (${r.engine})${r.provisional ? ' *' : ''}`,
     estimate: r.estimate,
     ci_low: r.ci_low,
@@ -170,7 +171,7 @@ function HeroBand({ results, allRuns }: { results: RunResult[]; allRuns: RunResu
     provisional: !!r.provisional,
   }))
 
-  const spread = results.length > 1
+  const spread = results.length > 1 && groups.length === 1 && results.every((r) => typeof r.estimate === 'number')
     ? {
         min: Math.min(...results.map((r) => r.estimate ?? NaN)),
         max: Math.max(...results.map((r) => r.estimate ?? NaN)),
@@ -186,7 +187,7 @@ function HeroBand({ results, allRuns }: { results: RunResult[]; allRuns: RunResu
         min={90} max={() => Math.round(window.innerHeight * 0.7)}
       />
       <div className="hero-question">{spec?.question?.text ?? questionOf(results[0])}</div>
-      {results[0]?.estimand_label && (
+      {groups.length === 1 && results[0]?.estimand_label && (
         <button className="hero-estimand" onClick={() => setExplain(`estimand.${(results[0].estimand ?? '').toLowerCase()}`)}>
           {results[0].estimand_label}
         </button>
@@ -201,14 +202,20 @@ function HeroBand({ results, allRuns }: { results: RunResult[]; allRuns: RunResu
         </div>
       )}
 
-      {rows.length > 0 && (
-        <div className="hero-forest">
-          <VegaChart spec={forestSpec(rows, results[0]?.outcome ?? 'the outcome', results[0]?.estimand, results[0]?.survival_target?.time_unit)}
-                     height={Math.max(rows.length * 24 + 24, 80)} />
+      {groups.map((group, index) => {
+        const rows = rowsFor(group)
+        const result = group[0]
+        const scale = result.design === 'survival' ? undefined : result.heterogeneity_target ? heterogeneityScaleLabel(result) : heterogeneityDiagnostics(result)[0]?.values?.scale
+        return rows.length > 0 && <div className="hero-forest" key={index}>
+          {groups.length > 1 && <p className="tiny hint">{result.estimand_label ?? result.estimand} · {result.interpretation ?? result.outcome}</p>}
+          <VegaChart spec={forestSpec(rows, result.outcome ?? 'the outcome', result.estimand, result.survival_target?.time_unit,
+            scale != null ? `${humanise(String(scale))} · ${result.outcome}` : undefined, resultNull(result))}
+            height={Math.max(rows.length * 24 + 24, 80)} />
         </div>
-      )}
+      })}
+      {groups.length > 1 && <p className="hint">These runs use different targets, scales or interpretations. Each has its own axis; a pooled range or direction is not reported.</p>}
 
-      {single ? (
+      {single && typeof results[0].estimate === 'number' ? (
         <div className="hero-single">
           <span className="hero-number num">{fmtNum(results[0].estimate)}</span>
           <span className="hero-ci num">
@@ -251,8 +258,14 @@ function questionOf(r?: RunResult): string {
 }
 
 function sameSign(rs: RunResult[]): boolean {
-  const signs = new Set(rs.map((r) => Math.sign((r.estimate ?? 0) - (r.estimand === 'time_ratio' ? 1 : 0))))
+  const signs = new Set(rs.map((r) => Math.sign((r.estimate ?? 0) - resultNull(r))))
   return signs.size === 1
+}
+
+export function resultNull(result: RunResult): number {
+  if (result.heterogeneity_target) return result.heterogeneity_target.null
+  const scale = String(heterogeneityDiagnostics(result)[0]?.values?.scale ?? '')
+  return result.estimand === 'time_ratio' || /(^|_)ratio$/.test(scale) ? 1 : 0
 }
 
 function InterpretButton({ results }: { results: RunResult[] }) {
@@ -386,6 +399,7 @@ function EstimatesTab({ results }: { results: RunResult[] }) {
         </tbody>
       </table>
       </div>
+      <HeterogeneityResults results={results} />
       {results.some((r) => (r.warnings ?? []).length > 0) && (
         <section style={{ marginTop: 14 }}>
           <div className="panel-title">Warnings</div>
@@ -413,7 +427,7 @@ function SecondaryEstimates({ result }: { result: RunResult }) {
           <div className="panel-title">{humanise(String(g))}</div>
           <table className="grid">
             <thead>
-              <tr><th>Term</th><th className="n">Estimate</th><th className="n">SE</th><th className="n">95% CI</th></tr>
+              <tr><th>Term</th><th className="n">Estimate</th><th className="n">SE</th><th className="n">{Math.round((result.ci_level ?? 0.95) * 100)}% CI</th></tr>
             </thead>
             <tbody>
               {rows.filter((r) => (r.group ?? 'other') === g).map((r, i) => (
@@ -809,11 +823,13 @@ export function forestSpec(
   outcome: string,
   estimand?: string | null,
   timeUnit?: string,
+  scaleTitle?: string,
+  nullValue = estimand === 'time_ratio' ? 1 : 0,
 ): Record<string, unknown> {
-  const axisTitle = estimand === 'time_ratio' ? 'Conditional AFT time factor (null = 1)'
+  const axisTitle = scaleTitle ?? (estimand === 'time_ratio' ? 'Conditional AFT time factor (null = 1)'
     : estimand === 'survival_difference' ? 'Survival probability difference (treatment 1 − 0)'
     : estimand === 'RMST_difference' ? `Restricted event-free time difference (${timeUnit ?? 'duration units'})`
-    : `Effect on ${outcome}`
+    : `Effect on ${outcome}`)
   return {
     $schema: 'https://vega.github.io/schema/vega-lite/v6.json',
     config: {
@@ -829,7 +845,7 @@ export function forestSpec(
     layer: [
       {
         mark: { type: 'rule', color: '#6f6862', strokeDash: [4, 3] },
-        encoding: { x: { datum: estimand === 'time_ratio' ? 1 : 0, type: 'quantitative' } },
+        encoding: { x: { datum: nullValue, type: 'quantitative' } },
       },
       {
         mark: { type: 'rule', size: 2, opacity: 0.85 },

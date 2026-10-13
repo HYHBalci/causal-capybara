@@ -82,6 +82,40 @@ horizon, scale/unit conversions, treatment-arm reversal and a reference
 likelihood/prediction calculation. Match expected invariants to the model and
 sampling design; these checks do not establish identification in the study.
 
+## Audit survival heterogeneity
+
+Define the baseline modifier, its levels and one common time horizon before
+outcome inspection. For raw KM or RMST subgroup contrasts, inspect treatment,
+persons, events, at-risk support and censoring within every treatment-by-modifier
+cell. Conditional independent censoring given omitted covariates does not justify
+unadjusted curves merely because the analyst split the population into subgroups.
+Do not relabel a log-rank test as a test of equal fixed-horizon survival or RMST
+treatment differences.
+
+Compare the vector of subgroup contrasts directly using its joint covariance.
+Retain covariance induced by a pooled model or shared standardization. Verify
+that a multi-level omnibus test uses an independent set of contrasts and the
+correct degrees of freedom. If covariance is singular or a required cell or
+horizon is unsupported, report the missing inference and reason; a fabricated
+p-value or silently removed subgroup changes the question.
+
+For a common-scale AFT model with a binary modifier, inspect
+`log(T) = alpha + beta*A + gamma*Z + delta*A*Z + other baseline terms + sigma*error`.
+The conditional time factor is `exp(beta + delta*z)`. Preserve all modifier main
+effects when fitting the interaction. Test log time-factor equality when that
+is the target. If the requested target is standardized survival or RMST,
+predict both arms over the same rows within each target subgroup and test those
+contrasts instead. Marginal additive effects can differ even when `delta=0`;
+these are distinct scientific nulls.
+
+Trace the actual resampling design: raw cell-stratified KM/RMST resampling and
+pooled AFT resample/refit/restandardize procedures condition on different sample
+features. Count usable complete subgroup vectors, rather than calculating each
+subgroup from different successful replicate sets. Record failed refits and
+support failures. Report pointwise intervals as pointwise and specify the
+multiplicity family across subgroup tests, horizons and models. A baseline or
+prespecification attestation remains an unverified study declaration.
+
 ## Selected methodological anchors
 
 - [Hernán and Robins, *Causal Inference: What If*](https://miguelhernan.org/whatifbook): intervention, time structure and causal identification.
@@ -92,3 +126,4 @@ sampling design; these checks do not establish identification in the study.
 - [R survival `survreg`](https://stat.ethz.ch/R-manual/R-devel/library/survival/html/survreg.html) and [lifelines Weibull AFT](https://lifelines.readthedocs.io/en/latest/fitters/regression/WeibullAFTFitter.html): implementation-specific parameterization and ancillary shape modeling.
 - [Young and colleagues, competing-event causal estimands](https://arxiv.org/abs/1806.06136): competing-event questions and their different assumptions.
 - [Separable effects for causal inference with competing events](https://arxiv.org/abs/2004.14824): treatment components and identification conditions.
+- [Altman and Bland](https://www.bmj.com/content/326/7382/219) and [Knol and VanderWeele](https://pubmed.ncbi.nlm.nih.gov/22253321/): direct interaction comparisons and explicit effect scales.

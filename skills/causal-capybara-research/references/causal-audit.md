@@ -48,6 +48,49 @@ contamination checks, pre-treatment fit and extrapolation limits. Spell out
 ambiguous. Mediation, interference, transport and longitudinal treatment require
 their own target and assumptions; a generic adjustment checklist is incomplete.
 
+## Audit heterogeneity across outcome types
+
+Trace the modifier back to baseline measurements and an analysis plan. Record
+coding, cut points, the reference group, any continuous evaluation values, and
+every attempted modifier, outcome, scale and horizon. Software declarations of
+prespecification are evidence to inspect, not verification. Preserve modifier
+main effects with treatment interactions. Check both arms within each subgroup;
+continuous contrasts also require support near the chosen evaluation values.
+Do not introduce automatic outcome-driven cut points to manufacture subgroups.
+
+| Outcome or summary | Inspect the tested quantity |
+|---|---|
+| Continuous | An identity-link interaction concerns a conditional mean difference. Inspect model specification and the sampling assumptions behind robust covariance. |
+| Binary | Logistic interactions test conditional log-odds modification. Risk differences, risk ratios and marginal odds ratios require their own standardized probability contrasts and covariance. A null logit interaction does not imply equal absolute benefit. |
+| Counts or rates | Distinguish mean-count differences/ratios from rate differences/ratios. If an exposure offset is used, confirm positive exposure, its timing and the chosen prediction unit. Keep that offset fixed under the treatment contrast; an outcome-dependent exposure may change the causal target. Robust variance does not repair a misspecified mean model. |
+| Nominal or ordinal labels | A multinomial model estimates category probabilities; it does not assign numeric distances or impose proportional odds on ordered labels. Probabilities sum to one, so a joint test needs an independent contrast basis. Keep category-specific differences distinct from an ordinal score effect. |
+| Survival | Use the horizon, censoring and AFT checks in [survival-aft.md](survival-aft.md). |
+| CATE projection, calibration and GATES | Inspect target scores, training/evaluation separation and grouping. A BLP is a projection of conditional average effects. A zero differential calibration coefficient and a unit coefficient are different nulls. Descriptive CATE bins do not automatically implement published GATES inference. |
+| Ranking/RATE | Verify an independently learned rule or a justified cross-fitting design. A bootstrap holding the ranking fixed must disclose its conditional scope. A weak test may reflect a poor ranking or limited power; it is not proof of homogeneous effects. |
+
+Require the direct between-group contrast or omnibus null, covariance, degrees
+of freedom, and a justified response to singularity or sparse cells. A larger
+p-value in one subgroup than another is not evidence of effect modification;
+overlapping intervals also do not settle the direct test. Report both estimates
+and uncertainty, not just a threshold label. A conditional model coefficient
+test and a marginal effect equality test can disagree because they test different
+nulls.
+
+For standardization, distinguish averaging over actual subgroup rows from
+setting a continuous modifier to two chosen values on common empirical profiles.
+The latter is a controlled profile comparison, not automatically the average
+effect among people observed at those values. Delta-method uncertainty using
+only coefficient covariance conditions on those profiles; do not describe it as
+including uncertainty in the population covariate distribution. Identify what
+the full bootstrap actually refits and resamples.
+
+Inspect the testing family. An omnibus test does not make every pairwise
+comparison significant. Holm-adjusted pairwise p-values control the specified
+family; pointwise confidence intervals remain pointwise unless separately
+constructed as simultaneous intervals. Repeated outcomes, models, cut points
+and horizons require an additional multiplicity plan or explicit exploratory
+reporting. Low power and non-significance do not establish equivalence.
+
 ## Correct causal language
 
 | Avoid unsupported wording | Use a quantity and interpretation tied to the evidence |
@@ -59,6 +102,8 @@ their own target and assumptions; a generic adjustment checklist is incomplete.
 | "Randomization validates every causal comparison." | Identify the randomized assignment contrast. Nonadherence, missingness, post-randomization selection and mediator contrasts require additional reasoning. |
 | "Double robustness means no assumptions are needed." | Explain the estimator's nuisance-model robustness conditions separately from causal identification, support and regularity conditions. |
 | "Significant means causally established" or "not significant means no effect" | Report the estimate and uncertainty under the specified design, model and inference assumptions; distinguish absence of precise evidence from an equivalence claim. |
+| "The modifier causes the treatment effect to change" | Describe variation of a defined treatment contrast across baseline modifier values. An intervention on the modifier is a separate causal question. |
+| "The subgroup with p < 0.05 responds; the other does not" | Report subgroup contrasts and a direct test of their difference on the chosen scale, together with precision and multiplicity scope. |
 
 For survival and time ratios use [survival-aft.md](survival-aft.md). A hazard
 ratio is not a risk ratio; an AFT treatment coefficient is not automatically a
@@ -89,3 +134,7 @@ starting points; use returned claim/source locators for specific findings.
 - [Cattaneo and Titiunik, regression discontinuity designs](https://rdpackages.github.io/references/Cattaneo-Titiunik_2022_ARE.pdf): local identification and inference.
 - [Robins, Hernán and Brumback, marginal structural models](https://pubmed.ncbi.nlm.nih.gov/10955408/): treatment-confounder feedback and longitudinal weighting.
 - [Wilson and colleagues, good enough practices in scientific computing](https://journals.plos.org/ploscompbiol/article?id=10.1371/journal.pcbi.1005510) and [Sandve and colleagues, reproducible computational research](https://journals.plos.org/ploscompbiol/article?id=10.1371/journal.pcbi.1003285): readable, testable and traceable scientific computation.
+- [Altman and Bland, direct comparison of estimates](https://www.bmj.com/content/326/7382/219), [Knol and VanderWeele, effect modification and interaction](https://pubmed.ncbi.nlm.nih.gov/22253321/), and [PATH statement](https://pubmed.ncbi.nlm.nih.gov/31711134/): direct contrasts, scale and predictive heterogeneity.
+- [Sun and colleagues, subgroup credibility](https://www.bmj.com/content/340/bmj.c117): baseline definitions, prespecified hypotheses and the limited credibility of searched subgroup patterns.
+- [Generic ML inference](https://arxiv.org/abs/1712.04802), [grf BLP](https://grf-labs.github.io/grf/reference/best_linear_projection.html), [calibration](https://grf-labs.github.io/grf/reference/test_calibration.html) and [RATE](https://grf-labs.github.io/grf/reference/rank_average_treatment_effect.html): distinct targets and honest evaluation. These references do not certify the local adapters as exact implementations.
+- [statsmodels GLM](https://www.statsmodels.org/stable/generated/statsmodels.genmod.generalized_linear_model.GLM.html), [MNLogit](https://www.statsmodels.org/stable/generated/statsmodels.discrete.discrete_model.MNLogit.html), [joint Wald tests](https://www.statsmodels.org/stable/generated/statsmodels.genmod.generalized_linear_model.GLMResults.wald_test.html) and [multiplicity](https://www.statsmodels.org/stable/generated/statsmodels.stats.multitest.multipletests.html): software parameterization and inference contracts.

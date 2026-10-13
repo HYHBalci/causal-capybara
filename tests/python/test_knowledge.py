@@ -42,7 +42,7 @@ def test_complete_public_inventory_and_stable_ids(kb):
     expected_methods = {m["id"] for m in inventory["methods"]}
     actual = {n["id"] for n in kb.nodes.values() if n["kind"] in {"method", "probe"}}
     assert expected_methods == actual
-    assert len(actual) == 89  # Original public registry plus three survival procedures.
+    assert len(actual) == 93  # Public registry, three survival and four outcome-family procedures.
     for reference in inventory["references"]:
         node = kb.get_node(reference["id"])["node"]
         assert node["kind"] == "source"

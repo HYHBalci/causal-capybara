@@ -75,6 +75,25 @@ checklist starts `not_assessed`. The portable skill guides an authorized host to
 inspect code, cite file locations, verify results and report findings; the MCP
 itself only retrieves public guidance. See [survival implementation](SURVIVAL.md)
 for supported estimands, numerical checks and model limitations.
+
+Heterogeneity is represented across continuous, binary, count/rate, categorical
+and survival outcomes. The four `heterogeneity.*` registry methods and existing
+KM, RMST and AFT methods link to original evidence notes, scale-specific concepts
+and cited audit questions through the same eight MCP tools. The graph separates
+conditional-link interaction tests from equality tests of standardized contrasts,
+and records baseline timing, support, multiplicity and fixed-profile uncertainty
+limitations. A multinomial probability comparison does not assume a numerical
+score or proportional odds for ordered outcomes.
+
+The CATE learning methods also link to BLP, calibration, GATES and ranking/RATE
+concepts. These mappings explain the target and required evaluation design;
+they do not certify that an exploratory local diagnostic implements every
+published inferential procedure. Search for `heterogeneity`, `RMST interaction`,
+`binary logistic interaction`, `categorical probabilities` or `GATES` and retrieve
+the exact claim evidence before drawing a methodological conclusion. Checks
+remain `not_assessed`; no MCP tool fits a statistical model or audits private
+study files.
+
 Selected-context previews, opt-in local/approved cloud providers and structured
 study proposals live in the separate application/sidecar bridge. Native approval,
 revision/expiry/replay checks and existing job execution enforce study changes;
