@@ -132,6 +132,11 @@ try {
     assert(Number.isFinite(diagnostic.values.p_value))
     const region = page.getByRole('region', { name: `Heterogeneity: ${result.method_label ?? result.method}`, exact: true }).first()
     await region.getByText('Direct heterogeneity test', { exact: true }).waitFor({ timeout: 60000 })
+    if (scenario.outcome) {
+      assert.equal(await page.locator('.hero-question').innerText(),
+        `Effect of treatment on ${scenario.outcome} for everyone in the data, compared to the control arm`,
+        'The result question must describe the currently selected outcome')
+    }
     assert.match(await region.innerText(), /Declared by the analyst/)
     assert.match(await region.innerText(), /do not establish a difference between groups/)
     if (scenario.options?.exposure) {
@@ -143,6 +148,7 @@ try {
     assert(await region.locator('table').count() >= 2, 'Subgroup and direct comparison tables must be visible')
     await audit(`${index}-${scenario.method.replaceAll('.', '-')}-${scenario.estimand ?? scenario.outcome}`)
     const saved = await json(`/projects/${project.id}/specs/${specId}`)
+    if (scenario.outcome) assert.equal(saved.question.outcome, scenario.outcome)
     assert.deepEqual(saved.methods[0].options.subgroups, [modifier])
     assert.equal(saved.methods[0].options.subgroups_prespecified, true)
     checks.push({ ...scenario, elapsedMs: Date.now() - started, run_id: result.run_id, scale: diagnostic.values.scale, p_value: diagnostic.values.p_value, passed: true })

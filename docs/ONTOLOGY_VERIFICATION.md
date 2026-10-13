@@ -14,8 +14,9 @@ This record distinguishes software checks from the [remaining release gates](ONT
 | CLI output | Eight focused regressions passed: categorical/no-scalar results, actual confidence levels, zero or missing standard errors, JSON output and failure handling |
 | Adapter contract | All eight groups passed: 70 adapters/cards, 24 recovery configurations, 24 determinism configurations and 154 explanatory failure paths |
 | Standalone distribution | Fresh isolated 0.3.0 wheel installation without desktop, statistical, MCP or JSON Schema dependencies; graph validation, all seven method audits, the 55-task benchmark, and skill/configuration installation for all three hosts passed |
-| Frontend | 58 unit tests, TypeScript and the final production build passed |
+| Frontend | Initial 58-test unit suite passed; the subsequent question-label correction passed all 25 relevant checks, including three new regressions. TypeScript and the corrected production build passed |
 | Local live browser | Final preflight was incomplete: the service became healthy, then the single 180-second adapter-catalogue warm-up expired before any of the eight workflow cases started. Hosted browser CI exercises all eight cases against the committed tree |
+| Hosted browser | At `824d613`, all eight heterogeneity cases and twelve general workflows passed; 32 Axe screens had zero violations or page errors. Screenshot review identified a stale automatic question label; the correction and stronger outcome-label assertions are included in the subsequent commit. Consult the PR for its final hosted result |
 | Installed MCP | Final 0.3.0 wheel served eight tools, three static resources and five prompts over official SDK stdio; all seven sourced, unassessed method audits and six requested claim groups passed against the final snapshot |
 
 Final public knowledge snapshot:
@@ -64,6 +65,11 @@ tests remain supporting diagnostics. Ratio quantities have null one and rate
 ratios are dimensionless. Unlike quantities are not pooled into one spread or
 summary. Categorical outcomes preserve a probability-difference vector instead
 of fabricating a scalar effect.
+
+Automatically generated treatment/outcome descriptions now follow reassigned
+roles through the same saved study revision. Custom-written descriptions are
+preserved. Regression checks cover switching outcomes, switching/clearing
+treatment, saved question text and diagnostic-acknowledgement invalidation.
 
 Grok 4.7 at xhigh provided a tool-free conceptual research critique. Primary
 references and implementation behavior were checked independently. Original

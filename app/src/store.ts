@@ -664,7 +664,14 @@ export const useStore = create<State>((set, get) => ({
 
   setRole(role, value, event) {
     get().updateSpec(
-      (s) => ({ ...s, roles: { ...s.roles, [role]: value as never } }),
+      (s) => {
+        const question = { ...s.question }
+        if ((role === 'treatment' || role === 'outcome')
+          && (!question[role] || question[role] === s.roles[role])) {
+          question[role] = typeof value === 'string' && value ? value : null
+        }
+        return { ...s, question, roles: { ...s.roles, [role]: value as never } }
+      },
       event ?? `Set ${role}`,
       { role, value },
     )
