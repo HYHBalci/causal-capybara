@@ -285,10 +285,9 @@ function EstimandPicker() {
     <section className="estimand-block">
       <div className="panel-title">What exactly do you want a number for?</div>
       <p className="tiny hint" style={{ margin: '2px 0 8px' }}>
-        Each line is a different question, and they can have different answers on the same data — the
-        effect on everybody is not the effect on the people who actually took the programme. Choosing
-        one before you choose a method is the whole trick; the technical name for the number you pick
-        is the <em>estimand</em>.{' '}
+        {spec.design === 'survival'
+          ? <>Choose an event-free probability difference at a horizon, a restricted mean event-free time difference through that horizon, or an AFT time factor. Declare the population, time zero, unit and horizon before choosing a method. Raw group contrasts are associations; a causal interpretation requires justified identification and censoring assumptions. The target quantity is the <em>estimand</em>.{' '}</>
+          : <>Each line is a different question, and they can have different answers on the same data — the effect on everybody is not the effect on the people who actually took the programme. Choose one before choosing a method; the technical name for the number is the <em>estimand</em>.{' '}</>}
         <button className="linky" onClick={() => setExplain('concept.estimand_first')}>
           Why this comes first
         </button>

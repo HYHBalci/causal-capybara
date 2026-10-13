@@ -38,6 +38,14 @@ SYNTHETIC_RIGHTS = ("Generated locally by Causal Capybara from original simulati
 
 EXAMPLES: list[dict[str, Any]] = [
     {
+        "id": "survival_followup", "title": "Baseline treatment and event-free follow-up",
+        "design": "survival", "blurb": "Confounded baseline treatment, right censoring and a prespecified eight-month horizon. Compare raw RMST with AFT standardization over the same baseline population.",
+        "teaches": "event definition, time zero, censoring and conditional versus marginal contrasts",
+        "n": 1600, "difficulty": "medium", "source": "simulated",
+        "citation": "Methodological context: Hernán (2010), Wei (1992) and Uno et al. (2014).",
+        "truth": "The standardized RMST difference at eight months is built in; the raw group difference intentionally misses it.",
+    },
+    {
         "id": "lalonde",
         "title": "Job training and later earnings",
         "design": "observational",
@@ -189,6 +197,7 @@ EXAMPLES: list[dict[str, Any]] = [
 ]
 
 _CITATION_URLS = {
+    "survival_followup": "https://doi.org/10.1097/EDE.0b013e3181c1ea43",
     "lalonde": "https://doi.org/10.2307/2529249",
     "minimum_wage": "https://doi.org/10.1257/aer.84.4.772",
     "medicaid": "https://doi.org/10.1016/j.jeconom.2020.12.001",
@@ -755,7 +764,41 @@ def _california_tobacco() -> tuple[pd.DataFrame, dict[str, Any], dict[str, Any],
     return df, roles, truth, notes
 
 
+def _survival_followup() -> tuple[pd.DataFrame, dict[str, Any], dict[str, Any], list[str]]:
+    """Original simulation, not records or results from a cited study."""
+    from scipy.special import ndtr
+
+    rng = np.random.default_rng(20261013)
+    n, tau, sigma, beta = 1600, 8.0, 0.55, 0.45
+    x = rng.normal(size=n)
+    a = rng.binomial(1, 1 / (1 + np.exp(-1.1 * x)))
+    mu0 = 2.0 - 0.6 * x
+    latent = np.exp(mu0 + beta * a + sigma * rng.normal(size=n))
+    censor = rng.uniform(9.0, 18.0, size=n)
+    duration = np.minimum(latent, censor)
+    event = (latent <= censor).astype(int)
+    def restricted(mu):
+        z = (np.log(tau) - mu) / sigma
+        return np.exp(mu + sigma**2 / 2) * ndtr(z - sigma) + tau * ndtr(-z)
+    truth = float(np.mean(restricted(mu0 + beta) - restricted(mu0)))
+    df = pd.DataFrame({"person": [f"person_{i}" for i in range(n)], "treatment": a,
+                       "followup_months": duration, "event": event, "baseline_risk": x})
+    role = {"unit": "person", "treatment": "treatment", "duration": "followup_months",
+            "event": "event", "confounders": ["baseline_risk"]}
+    target = {"value": truth, "estimand": "RMST_difference", "horizon": tau,
+              "time_unit": "months", "time_ratio": float(np.exp(beta)),
+              "note": "Expected event-free time is restricted to eight months and averaged over this simulated baseline population. The raw unadjusted RMST association intentionally misses the causal standardized target because baseline risk affects both treatment and event time."}
+    notes = [
+        "This data is simulated by original local code, not taken from the cited articles.",
+        "Each independent person is observed from baseline. Treatment is 0/1 at time zero; event is 1 and right censoring is 0. Durations and the fixed horizon are in months.",
+        f"The built-in standardized RMST difference through {tau:g} months is {truth:.4g} months. The conditional common AFT time factor is exp(0.45), a different target.",
+        "Baseline risk affects treatment and event time. The unadjusted observed-group association intentionally misses the standardized target; AFT includes that baseline confounder. The simulation makes the assumptions true by construction; real studies must justify them independently.",
+    ]
+    return df, role, target, notes
+
+
 GENERATORS = {
+    "survival_followup": _survival_followup,
     "lalonde": _lalonde,
     "minimum_wage": _minimum_wage,
     "medicaid": _medicaid,
@@ -794,6 +837,8 @@ def _build(example_id: str) -> tuple[pd.DataFrame, dict[str, Any], dict[str, Any
 
 
 METHOD_OPTIONS: dict[str, dict[str, dict[str, Any]]] = {
+    "survival_followup": {"survival.aft": {"distribution": "lognormal", "time_unit": "months", "horizon": 8.0, "bootstrap_reps": 100},
+                          "survival.rmst": {"time_unit": "months", "horizon": 8.0, "bootstrap_reps": 100}},
     "rct_noncompliance": {"rct.cace": {"takeup": "attended"}},
     # Spelled out rather than left to the default, so the month the effect is read at is visible on
     # the method card and matches the month the built-in answer was worked out for.
@@ -802,6 +847,7 @@ METHOD_OPTIONS: dict[str, dict[str, dict[str, Any]]] = {
 }
 
 DEFAULT_METHODS: dict[str, list[str]] = {
+    "survival_followup": ["survival.aft", "survival.rmst"],
     "lalonde": ["obs.aipw", "obs.weighting.ipw", "obs.matching.nn", "obs.outcome_regression"],
     "minimum_wage": ["did.twoway_2x2", "did.twfe"],
     "medicaid": ["did.callaway_santanna", "did.sun_abraham", "did.twfe"],
@@ -817,6 +863,7 @@ DEFAULT_METHODS: dict[str, list[str]] = {
 }
 
 DEFAULT_ESTIMAND: dict[str, str] = {
+    "survival_followup": "RMST_difference",
     "lalonde": "ATT", "minimum_wage": "ATT", "medicaid": "ATT", "close_elections": "LATE",
     "basque": "ATT", "encouragement": "LATE", "its_public_health": "ATT", "rct_noncompliance": "ITT",
     "project_star": "ITT", "draft_lottery": "LATE", "ihdp": "ATT", "california_tobacco": "ATT",
@@ -855,7 +902,7 @@ def materialise(example_id: str, store: Store, *, name: str | None = None) -> Pr
         "estimand": DEFAULT_ESTIMAND.get(example_id),
         "question": {
             "treatment": roles.get("treatment"),
-            "outcome": roles.get("outcome"),
+            "outcome": roles.get("outcome") or roles.get("duration"),
             "population": _population_phrase(example_id),
             "comparison": _comparison_phrase(meta["design"]),
         },
@@ -877,6 +924,7 @@ def materialise(example_id: str, store: Store, *, name: str | None = None) -> Pr
 
 def _population_phrase(example_id: str) -> str:
     return {
+        "survival_followup": "the complete-case simulated baseline population",
         "lalonde": "people eligible for the training programme",
         "minimum_wage": "fast-food restaurants in the two states",
         "medicaid": "adults in states that expanded",
@@ -894,6 +942,7 @@ def _population_phrase(example_id: str) -> str:
 
 def _comparison_phrase(design: str) -> str:
     return {
+        "survival": "baseline treatment 0 through the same follow-up horizon",
         "observational": "comparable people who did not take part",
         "did": "the same units before, and units not yet treated",
         "rd": "districts just the other side of the cutoff",
@@ -909,6 +958,12 @@ def _comparison_phrase(design: str) -> str:
 # ---------------------------------------------------------------------------
 
 TOURS: dict[str, list[dict[str, str]]] = {
+    "survival_followup": [
+        {"step": "1", "title": "Define the event and time zero", "focus": "board", "body": "One independent person per row; treatment is set at baseline. Follow-up is elapsed months until event or right censoring. Event is 1, censoring 0. No competing-event, delayed-entry or time-varying-treatment analysis is implied."},
+        {"step": "2", "title": "Choose the target before the estimate", "focus": "recommend", "body": "The horizon is fixed at eight months with observed follow-up in both groups. RMST is event-free time restricted to that horizon; it is neither unrestricted lifetime nor a hazard ratio."},
+        {"step": "3", "title": "Compare association with standardization", "focus": "dashboard", "body": "Raw unadjusted RMST intentionally misses the built-in standardized effect because baseline risk confounds treatment. AFT adjusts the correctly generated baseline model and averages both treatment predictions over the same population. In this simulation the assumptions hold by construction; model convergence and balance cannot verify them in an actual study."},
+        {"step": "4", "title": "Read the assumptions and uncertainty", "focus": "diagnose", "body": "Identification, censoring and model assumptions remain labelled untested. Subject bootstrap uncertainty refits the AFT model and re-averages the target in every sample. exp(beta) is a conditional common time factor and generally does not equal the RMST ratio at eight months."},
+    ],
     "lalonde": [
         {"step": "1", "title": "Read the question", "focus": "question",
          "body": "The strip at the top is the whole analysis in one sentence: the effect of the training "

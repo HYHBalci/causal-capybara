@@ -574,6 +574,20 @@ def honest_paragraph(results: Sequence[Mapping[str, Any]], *, tone: str = "stand
         )
 
     f = _facts(results)
+    survival_runs = [r for r in results if r.get("design") == "survival"]
+    if survival_runs:
+        lines = []
+        for r in survival_runs:
+            if r.get("status") != "ok":
+                continue
+            target = r.get("survival_target") or {}
+            scope = "conditional on baseline covariates" if r.get("estimand") == "time_ratio" else f"through horizon {_fmt(target.get('horizon'))} {target.get('time_unit', 'duration units')} in {target.get('population', 'the recorded target population')}"
+            lines.append(_para(f"{f['lab'](r)} reports {r.get('estimand_label') or r.get('estimand')} = {_fmt(r.get('estimate'))} ({_fmt_ci(r)})",
+                               f"Interpretation: {r.get('interpretation') or 'survival contrast'}; {scope}"))
+        return "\n\n".join([*lines,
+            "Raw Kaplan–Meier/RMST compares observed treatment groups and does not adjust baseline confounding. AFT marginal survival/RMST standardization requires justified consistency, no interference, exchangeability, positivity, conditional independent censoring and correct model form. These remain untested. Its exp(beta) is a conditional common time factor, not a hazard ratio, marginal causal effect or finite-horizon RMST ratio.",
+            "A common observed follow-up horizon does not establish conditional covariate or censoring support. Complete-case analysis may change the target population. Mixed horizons, units or observed-group and standardized targets cannot be averaged into one effect.",
+            _assumption_para(f, tone), _caveat_para(f, tone), _closing_para(f, tone)])
     paras: list[str] = [
         _question_para(f, tone),
         _estimate_para(f, tone),
@@ -1065,6 +1079,8 @@ def _default_title(spec: Mapping[str, Any], primary: Mapping[str, Any]) -> str:
     q = spec.get("question") or {}
     t = q.get("treatment") or primary.get("treatment")
     y = q.get("outcome") or primary.get("outcome")
+    if spec.get("design") == "survival" or primary.get("design") == "survival":
+        return f"Baseline {t or 'treatment'} and event-free follow-up"
     if t and y:
         return f"Effect of {t} on {y}"
     return "Analysis report"
@@ -1085,8 +1101,14 @@ def _question_text(spec: Mapping[str, Any], primary: Mapping[str, Any]) -> str:
     bits.append(label)
     estimand = spec.get("estimand") or primary.get("estimand")
     if estimand:
-        bits.append(f"Reported as the {estimand}, an average over "
-                    f"{ESTIMAND_POPULATION.get(estimand, 'the analysis sample')}")
+        target = primary.get("survival_target") or {}
+        if primary.get("design") == "survival":
+            bits.append(f"Reported as {estimand}; interpretation: {primary.get('interpretation') or 'survival contrast'}; target: {target.get('population', 'recorded population')}")
+            if target.get("horizon") is not None:
+                bits.append(f"Common horizon {_fmt(target['horizon'])} {target.get('time_unit', 'duration units')}")
+        else:
+            bits.append(f"Reported as the {estimand}, an average over "
+                        f"{ESTIMAND_POPULATION.get(estimand, 'the analysis sample')}")
     if q.get("population"):
         bits.append(f"Population as recorded in the spec: {q['population']}")
     if q.get("comparison"):
@@ -1599,12 +1621,7 @@ def _blocks_forest(sec: Mapping[str, Any], ctx: _Ctx) -> list[dict[str, Any]]:
         if cmp_obj.get("summary"):
             out.append(_b("para", text=str(cmp_obj["summary"])))
     else:
-        rows = [{"label": _label(r), "estimate": r.get("estimate"), "ci_low": r.get("ci_low"),
-                 "ci_high": r.get("ci_high"), "se": r.get("se"), "engine": r.get("engine"),
-                 "n": r.get("n"), "n_effective": r.get("n_effective"),
-                 "provisional": bool(r.get("provisional"))}
-                for r in runs if r.get("estimate") is not None]
-        out.append(_b("vega", id="forest", spec=vega.forest(rows),
+        out.append(_b("vega", id="forest", spec=compare._forest(runs),
                       title="Estimates across methods", caption=None))
     return out
 
@@ -1631,6 +1648,7 @@ def _blocks_estimates(sec: Mapping[str, Any], ctx: _Ctx) -> list[dict[str, Any]]
     if not runs:
         return [_b("note", text="No run is bound to this table.")]
     rows = []
+    survival = any(r.get("design") == "survival" for r in runs)
     for r in runs:
         row = {
             "Method": r.get("method_label") or r.get("method"),
@@ -1649,10 +1667,19 @@ def _blocks_estimates(sec: Mapping[str, Any], ctx: _Ctx) -> list[dict[str, Any]]
             "Provisional": ("yes -- " + "; ".join(r.get("provisional_reasons") or [])
                             if r.get("provisional") else "no"),
         }
+        if survival:
+            target = r.get("survival_target") or {}
+            row["Interval"] = row.pop("95% interval")
+            row.update({"Confidence level": _fmt(r.get("ci_level") or 0.95),
+                        "Interpretation": r.get("interpretation") or "not recorded", "Horizon": _fmt(target.get("horizon")),
+                        "Duration unit": target.get("time_unit") or "not recorded", "Target population": target.get("population") or "not recorded"})
         rows.append(row)
     caption = ("One row per method and engine. A row marked provisional is a number the software "
                "does not stand behind as it stands.")
-    return _text_blocks(sec) + [_b("table", columns=[c[1] for c in ESTIMATE_COLUMNS], rows=rows,
+    columns = [c[1] for c in ESTIMATE_COLUMNS]
+    if survival:
+        columns = ["Interval" if c == "95% interval" else c for c in columns] + ["Confidence level", "Interpretation", "Horizon", "Duration unit", "Target population"]
+    return _text_blocks(sec) + [_b("table", columns=columns, rows=rows,
                                    caption=caption)]
 
 

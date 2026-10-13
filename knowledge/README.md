@@ -14,10 +14,18 @@ python -m capy_knowledge release
 python -m capy_knowledge search "AIPW ATT overlap"
 python -m capy_knowledge evidence claim:aipw-att-positivity
 python -m capy_knowledge context "staggered DiD treated controls"
+python -m capy_knowledge coverage --method survival.aft
+python -m capy_knowledge audit-checklist --method survival.aft
 ```
 
 An independent installation uses `pip install ./knowledge`; optional MCP support
 uses `pip install './knowledge[mcp]'`. The ordinary library has no dependencies.
+The 0.2.0 wheel bundles the graph, MCP entry point and portable four-file audit
+skill. From any project after installation, use `capy-knowledge install-skill
+codex --project /absolute/project` (also `claude` or `antigravity`) and
+`capy-knowledge configure-client codex` to print configuration for the current
+interpreter. Skill installation is explicit and project scoped; existing
+customized skills and configuration files are preserved.
 Normal queries open published SQLite handles read-only and never rebuild assets,
 call a model, download a paper or access a study. Compilation is an explicit
 maintenance command: `python tools/build_knowledge.py`. It statically interprets
@@ -26,7 +34,7 @@ Rebuild or invalidate a release after changing its reviewed inputs.
 
 `capy_knowledge.KnowledgeBase(pack_path=None)` exposes `search`, `get_node`,
 `get_evidence`, `traverse`, `method_requirements`, `build_context`, and
-`release_info`. Responses carry snapshot/release, citation objects, omissions,
+`release_info`, `get_ontology_coverage` and `get_audit_checklist`. Responses carry snapshot/release, citation objects, omissions,
 status and pagination. Unknown IDs raise `KeyError`, invalid inputs `ValueError`,
 and freshness/rights refusals `KnowledgeError` with a machine-readable `code`.
 An API citation's `id`/`source_id` resolves through `get_node`; a DOI/link is
@@ -52,9 +60,13 @@ other graph cross-links may cycle or have multiple parents. Default traversal is
 one hop; explicit depth is bounded at three and does not establish entailment.
 
 Context retrieval preserves complete claim/evidence/qualification groups under
-a byte budget, reporting omissions. Coverage is deliberately narrow: AIPW/ATT,
-clipping, cross-fitting and staggered DiD have original agent-reviewed cards.
-The rest of the complete catalogue is imported with unassessed semantic review.
+a byte budget, reporting omissions. Every registry method/probe has an explicit
+coverage row, including concepts, references, audit questions, scope and gaps.
+Broad sourced explanations cover causal design and estimation families and
+survival/AFT; a smaller set of claims links exact original evidence notes.
+Catalogue metadata, editorial context and scoped evidence retain different
+review states. The graph is complete against its declared registry inventory;
+it does not claim exhaustive scientific or literature coverage.
 No reviewed evidence in this pack means an explicit gap, not evidence of absence.
 Structural validation cannot prove scientific truth or causal identification.
 
@@ -86,7 +98,7 @@ use recursively closed typed contracts. Schema assets are bound to the compiler'
 versioned contract; intentional schema changes require an explicit compiler update.
 Claim and exact-locator reviews do not mark a whole shared source as reviewed.
 
-The frozen `benchmark.json` covers 30 answerable tasks and unsupported/adversarial
-cases. Its review is agent contextual review, with independent human adjudication
+The frozen `benchmark.json` retains the original 40 fixtures and adds 15 causal
+domain/survival tasks. Its review is agent contextual review, with independent human adjudication
 still a release gate. Meaningful tests separately check scientific qualifiers,
 rights, freshness, budgets, deterministic compilation and read-only preservation.

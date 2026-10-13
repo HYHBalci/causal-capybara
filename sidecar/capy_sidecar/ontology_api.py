@@ -129,6 +129,16 @@ def knowledge_context(body: KnowledgeContextRequest):
     return call(lambda: assistant.knowledge().build_context(body.query, max_bytes=body.max_bytes))
 
 
+@router.get("/knowledge/coverage")
+def coverage(method_id: str | None = None, limit: int = 20, cursor: str | None = None):
+    return call(lambda: assistant.knowledge().get_ontology_coverage(method_id=method_id, limit=limit, cursor=cursor))
+
+
+@router.get("/knowledge/audit-checklist")
+def audit_checklist(method_id: str | None = None):
+    return call(lambda: assistant.knowledge().get_audit_checklist(method_id=method_id))
+
+
 @router.get("/assistant/session")
 def session():
     return assistant.SERVICE.session()

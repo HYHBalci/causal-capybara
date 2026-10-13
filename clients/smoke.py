@@ -77,7 +77,7 @@ class WireClient:
 
     def initialize(self, version: str = "2025-11-25"):
         value = self.request("initialize", {"protocolVersion": version, "capabilities": {},
-            "clientInfo": {"name": "capy-ontology-smoke", "version": "0.1.0"}})
+            "clientInfo": {"name": "capy-ontology-smoke", "version": "0.2.0"}})
         if "result" not in value:
             raise AssertionError("MCP initialization failed.")
         self.send({"jsonrpc": "2.0", "method": "notifications/initialized"})
@@ -115,7 +115,7 @@ def protocol_smoke(pack: str | None = None) -> dict:
         initialized = client.initialize()
         tools = client.request("tools/list")["result"]["tools"]
         expected = {"search_knowledge", "get_knowledge_node", "get_source_evidence", "traverse_relations",
-                    "get_method_requirements", "build_research_context"}
+                    "get_method_requirements", "build_research_context", "get_ontology_coverage", "get_audit_checklist"}
         if {item["name"] for item in tools} != expected:
             raise AssertionError("Unexpected tools were advertised.")
         result = client.request("tools/call", {"name": "build_research_context", "arguments": {
@@ -127,6 +127,21 @@ def protocol_smoke(pack: str | None = None) -> dict:
             raise AssertionError("Context omitted its knowledge snapshot.")
         if not body.get("groups") or not body.get("citations"):
             raise AssertionError("The seed probe returned no complete cited evidence group.")
+        for name, arguments in (
+            ("get_ontology_coverage", {"limit": 2}),
+            ("get_audit_checklist", {"method_id": "method:survival.aft"}),
+        ):
+            response = client.request("tools/call", {"name": name, "arguments": arguments})["result"]
+            if response.get("isError"):
+                raise AssertionError("Ontology coverage or audit retrieval failed.")
+            payload = response.get("structuredContent") or json.loads(response["content"][0]["text"])
+            if payload.get("snapshot_id") != body["snapshot_id"]:
+                raise AssertionError("Ontology retrieval changed its knowledge snapshot.")
+            if name == "get_ontology_coverage" and not payload.get("coverage_rows"):
+                raise AssertionError("Coverage probe returned no declared rows.")
+            if name == "get_audit_checklist" and (not payload.get("checks") or any(
+                    check.get("assessment") != "not_assessed" for check in payload["checks"])):
+                raise AssertionError("Audit retrieval must return planning checks without inventing assessments.")
         resources = client.request("resources/list")["result"]["resources"]
         prompts = client.request("prompts/list")["result"]["prompts"]
         return {"status": "passed", "protocol_version": initialized["protocolVersion"],

@@ -104,6 +104,7 @@ def cmd_spec(args: argparse.Namespace) -> int:
                      "population": args.population, "comparison": args.comparison},
         "roles": {
             "treatment": args.treatment, "outcome": args.outcome,
+            "duration": args.duration, "event": args.event,
             "unit": args.unit, "time": args.time,
             "confounders": _split(args.confounders),
             "instruments": _split(args.instruments),
@@ -444,6 +445,8 @@ def build_parser() -> argparse.ArgumentParser:
     s.add_argument("--estimand")
     s.add_argument("--treatment")
     s.add_argument("--outcome")
+    s.add_argument("--duration", help="elapsed positive follow-up from a common time zero")
+    s.add_argument("--event", help="single event column: 1 event, 0 right censored")
     s.add_argument("--unit")
     s.add_argument("--time")
     s.add_argument("--confounders")

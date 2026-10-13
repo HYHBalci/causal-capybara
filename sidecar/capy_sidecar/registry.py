@@ -361,6 +361,8 @@ def _has_role(roles: dict[str, Any], role: str) -> bool:
 ROLE_LABELS = {
     "treatment": "a treatment",
     "outcome": "an outcome",
+    "duration": "elapsed follow-up duration",
+    "event": "an event indicator (1 event, 0 right censored)",
     "unit": "a unit id",
     "time": "a time variable",
     "confounders": "at least one measured confounder",

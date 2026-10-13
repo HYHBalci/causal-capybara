@@ -284,7 +284,7 @@ function MethodCardView({
   const rHealthy = !!health?.r?.available
   const pyAvailable = health?.python?.available ?? card.python_available
   const shownOptions = card.options.filter(
-    (o) => profile === 'advanced' || (profile === 'standard' && o.profile === 'standard'),
+    (o) => o.profile === 'beginner' || profile === 'advanced' || (profile === 'standard' && o.profile === 'standard'),
   )
 
   return (
@@ -456,6 +456,7 @@ function OptionField({
       <div className="field">
         <label htmlFor={id}>{option.label}</label>
         <select id={id} value={String(v ?? '')} onChange={(e) => onChange(e.target.value)}>
+          {option.default == null && <option value="">Choose…</option>}
           {(option.choices ?? []).map((c) => <option key={c} value={c}>{choiceLabel(c)}</option>)}
         </select>
         {option.help && <span className="hint">{option.help}</span>}

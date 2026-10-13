@@ -1,8 +1,8 @@
 import { researchApi } from './api'
 import { filterKnowledge, record, words } from './helpers'
-import type { KnowledgeCitation, KnowledgeDetail, KnowledgeEnvelope, KnowledgeNode, KnowledgeRelation, KnowledgeSearch, ResearchRecord } from './types'
+import type { KnowledgeAudit, KnowledgeCitation, KnowledgeCoverage, KnowledgeDetail, KnowledgeEnvelope, KnowledgeNode, KnowledgeRelation, KnowledgeSearch, ResearchRecord } from './types'
 
-interface KnowledgePack { snapshot_id: string; release: string; nodes: KnowledgeNode[]; relations: KnowledgeRelation[]; release_info: ResearchRecord; catalogueFallback?: boolean }
+interface KnowledgePack { snapshot_id: string; release: string; nodes: KnowledgeNode[]; relations: KnowledgeRelation[]; release_info: ResearchRecord; ontology?: ResearchRecord; catalogueFallback?: boolean }
 let bundled: Promise<KnowledgePack> | null = null
 const loaders = import.meta.glob('../generated/knowledge*.json')
 
@@ -28,7 +28,7 @@ export async function bundledKnowledge(): Promise<KnowledgePack> {
           })
           return { ...node, citations: node.citations?.length ? node.citations : citations, relations: relations.filter((edge) => edge.subject_id === node.id || edge.object_id === node.id), declared_registry: node.declared_registry ?? node.registry }
         })
-        return { snapshot_id: words(pack.snapshot_id ?? pack.snapshot) || 'bundled-knowledge', release: words(pack.release) || 'bundled', nodes: normalized, relations,
+        return { snapshot_id: words(pack.snapshot_id ?? pack.snapshot) || 'bundled-knowledge', release: words(pack.release) || 'bundled', nodes: normalized, relations, ontology: record(pack.ontology),
           release_info: record(pack.release_info ?? { counts: pack.counts, coverage: pack.coverage, provenance: pack.provenance, rights_summary: 'Individual record permissions are preserved. External publication bodies are governed separately.' }) }
       }
     }
@@ -57,6 +57,22 @@ export async function bundledKnowledge(): Promise<KnowledgePack> {
       release_info: { counts: { nodes: nodes.length, relations: relations.length }, coverage: 'Installed catalogue only; scientific evidence support is unreviewed.' } }
   })()
   return bundled
+}
+
+export async function loadMethodAudit(id: string, offline: boolean, snapshot: string, signal?: AbortSignal): Promise<{ coverage: KnowledgeCoverage; audit: KnowledgeAudit }> {
+  if (!offline) {
+    const [coverage, audit] = await Promise.all([researchApi.coverage(id, signal), researchApi.audit(id, signal)])
+    if (coverage.snapshot_id !== snapshot || audit.snapshot_id !== snapshot) throw new Error('Audit guidance belongs to a different knowledge snapshot. Retry this record.')
+    return { coverage, audit }
+  }
+  const pack = await bundledKnowledge()
+  if (pack.snapshot_id !== snapshot) throw new Error('Installed audit guidance belongs to a different knowledge snapshot.')
+  const rows = (record(pack.ontology).coverage as ResearchRecord[] ?? []).filter((row) => row.method_id === id)
+  const ids = new Set(rows.flatMap((row) => row.audit_ids as string[] ?? []))
+  const checks: ResearchRecord[] = (record(pack.ontology).audits as ResearchRecord[] ?? []).filter((check) => ids.has(words(check.id))).map((check) => ({ ...check, assessment: 'not_assessed' }))
+  const citations = [...new Set([...rows, ...checks].flatMap((item) => item.source_ids as string[] ?? []))].flatMap((source) => pack.nodes.find((node) => node.id === source)?.citations ?? [])
+  const base = { ...envelope(pack), citations }
+  return { coverage: { ...base, coverage_rows: rows, coverage_summary: {} }, audit: { ...base, checks } }
 }
 
 function envelope(pack: KnowledgePack): KnowledgeEnvelope {

@@ -13,7 +13,7 @@ from urllib.parse import urlsplit
 
 SCHEMA_VERSION = "capy.knowledge.v1"
 RESPONSE_VERSION = "capy.knowledge.response.v1"
-RELEASE = "0.1.0"
+RELEASE = "0.2.0"
 KINDS = {"concept", "design", "estimand", "method", "probe", "assumption",
          "diagnostic", "softwarepackage", "example", "study", "source",
          "evidencelocator", "claim", "review"}
@@ -124,6 +124,9 @@ def validate_records(nodes, relations):
         by_id[ident] = node
         if node.get("kind") not in KINDS:
             errors.append("Unknown node kind: " + ident)
+        if "ontology_role" in node and (node.get("kind") != "concept" or node["ontology_role"] not in {
+                "causal_foundation", "method_idea", "good_practice", "scope_note"}):
+            errors.append("Invalid typed ontology role: " + ident)
         for key in ("title", "summary"):
             if not isinstance(node.get(key), str):
                 errors.append("Missing text field: " + ident)

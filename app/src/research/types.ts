@@ -49,6 +49,8 @@ export interface KnowledgeSearch extends KnowledgeEnvelope { results: KnowledgeN
 export interface KnowledgeDetail extends KnowledgeEnvelope { node: KnowledgeNode | null }
 export interface KnowledgeRelations extends KnowledgeEnvelope { nodes: KnowledgeNode[]; relations: KnowledgeRelation[] }
 export interface KnowledgeEvidence extends KnowledgeEnvelope { groups: ResearchRecord[]; gaps: unknown[] }
+export interface KnowledgeCoverage extends KnowledgeEnvelope { coverage_rows: ResearchRecord[]; coverage_summary: ResearchRecord; interpretation?: string }
+export interface KnowledgeAudit extends KnowledgeEnvelope { checks: ResearchRecord[]; interpretation?: string }
 export interface ResearchSelection extends ResearchRecord { kind: string; id: string; title: string }
 export type AssistantProvider = 'offline' | 'ollama' | 'openai-compatible'
 

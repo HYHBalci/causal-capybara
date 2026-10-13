@@ -1,0 +1,11 @@
+{
+  "files": {
+    "SKILL.md": "7fcb168bb609d9dfa583ccbcceebbe52370486449c12a973a7cb6a3cc78ce62a",
+    "references/causal-audit.md": "707151ba1bbd863b2bca8264c9937fb3578f25783e1be33c78c7d211c0b3c934",
+    "references/survival-aft.md": "142709455298b120eaa50be3ea953d11a6d4daa91461f71270e141a205f6fde1",
+    "templates/audit-finding.md": "4dfbfd3cdf282153385a9b61e8381e1276a74bfb507365a3acd6e2e0337894ca"
+  },
+  "license": "Apache-2.0",
+  "name": "causal-capybara-research",
+  "schema_version": "capy.skill.bundle.v1"
+}

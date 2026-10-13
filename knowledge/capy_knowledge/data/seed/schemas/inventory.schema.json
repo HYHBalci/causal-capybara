@@ -62,6 +62,7 @@
                   },
                   "r": {
                     "type": [
+                      "boolean",
                       "null",
                       "string"
                     ]
@@ -1201,6 +1202,7 @@
                 },
                 "worry_when": {
                   "type": [
+                    "null",
                     "string"
                   ]
                 }
@@ -1315,6 +1317,7 @@
               },
               "r": {
                 "type": [
+                  "boolean",
                   "null",
                   "string"
                 ]
@@ -1706,6 +1709,11 @@
               "type": [
                 "string"
               ]
+            },
+            "engines/python/capy_py/survival.py": {
+              "type": [
+                "string"
+              ]
             }
           },
           "additionalProperties": false,
@@ -1723,6 +1731,7 @@
             "engines/python/capy_py/rct.py",
             "engines/python/capy_py/rd.py",
             "engines/python/capy_py/sensitivity.py",
+            "engines/python/capy_py/survival.py",
             "engines/python/capy_py/synth.py",
             "engines/registry/methods.extra.yaml"
           ]

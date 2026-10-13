@@ -203,7 +203,7 @@ function HeroBand({ results, allRuns }: { results: RunResult[]; allRuns: RunResu
 
       {rows.length > 0 && (
         <div className="hero-forest">
-          <VegaChart spec={forestSpec(rows, results[0]?.outcome ?? 'the outcome')}
+          <VegaChart spec={forestSpec(rows, results[0]?.outcome ?? 'the outcome', results[0]?.estimand, results[0]?.survival_target?.time_unit)}
                      height={Math.max(rows.length * 24 + 24, 80)} />
         </div>
       )}
@@ -212,7 +212,7 @@ function HeroBand({ results, allRuns }: { results: RunResult[]; allRuns: RunResu
         <div className="hero-single">
           <span className="hero-number num">{fmtNum(results[0].estimate)}</span>
           <span className="hero-ci num">
-            95% CI [{fmtNum(results[0].ci_low)}, {fmtNum(results[0].ci_high)}]
+            {Math.round((results[0].ci_level ?? 0.95) * 100)}% CI [{fmtNum(results[0].ci_low)}, {fmtNum(results[0].ci_high)}]
           </span>
           <span className="hint">
             One method is not a comparison. Add a second before treating this as the answer.
@@ -228,6 +228,9 @@ function HeroBand({ results, allRuns }: { results: RunResult[]; allRuns: RunResu
       ) : null}
 
       <ProvisionalNotice results={results} />
+      {results.some((r) => r.design === 'survival') && (
+        <p className="hint">Raw Kaplan–Meier/RMST compares observed groups. AFT survival/RMST standardization needs justified causal, censoring and model assumptions. Its conditional time factor is a separate model association; these meanings cannot be averaged together.</p>
+      )}
 
       <div className="row hero-actions">
         <InterpretButton results={results} />
@@ -243,11 +246,12 @@ function HeroBand({ results, allRuns }: { results: RunResult[]; allRuns: RunResu
 
 function questionOf(r?: RunResult): string {
   if (!r) return ''
+  if (r.design === 'survival') return `Baseline treatment ${r.treatment ?? 'treatment'} and event-free follow-up`
   return `Effect of ${r.treatment ?? 'treatment'} on ${r.outcome ?? 'outcome'}`
 }
 
 function sameSign(rs: RunResult[]): boolean {
-  const signs = new Set(rs.map((r) => Math.sign(r.estimate ?? 0)))
+  const signs = new Set(rs.map((r) => Math.sign((r.estimate ?? 0) - (r.estimand === 'time_ratio' ? 1 : 0))))
   return signs.size === 1
 }
 
@@ -343,7 +347,7 @@ function EstimatesTab({ results }: { results: RunResult[] }) {
           <tr>
             <th>Method</th><th>Engine</th><th>Package</th><th className="n">N</th>
             <th className="n">N treated</th><th className="n">Estimate</th><th className="n">SE</th>
-            <th className="n">95% CI</th><th className="n">p</th><th className="n">ESS</th><th>Inference</th>
+            <th className="n">Confidence interval</th><th className="n">p</th><th className="n">ESS</th><th>Inference</th>
           </tr>
         </thead>
         <tbody>
@@ -364,7 +368,7 @@ function EstimatesTab({ results }: { results: RunResult[] }) {
                 <td className="n"><strong>{fmtNum(r.estimate)}</strong></td>
                 <td className="n">{fmtNum(r.se)}</td>
                 <td className="n">
-                  {r.ci_low != null ? `[${fmtNum(r.ci_low)}, ${fmtNum(r.ci_high)}]` : '—'}
+                  {r.ci_low != null ? `${Math.round((r.ci_level ?? 0.95) * 100)}% [${fmtNum(r.ci_low)}, ${fmtNum(r.ci_high)}]` : '—'}
                 </td>
                 <td className="n">{r.p_value != null ? r.p_value.toFixed(4) : '—'}</td>
                 <td className="n">{r.n_effective != null ? fmtNum(r.n_effective) : '—'}</td>
@@ -803,7 +807,13 @@ function ClassicTab({ results }: { results: RunResult[] }) {
 export function forestSpec(
   rows: Record<string, unknown>[],
   outcome: string,
+  estimand?: string | null,
+  timeUnit?: string,
 ): Record<string, unknown> {
+  const axisTitle = estimand === 'time_ratio' ? 'Conditional AFT time factor (null = 1)'
+    : estimand === 'survival_difference' ? 'Survival probability difference (treatment 1 − 0)'
+    : estimand === 'RMST_difference' ? `Restricted event-free time difference (${timeUnit ?? 'duration units'})`
+    : `Effect on ${outcome}`
   return {
     $schema: 'https://vega.github.io/schema/vega-lite/v6.json',
     config: {
@@ -819,12 +829,12 @@ export function forestSpec(
     layer: [
       {
         mark: { type: 'rule', color: '#6f6862', strokeDash: [4, 3] },
-        encoding: { x: { datum: 0, type: 'quantitative' } },
+        encoding: { x: { datum: estimand === 'time_ratio' ? 1 : 0, type: 'quantitative' } },
       },
       {
         mark: { type: 'rule', size: 2, opacity: 0.85 },
         encoding: {
-          x: { field: 'ci_low', type: 'quantitative', title: `Effect on ${outcome}`, scale: { zero: false, nice: true } },
+          x: { field: 'ci_low', type: 'quantitative', title: axisTitle, scale: { zero: false, nice: true } },
           x2: { field: 'ci_high' },
           y: { field: 'label', type: 'nominal', sort: null, title: null, axis: { labelLimit: 260 } },
           color: engineColor(),

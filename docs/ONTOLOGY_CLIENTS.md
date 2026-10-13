@@ -1,6 +1,11 @@
 # MCP clients and portable research skill
 
 Install `knowledge[mcp]` into an environment accessible to the selected client.
+The 0.2.0 wheel includes the compiled graph and all four skill files. Install a
+downloaded wheel with `python -m pip install 'capy_knowledge-0.2.0-py3-none-any.whl[mcp]'`.
+The graph/library and skill installer also work without the optional `[mcp]`
+dependencies. A desktop installation or source checkout is unnecessary after
+wheel installation.
 Use `python -m pip install -c knowledge/constraints-mcp.txt './knowledge[mcp]'`
 from the checkout to reproduce the tested optional runtime closure. The
 Windows-only dependency has an explicit platform marker.
@@ -9,9 +14,9 @@ generator prints by default; `--output` creates a new file and refuses overwrite
 Review a merge into existing settings yourself so unrelated servers remain intact.
 
 ```sh
-python clients/configure.py codex --python /absolute/venv/bin/python
-python clients/configure.py claude --python /absolute/venv/bin/python
-python clients/configure.py antigravity --python /absolute/venv/bin/python
+capy-knowledge configure-client codex --python /absolute/venv/bin/python
+capy-knowledge configure-client claude --python /absolute/venv/bin/python
+capy-knowledge configure-client antigravity --python /absolute/venv/bin/python
 ```
 
 On Windows pass the absolute `.venv\Scripts\python.exe` path. Arguments are arrays,
@@ -31,16 +36,20 @@ when Python imports take longer than the host's default startup grace period.
 Install into an explicitly selected project:
 
 ```sh
-python clients/install_skill.py codex --project /absolute/project
-python clients/install_skill.py claude --project /absolute/project
-python clients/install_skill.py antigravity --project /absolute/project
+capy-knowledge install-skill codex --project /absolute/project
+capy-knowledge install-skill claude --project /absolute/project
+capy-knowledge install-skill antigravity --project /absolute/project
 ```
 
-The installer copies this repository's public skill, validates destination scope,
+The installer verifies and copies the wheel's bundled public skill, validates destination scope,
 rejects symlink traversal and refuses a different existing skill. Codex and
 Antigravity share the same modern project path and can use the same installed
 copy. No global user settings are changed. Installation does not approve a server
-or a study action; follow the host's normal trust UI.
+or a study action; follow the host's normal trust UI. The repository's
+`clients/configure.py` and `clients/install_skill.py` remain equivalent source
+checkout entry points. `clients/standalone_smoke.py` tests an installed wheel from
+a fresh directory with Python source imports disabled, including all three
+project skill destinations and configuration formats.
 
 After discovery, ask the same question in each host:
 
@@ -49,12 +58,13 @@ After discovery, ask the same question in each host:
 > locators, review status, gaps and the knowledge snapshot. Make no study changes.
 
 Record the host version, skill discovery, tool discovery, query result, citations
-and snapshot. A host that cannot consume resources/prompts should call the six
+and snapshot. A host that cannot consume resources/prompts should call the eight
 tools directly. The portable Agent Skills frontmatter does not guarantee identical
 host discovery or behavior.
 
-The executable `python clients/smoke.py` exercises stdio negotiation, discovery
-and cited seed context, parses each generated host configuration and inventories
+The executable `python clients/smoke.py` exercises stdio negotiation, eight-tool
+discovery, cited seed context, coverage and survival audit questions; it parses
+each generated host configuration and inventories
 available CLI versions. It reports `actual_query` and `skill_discovery` as
 `not_run`; those states cannot satisfy the actual-host release gate.
 

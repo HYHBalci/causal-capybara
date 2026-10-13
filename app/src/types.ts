@@ -7,11 +7,12 @@
 
 export type Design =
   | 'undecided' | 'rct' | 'observational' | 'did' | 'rd' | 'iv'
-  | 'synth' | 'its' | 'mediation' | 'longitudinal'
+  | 'synth' | 'its' | 'mediation' | 'longitudinal' | 'survival'
 
 export type Estimand =
   | 'ATE' | 'ATT' | 'ATC' | 'ATO' | 'LATE' | 'CACE' | 'LATET' | 'ITT'
   | 'cohort_ATT' | 'CATE' | 'GATE' | 'dose_response'
+  | 'survival_difference' | 'RMST_difference' | 'time_ratio'
 
 export type Profile = 'beginner' | 'standard' | 'advanced'
 export type AssumptionStatus = 'assumed' | 'supported' | 'weakened' | 'untested' | 'not_applicable'
@@ -23,6 +24,8 @@ export type ColumnKind = 'binary' | 'continuous' | 'categorical' | 'datetime' | 
 export interface Roles {
   treatment?: string | null
   outcome?: string | null
+  duration?: string | null
+  event?: string | null
   unit?: string | null
   time?: string | null
   confounders?: string[]
@@ -156,6 +159,8 @@ export interface RunResult {
   design: string
   estimand?: string | null
   estimand_label?: string | null
+  interpretation?: string
+  survival_target?: { horizon?: number | null; time_unit: string; population: string; contrast: string; distribution?: string; scale?: string; common_log_time_scale?: number }
   treatment?: string | null
   outcome?: string | null
   roles_used?: Roles
@@ -202,7 +207,8 @@ export type RunSummary = Pick<
   RunResult,
   'run_id' | 'spec_id' | 'timestamp' | 'status' | 'design' | 'estimand' | 'estimand_label'
   | 'method' | 'method_label' | 'engine' | 'package' | 'package_version' | 'treatment' | 'outcome'
-  | 'estimate' | 'se' | 'ci_low' | 'ci_high' | 'p_value' | 'n' | 'n_treated' | 'n_control'
+  | 'estimate' | 'se' | 'ci_low' | 'ci_high' | 'ci_level' | 'p_value' | 'n' | 'n_treated' | 'n_control'
+  | 'interpretation' | 'survival_target'
   | 'n_effective' | 'inference' | 'provisional' | 'provisional_reasons' | 'elapsed_ms' | 'error'
 > & { n_warnings?: number }
 
@@ -269,7 +275,7 @@ export interface MethodOption {
   default?: unknown
   label: string
   help?: string
-  profile: 'standard' | 'advanced'
+  profile: Profile
   choices?: string[]
   min?: number
   max?: number

@@ -84,7 +84,7 @@ jobs:
             python "tests/python/test_$t.py"
           done
       - name: Application regressions and offline studies
-        run: python -m pytest tests/python/test_learn.py tests/python/test_literature.py tests/python/test_recents.py tests/python/test_realdata.py tests/python/test_robustness.py tests/python/test_readiness.py tests/python/test_scripts.py tests/python/test_catalogue_concurrency.py tests/python/test_engine_install.py tests/python/test_assistant_ontology.py tests/python/test_ontology_adversarial.py tests/python/test_store_lifecycle.py -q
+        run: python -m pytest tests/python/test_learn.py tests/python/test_literature.py tests/python/test_recents.py tests/python/test_realdata.py tests/python/test_robustness.py tests/python/test_readiness.py tests/python/test_scripts.py tests/python/test_catalogue_concurrency.py tests/python/test_engine_install.py tests/python/test_assistant_ontology.py tests/python/test_ontology_adversarial.py tests/python/test_store_lifecycle.py tests/python/test_survival.py tests/python/test_ontology_http_audits.py -q
       - name: A run validates against capy.result.v1, end to end
         shell: bash
         run: |

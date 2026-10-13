@@ -27,6 +27,7 @@ SKETCH_FOR_DESIGN = {
     "its": "its_series",
     "mediation": "mediation_paths",
     "longitudinal": "person_time",
+    "survival": "survival_followup",
 }
 
 
@@ -646,7 +647,48 @@ SKETCH_LABELS = {
     "person_time": "Person-time and treatment switching",
 }
 
+def _sketch_survival(df: pd.DataFrame, spec: dict[str, Any], out: dict[str, Any]) -> None:
+    from capy_py.survival import km_curve
+
+    treatment, duration, event = _need(spec, "treatment", "duration", "event")
+    out["title"] = "Observed event-free follow-up"
+    work = _clean(df, [treatment, duration, event])
+    if work.empty:
+        out["summary"] = "No complete rows on the current survival roles."
+        return
+    a = capy_roles.numeric(work, treatment, "baseline treatment")
+    t = capy_roles.numeric(work, duration, "follow-up duration")
+    e = capy_roles.numeric(work, event, "event indicator")
+    if not np.all(np.isfinite(t)) or np.any(t <= 0) or not np.all(np.isin(a, [0, 1])) or not np.all(np.isin(e, [0, 1])):
+        out["summary"] = "Use positive finite elapsed durations, baseline treatment 0/1 and a single event 1/right censoring 0. Competing-event codes are unsupported."
+        return
+    rows, groups = [], []
+    for g in (0, 1):
+        mask = a == g
+        if not np.any(mask):
+            out["summary"] = "Both baseline treatment groups are needed before drawing a comparison."
+            return
+        u, s = km_curve(t[mask], e[mask])
+        rows.append({"time": 0.0, "survival": 1.0, "group": f"Treatment {g}"})
+        rows.extend({"time": float(x), "survival": float(y), "group": f"Treatment {g}"} for x, y in zip(u, s))
+        groups.append({"treatment": g, "n": int(mask.sum()), "events": int(e[mask].sum()),
+                       "right_censored": int(np.sum(e[mask] == 0)), "maximum_followup": float(t[mask].max())})
+    _art(out, "vega", "Unadjusted Kaplan–Meier curves", {
+        "$schema": "https://vega.github.io/schema/vega-lite/v5.json", "data": {"values": rows},
+        "mark": {"type": "line", "interpolate": "step-after"}, "encoding": {
+            "x": {"field": "time", "type": "quantitative", "title": "Elapsed follow-up (duration column units)"},
+            "y": {"field": "survival", "type": "quantitative", "scale": {"domain": [0, 1]}, "title": "Event-free probability"},
+            "color": {"field": "group", "type": "nominal"}}},
+        caption="Observed-group associations. Raw curves require independent censoring within groups; they do not adjust baseline confounding.", explain_key="method.survival.kaplan_meier")
+    _art(out, "table", "Events and right censoring", groups)
+    out["values"] = {"groups": groups, "common_maximum_followup": min(row["maximum_followup"] for row in groups)}
+    out["summary"] = "Define one event and a common time zero; choose an explicit duration unit and supported horizon on the method cards. The preview shows observed groups, not identified causal survival."
+    out["warnings"].append({"level": "caution", "message": "Censoring, treatment support and identification assumptions remain untested. Competing events, delayed entry, interval censoring and time-varying treatment require other adapters."})
+    out["ready"] = True
+
+
 _SKETCHES = {
+    "survival_followup": _sketch_survival,
     "overlap": _sketch_overlap,
     "baseline_balance": _sketch_baseline_balance,
     "adoption": _sketch_adoption,
@@ -680,7 +722,7 @@ def design_facts(df: pd.DataFrame, spec: dict[str, Any]) -> dict[str, Any]:
             shape = capy_roles.panel_shape(work, roles["unit"], roles["time"])
             facts.update({"n_units": shape["n_units"], "n_periods": shape["n_periods"],
                           "balanced": shape["balanced"]})
-        if design in ("observational", "longitudinal", "mediation") and roles.get("treatment"):
+        if design in ("observational", "longitudinal", "mediation", "survival") and roles.get("treatment"):
             confs = capy_roles.confounders(spec)
             if confs:
                 work = _clean(df, [roles["treatment"]] + confs)

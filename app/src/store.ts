@@ -1040,7 +1040,9 @@ async function loadProject(
 export function questionText(spec: Spec): string {
   const t = spec.question.treatment ?? spec.roles.treatment ?? 'a treatment'
   const y = spec.question.outcome ?? spec.roles.outcome ?? 'an outcome'
-  let text = `Effect of ${t} on ${y}`
+  let text = spec.design === 'survival'
+    ? `Compare baseline ${t} for event ${spec.roles.event ?? 'an event'} over ${spec.roles.duration ?? 'elapsed follow-up'}`
+    : `Effect of ${t} on ${y}`
   if (spec.question.population) text += ` for ${spec.question.population}`
   if (spec.question.comparison) text += `, compared to ${spec.question.comparison}`
   return text

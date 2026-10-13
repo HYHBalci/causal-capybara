@@ -227,5 +227,93 @@ def test_budget_limited_mcp_queries_leave_pack_and_statistical_modules_untouched
     call(kb, monkeypatch, "traverse_relations", {"node_id": "obs.aipw", "depth": 1, "limit": 50})
     call(kb, monkeypatch, "get_method_requirements", {"method_id": "obs.aipw"})
     call(kb, monkeypatch, "build_research_context", {"query": "AIPW clipping", "max_bytes": 8192})
+    call(kb, monkeypatch, "get_ontology_coverage", {"limit": 50})
+    call(kb, monkeypatch, "get_audit_checklist", {"method_id": "obs.aipw"})
     assert hashes() == before_bytes
     assert not any(name.startswith(("capy_py", "capy_sidecar")) for name in set(sys.modules) - before_modules)
+
+
+@pytest.mark.parametrize("budget", [8192, 16384])
+def test_coverage_budget_preserves_complete_records_summary_and_cursor(kb, monkeypatch, budget):
+    full = full_read(kb, monkeypatch, "coverage", limit=100)
+    assert full["coverage_rows"] and full["coverage_summary"]
+    for row in full["coverage_rows"]:
+        assert row["record_kind"] in {"method", "probe"}
+        assert all(key in row for key in ("method_id", "coverage_level", "concept_ids", "audit_ids", "source_ids", "claim_ids", "scope", "gaps", "review", "rights", "citations"))
+    expected = {row["method_id"]: row for row in full["coverage_rows"]}
+    assert len(canonical(full).encode("utf-8")) > budget
+    monkeypatch.setattr(core, "MAX_RESPONSE_BYTES", budget)
+
+    value = call(kb, monkeypatch, "get_ontology_coverage", {"limit": 50})
+    assert_envelope(value, kb, budget)
+    assert value["method_id"] is None
+    assert value["coverage_summary"] == full["coverage_summary"]
+    assert isinstance(value["coverage_rows"], list)
+    assert value["status"] in {"partial", "abstained"}
+    assert value["omissions"] or value["pagination"]["truncated"]
+    assert all(row == expected[row["method_id"]] for row in value["coverage_rows"])
+    if value["pagination"]["next_cursor"] is not None:
+        following = call(kb, monkeypatch, "get_ontology_coverage", {"limit": 50, "cursor": value["pagination"]["next_cursor"]})
+        assert_envelope(following, kb, budget)
+        assert all(row == expected[row["method_id"]] for row in following["coverage_rows"])
+        assert not {row["method_id"] for row in value["coverage_rows"]}.intersection(row["method_id"] for row in following["coverage_rows"])
+
+
+@pytest.mark.parametrize("budget", [2048, 8192])
+def test_audit_budget_withholds_whole_checks_preserving_guidance_contract(kb, monkeypatch, budget):
+    full = full_read(kb, monkeypatch, "checklist")
+    assert full["checks"] and full["coverage"] and full["purpose"]
+    assert all(check["assessment"] == "not_assessed" for check in full["checks"])
+    assert len(canonical(full).encode("utf-8")) > budget
+    monkeypatch.setattr(core, "MAX_RESPONSE_BYTES", budget)
+
+    value = call(kb, monkeypatch, "get_audit_checklist", {})
+    assert_envelope(value, kb, budget)
+    assert value["method_id"] is None
+    assert value["purpose"] == full["purpose"]
+    assert isinstance(value["coverage"], dict)
+    assert value["checks"] == []
+    assert value["citations"] == []
+    assert value["status"] == "abstained"
+    assert value["omissions"] and value["pagination"]["truncated"]
+
+
+def test_method_audit_returns_whole_scoped_checks_without_assessment(kb, monkeypatch):
+    value = call(kb, monkeypatch, "get_audit_checklist", {"method_id": "obs.aipw"})
+    assert_envelope(value, kb, core.MAX_RESPONSE_BYTES)
+    assert value["method_id"] == "obs.aipw" and value["checks"]
+    full = full_read(kb, monkeypatch, "checklist", method_id="obs.aipw")
+    assert value["checks"] == full["checks"]
+    for check in value["checks"]:
+        assert check["assessment"] == "not_assessed"
+        assert check["id"].startswith("audit:")
+        assert check["required_evidence"] and check["question"]
+        assert all(key in check for key in ("scope", "conditions", "rights", "review", "citations", "concept_ids", "source_ids"))
+
+
+def test_real_ontology_resources_match_tool_scoping_and_leave_audits_unassessed(kb, monkeypatch):
+    entry = create_server(kb).get_request_handler("resources/read")
+    assert entry is not None
+
+    async def read(uri):
+        def deny_network(*args, **kwargs):
+            raise AssertionError("Knowledge resource attempted network access")
+        with monkeypatch.context() as offline:
+            offline.setattr(socket, "create_connection", deny_network)
+            offline.setattr(socket.socket, "connect", deny_network)
+            result = await entry.handler(None, types.ReadResourceRequestParams(uri=uri))
+        assert len(result.contents) == 1
+        assert str(result.contents[0].uri) == uri
+        value = json.loads(result.contents[0].text)
+        assert_envelope(value, kb, core.MAX_RESPONSE_BYTES)
+        return value
+
+    first_page = asyncio.run(read("capy://ontology/coverage"))
+    assert first_page == kb.coverage(limit=50)
+    scoped = asyncio.run(read("capy://ontology/coverage/survival.aft"))
+    assert scoped["method_id"] == "survival.aft"
+    assert [row["method_id"] for row in scoped["coverage_rows"]] == ["survival.aft"]
+    checklist = asyncio.run(read("capy://audit/checklist/survival.aft"))
+    assert checklist == kb.checklist(method_id="survival.aft")
+    assert checklist["checks"]
+    assert all(check["assessment"] == "not_assessed" for check in checklist["checks"])

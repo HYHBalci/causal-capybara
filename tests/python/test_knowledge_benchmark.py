@@ -19,6 +19,7 @@ from capy_knowledge.contracts import PROJECT_RIGHTS, validate_rights
 ROOT = Path(__file__).resolve().parents[2]
 BENCHMARK = ROOT / "knowledge" / "benchmark.json"
 FROZEN_TASK_SHA256 = "8da50dcdf4ca70ec2ca479131053e36db66977329dc982925fc2cf8c10b80a68"
+FROZEN_EXPANSION_SHA256 = "74c612e4ce1c9ab6678f0a21603cccfc19350e36efb0f724d338ecde9b0d36d1"
 
 
 def _load(path):
@@ -72,11 +73,15 @@ def test_reviewed_queries_are_frozen_and_expectations_resolve(benchmark, kb):
         for task in tasks
     ]
     encoded = json.dumps(
-        frozen, ensure_ascii=False, sort_keys=True, separators=(",", ":")
+        frozen[:40], ensure_ascii=False, sort_keys=True, separators=(",", ":")
     ).encode("utf-8")
     assert hashlib.sha256(encoded).hexdigest() == FROZEN_TASK_SHA256, (
         "Query/expectation changes require an explicit benchmark review. "
         "Do not change frozen fixtures to hide retrieval failures."
+    )
+    expansion = json.dumps(frozen[40:], ensure_ascii=False, sort_keys=True, separators=(",", ":")).encode("utf-8")
+    assert len(frozen) == 55 and hashlib.sha256(expansion).hexdigest() == FROZEN_EXPANSION_SHA256, (
+        "The intentional ontology expansion is separately frozen; the original 40 fixtures remain unchanged."
     )
     assert benchmark["thresholds"]["answerable_top5"] >= 0.90
     assert benchmark["thresholds"]["unsupported_abstention"] >= 0.95
@@ -101,6 +106,7 @@ def test_original_note_spans_and_public_reference_ids_are_exact():
     references = {
         item["id"] for item in _load(ROOT / "docs" / "explain" / "literature.json")
     }
+    references.update(item["id"] for item in _load(ROOT / "knowledge" / "seed" / "ontology.json")["sources"])
     assert len(semantic["claims"]) >= 14
     for record in [*semantic["claims"], *semantic["notes"]]:
         assert record["rights"] == PROJECT_RIGHTS

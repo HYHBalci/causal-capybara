@@ -4,9 +4,9 @@ import { AskButton } from '../components/AskButton'
 import { KnowledgeCitations } from '../components/KnowledgeCitations'
 import { researchApi } from '../research/api'
 import { record, relationLabel, relationTarget, statusOf, words } from '../research/helpers'
-import { bundledKnowledge, loadKnowledgeNode, loadKnowledgeSearch } from '../research/offline'
+import { bundledKnowledge, loadKnowledgeNode, loadKnowledgeSearch, loadMethodAudit } from '../research/offline'
 import { useResearch } from '../research/store'
-import type { KnowledgeDetail, KnowledgeEnvelope, KnowledgeEvidence, KnowledgeNode, KnowledgeRelation, KnowledgeSearch, ResearchRecord } from '../research/types'
+import type { KnowledgeAudit, KnowledgeCoverage, KnowledgeDetail, KnowledgeEnvelope, KnowledgeEvidence, KnowledgeNode, KnowledgeRelation, KnowledgeSearch, ResearchRecord } from '../research/types'
 
 const KINDS = ['concept', 'design', 'estimand', 'method', 'probe', 'assumption', 'diagnostic', 'claim', 'source', 'evidencelocator', 'softwarepackage', 'example', 'study', 'review']
 const LABELS: Record<string, string> = { evidencelocator: 'Evidence locator', softwarepackage: 'Software package', rct: 'Randomized trial', did: 'Difference in differences', rd: 'Regression discontinuity', iv: 'Instrumental variables', synth: 'Synthetic control', its: 'Interrupted time series' }
@@ -87,8 +87,8 @@ export function ResearchTree() {
           <label>Search knowledge<input type="search" value={query} onChange={(event) => setQuery(event.target.value)} placeholder="AIPW, overlap, parallel trends…" /></label>
           <label>Record type<select value={kind} onChange={(event) => setKind(event.target.value)}><option value="">All types</option>{KINDS.map((item) => <option key={item} value={item}>{label(item)}</option>)}</select></label>
           <div className="research-filter-pair">
-            <label>Design<select value={design} onChange={(event) => setDesign(event.target.value)}><option value="">All designs</option>{['observational', 'did', 'rct', 'rd', 'iv', 'synth', 'its', 'mediation', 'longitudinal'].map((item) => <option key={item} value={item}>{label(item)}</option>)}</select></label>
-            <label>Estimand<select value={estimand} onChange={(event) => setEstimand(event.target.value)}><option value="">All estimands</option>{['ATE', 'ATT', 'ATC', 'ATO', 'LATE', 'CACE', 'LATET', 'ITT', 'cohort_ATT', 'CATE', 'GATE', 'dose_response', 'CDE', 'IDE', 'IIE', 'NDE', 'NIE', 'policy_value', 'slope_change', 'inherited'].map((item) => <option key={item}>{item}</option>)}</select></label>
+            <label>Design<select value={design} onChange={(event) => setDesign(event.target.value)}><option value="">All designs</option>{['observational', 'did', 'rct', 'rd', 'iv', 'synth', 'its', 'mediation', 'longitudinal', 'survival'].map((item) => <option key={item} value={item}>{label(item)}</option>)}</select></label>
+            <label>Estimand<select value={estimand} onChange={(event) => setEstimand(event.target.value)}><option value="">All estimands</option>{['ATE', 'ATT', 'ATC', 'ATO', 'LATE', 'CACE', 'LATET', 'ITT', 'cohort_ATT', 'CATE', 'GATE', 'dose_response', 'CDE', 'IDE', 'IIE', 'NDE', 'NIE', 'policy_value', 'slope_change', 'inherited', 'survival_difference', 'RMST_difference', 'time_ratio'].map((item) => <option key={item}>{item}</option>)}</select></label>
           </div>
         </form>
         <p className="tiny hint" role="status" aria-live="polite">{loading ? 'Searching knowledge…' : `${result?.results.length ?? 0} records shown`}</p>
@@ -196,6 +196,7 @@ function KnowledgeArticle({ id, offline, onPick }: { id: string; offline: boolea
       {['conditions', 'scope', 'limitations', 'counterevidence', 'gaps', 'provenance'].map((key) => node[key] ? <section className="knowledge-section" key={key}><h3>{label(key)}</h3><p>{words(node[key])}</p></section> : null)}
       {!!node.locator && <section className="knowledge-section"><h3>Versioned evidence locator</h3><p className="knowledge-summary">{words(record(node.locator).exact_text)}</p><p className="tiny hint">Source: {words(node.source_id)} · version {words(node.source_version)}</p><p className="tiny hint">Offsets: {words(record(node.locator).start)}–{words(record(node.locator).end)} · {words(record(node.locator).offset_convention)} · {words(record(node.locator).normalization)}</p></section>}
       {requirements && <section className="knowledge-section"><h3>Method requirements</h3><dl className="knowledge-metadata">{Object.entries(record(requirements.requirements)).map(([key, value]) => <div key={key} style={{ display: 'contents' }}><dt>{label(key)}</dt><dd>{words(value) || 'Not recorded'}</dd></div>)}</dl><p className="tiny hint">Engine support describes the knowledge snapshot. Installed engine availability is checked separately in the method chooser.</p><KnowledgeOmissions envelope={requirements} /></section>}
+      {['method', 'probe'].includes(node.kind.toLowerCase()) && <MethodAudit key={`${id}:${localRecord}:${detail?.snapshot_id}`} id={id} offline={localRecord} snapshot={detail!.snapshot_id} onPick={onPick} />}
       <section className="knowledge-section"><h3>Qualified relationships</h3>
         {!relations.length && <p className="hint">No relationships are attached to this record.</p>}
         <ul className="knowledge-relations">{relations.map((relation) => {
@@ -216,4 +217,39 @@ function KnowledgeArticle({ id, offline, onPick }: { id: string; offline: boolea
     </>}
     <KnowledgeOmissions envelope={detail} />
   </article>
+}
+
+function MethodAudit({ id, offline, snapshot, onPick }: { id: string; offline: boolean; snapshot: string; onPick: (id: string) => void }) {
+  const [data, setData] = useState<{ coverage: KnowledgeCoverage; audit: KnowledgeAudit } | null>(null)
+  const [error, setError] = useState('')
+  const [retry, setRetry] = useState(0)
+  useEffect(() => {
+    const controller = new AbortController()
+    setData(null); setError('')
+    void loadMethodAudit(id, offline, snapshot, controller.signal).then((value) => { if (!controller.signal.aborted) setData(value) })
+      .catch((err) => { if (!controller.signal.aborted) setError((err as Error).message) })
+    return () => controller.abort()
+  }, [id, offline, snapshot, retry])
+  return <section className="knowledge-section" aria-label="Causal practice and implementation audit">
+    <h3>Causal practice and implementation audit</h3>
+    <p className="hint">Use these sourced questions to review an implementation and its causal framing. An audit needs code locations, study evidence and verification results; these questions do not assess your study.</p>
+    {error && <div role="alert"><p>{error}</p><button className="btn sm" onClick={() => setRetry((value) => value + 1)}>Retry audit guidance</button></div>}
+    {!data && !error && <p role="status">Loading audit guidance…</p>}
+    {data && <>
+      {data.coverage.coverage_rows.map((row) => <div key={words(row.method_id)}><p><strong>Coverage:</strong> {label(words(row.coverage_level))}</p><p>{words(row.scope)}</p><p className="tiny hint">Review: {statusOf(row.review)} · Gaps: {words(row.gaps) || 'No gaps declared'}</p></div>)}
+      {!data.coverage.coverage_rows.length && <p className="hint">No complete coverage row is available in this snapshot.</p>}
+      <p className="tiny hint">Sourced navigation and scoped evidence do not establish whole-method correctness or causal identification.</p>
+      {data.audit.checks.map((check) => <details key={words(check.id)} className="knowledge-section"><summary>{words(check.title)}</summary>
+        <p>{words(check.question)}</p><p className="tiny hint">Required evidence: {words(check.required_evidence)}</p>
+        <p className="tiny hint">Scope: {words(check.scope)} · Conditions: {words(check.conditions)}</p>
+        <p className="tiny hint">Gaps: {words(check.gaps)} · Assessment: not assessed</p>
+        <p className="tiny hint">Review: {statusOf(check.review)}</p>
+        <div className="row wrap">{(check.concept_ids as string[] ?? []).map((concept) => <button className="linky" key={concept} onClick={() => onPick(concept)}>{concept}</button>)}</div>
+        <details><summary>Audit provenance and rights</summary><pre className="research-json">{JSON.stringify({ id: check.id, source_ids: check.source_ids, review: check.review, rights: check.rights }, null, 2)}</pre></details>
+      </details>)}
+      {!data.audit.checks.length && <p className="hint">No complete audit questions are available for this record. This does not establish that an implementation is correct.</p>}
+      <KnowledgeCitations citations={data.audit.citations} />
+      <KnowledgeOmissions envelope={data.coverage} /><KnowledgeOmissions envelope={data.audit} />
+    </>}
+  </section>
 }

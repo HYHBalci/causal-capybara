@@ -202,6 +202,27 @@ designs:
     assumptions: [no_time_varying_confounding, positivity, sequential_ignorability, sutva, consistency]
     methods_hint: [long.msm_iptw, long.gformula, long.ltmle]
 
+  - id: survival
+    title: Time until an event
+    sentence: Follow people from a common time zero; some leave follow-up before the event is observed.
+    aliases: [Survival analysis, time-to-event, right censoring, Kaplan-Meier, restricted mean survival time, RMST, accelerated failure time, AFT, event-free survival]
+    schematic: survival_steps
+    order: 10
+    explain_key: design.survival
+    board_caption: Define one event and a common time zero. Duration is elapsed follow-up, with 1 for the event and 0 for right censoring. Treatment is set at baseline. Choose the duration unit and a common supported horizon on the method cards. Raw group curves are associations; causal standardization needs explicit identification and censoring assumptions.
+    zones:
+      - { role: treatment, label: Baseline treatment, help: "Code 0 or 1 at time zero. Treatment starting during follow-up needs another adapter.", accepts: [binary], required: true }
+      - { role: duration, label: Elapsed follow-up duration, help: "Positive time from a common time zero to event or right censoring, all in one unit.", accepts: [continuous], required: true }
+      - { role: event, label: Event indicator, help: "1 is the single event; 0 is right censoring. Competing death is not automatically censoring.", accepts: [binary], required: true }
+      - { role: unit, label: Person identifier, help: "One baseline row per independent person; repeated IDs are refused.", accepts: [id, categorical] }
+      - { role: confounders, label: Baseline confounders, help: "Causes of treatment and event time measured before treatment; used only by AFT standardization.", accepts: [continuous, binary, categorical], multiple: true }
+      - { role: forbidden, label: "Do not adjust for (post-treatment / colliders)", help: "Follow-up measurements may be affected by treatment and do not belong in the baseline AFT adjustment set.", accepts: [continuous, binary, categorical], multiple: true, tone: forbidden }
+    live_sketch: survival_followup
+    estimands: [survival_difference, RMST_difference, time_ratio]
+    default_estimand: RMST_difference
+    assumptions: [exchangeability, positivity, survival_consistency, survival_no_interference, conditional_independent_censoring]
+    methods_hint: [survival.rmst, survival.kaplan_meier, survival.aft]
+
   - id: catalogue
     title: I already know the method
     sentence: Skip the cards; open the method catalogue with a search box.

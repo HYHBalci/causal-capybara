@@ -18,6 +18,10 @@ This preview installer is unsigned. [Release notes](https://github.com/HYHBalci/
 The `ontology` development branch adds an open, offline [ontological research tree](docs/ONTOLOGY.md),
 local MCP tools and a portable agent skill. Browse method requirements, qualified claims, source
 versions, evidence gaps and rights decisions alongside the existing literature catalogue.
+The expanded tree covers all registered methods and probes, with causal practice
+and implementation audit questions. The app also supports [right-censored
+survival analysis](docs/SURVIVAL.md): Kaplan–Meier, RMST and log-normal/Weibull AFT,
+with explicit causal assumptions and association versus standardization labels.
 “Ask about this” assembles context you can inspect and redact before using offline help, Ollama,
 or an explicitly selected cloud provider. Study proposals require the desktop's approval of the
 exact diff; estimation still uses the existing R/Python job pipeline.
@@ -27,10 +31,15 @@ Install only the lightweight knowledge service, without the statistical engines:
 ```powershell
 python -m pip install './knowledge[mcp]'
 capy-knowledge validate
+capy-knowledge coverage --method survival.aft
+capy-knowledge install-skill codex --project /absolute/project
+capy-knowledge configure-client codex
 capy-knowledge-mcp
 ```
 
-See [client and skill setup](docs/ONTOLOGY_CLIENTS.md) and [rights and provenance](docs/ONTOLOGY_RIGHTS.md).
+The independent wheel bundles the graph and audit skill; it can be used without
+the desktop app or statistical engines. See [client and skill setup](docs/ONTOLOGY_CLIENTS.md),
+[verification](docs/ONTOLOGY_VERIFICATION.md) and [rights and provenance](docs/ONTOLOGY_RIGHTS.md).
 
 
 ![Causal Capybara results dashboard comparing computed Python ATT estimates and uncertainty for a synthetic child-development example](docs/promotion/linkedin/05-results.png)

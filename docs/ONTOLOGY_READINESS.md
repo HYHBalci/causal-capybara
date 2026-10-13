@@ -9,11 +9,11 @@ Observed automated and actual-client results are in
 | Phase | Delivered implementation | Remaining acceptance evidence |
 |---|---|---|
 | 1: contracts and reuse | Strict knowledge/assistant contracts, stable public IDs, qualified relationships, provenance/rights records, transport/rights ADRs, pinned official MCP SDK; independent second-agent semantic review of the bounded seed | Human scientific review of the seed and benchmark |
-| 2: seed and compiler | Current public catalogue/reference dispositions, AIPW/ATT and staggered-DiD evidence cards, independent second-agent semantic review, deterministic JSON/SQLite indexes, source hashes, rights manifest and RDF projections | Human semantic-support review; broader designs beyond the bounded seed |
-| 3: standalone MCP and skill | Six read tools, resources/prompts, offline installed pack, strict budgets/errors, protocol/cancellation tests, portable skill, three project configuration/install adapters and wheel CI; actual Codex CLI public MCP query verified | Codex skill-file read remains unverified; Claude Code/Antigravity unavailable on test host |
+| 2: seed and compiler | Full registry coverage rows, broad sourced causal concepts, survival/AFT, scoped original evidence notes, audit questions, deterministic JSON/SQLite indexes, source hashes, rights manifest and RDF projections | Human semantic-support review; exhaustive literature and whole-method scientific certification remain outside the declared scope |
+| 3: standalone MCP and skill | Eight read tools, five prompts, bounded coverage and audit resources, independent wheel with bundled skill/configuration installer, strict budgets/errors, protocol/cancellation tests and Linux/Windows CI | Codex skill-file read remains unverified; Claude Code/Antigravity unavailable on test host; previous actual Codex MCP pass applies to the 0.1.0 snapshot |
 | 4: context and assistance | Research tree/Literature view, selected-context preview/redaction, local Ollama and explicit approved-cloud adapters, provider failure/cancel handling | Provider-specific authenticated end-to-end checks where available; privacy review for real study contexts |
 | 5: controlled proposals | Strict proposals, native approval authority, exact hash/revision/data/action binding, expiry/replay checks, ordinary job engine execution and direct provenance hashes; synthetic AIPW reproduction parity and adversarial checks passed | Wider design/engine reproduction evaluations under declared tolerances; upstream ancestry remains untraversed |
-| 6: expand after evaluation | Frozen benchmark with 30 answerable and 10 unsupported tasks, plus adversarial boundaries; explicit core/HTTP navigation bounded at three hops, MCP at one; opt-in local JSON overlay remains excluded from model context and public exports | Unbounded traversal, embeddings, federation, full-text overlays and autonomous literature ingestion deferred |
+| 6: expand after evaluation | Original 40 frozen fixtures retained with 15 added causal/survival tasks; explicit coverage and unassessed audit planning; core/HTTP navigation bounded at three hops, MCP at one; opt-in local JSON overlay excluded from model context and public exports | Unbounded traversal, embeddings, federation, full-text overlays and autonomous literature ingestion deferred |
 
 The bounded initial seed has independent second-agent semantic review and labels
 agent authorship and the absence of human review. That review is separate from
@@ -21,6 +21,19 @@ the passing synthetic AIPW numerical parity and adversarial boundary checks. A
 structurally valid graph, resolvable citation and green retrieval score cannot
 establish passage entailment, causal identification or unrestricted corpus
 coverage. Contradictions, qualifications and explicit gaps are required outputs.
+
+The expansion adds 189 concepts, 29 scoped claims, 223 source records and 21 audit
+questions, covering 89 registry records (75 methods and 14 probes). Every registry
+record has a mapping; 39 link scoped evidence. Those counts describe this release's
+inventory and do not establish scientific completeness. Grok 4.7 at xhigh supplied
+a conceptual research critique; primary references and implementation behavior
+were checked separately. Original explanations and metadata retain explicit rights;
+external publication bodies are excluded.
+
+The [survival implementation](SURVIVAL.md) includes independent numerical oracles,
+bootstrap refitting, horizon/support checks and explicit result interpretation.
+The audit skill requires scoped evidence, code locations and verification; it
+cannot manufacture diagnostic acknowledgements, human review or study approval.
 
 The standalone workflow builds/reinstalls a wheel and exercises the public pack,
 core benchmark, protocol transport and client adapters on Linux and Windows.

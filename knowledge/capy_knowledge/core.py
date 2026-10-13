@@ -15,6 +15,7 @@ from pathlib import Path
 from .contracts import (KINDS, RELATIONS, RESPONSE_VERSION, KnowledgeError,
                         canonical, digest, safe_path, validate_records, validate_rights)
 from .compiler import admit_seed_files
+from .ontology import COVERAGE_LEVELS, validate_ontology
 
 MAX_RESPONSE_BYTES = 131072
 STOPWORDS = set("a an the of and or to for in into on is are do does did it this that why how what which with by can i my we from about under when explain use using please prove proves provide provides sentence translate".split())
@@ -51,6 +52,14 @@ class KnowledgeBase:
             if self.snapshot_id != self.manifest["snapshot_id"]:
                 raise KnowledgeError("stale_pack", "Pack and manifest snapshots differ.")
             self._check_runtime()
+            seed_root = safe_path(self.root, "seed")
+            ontology = validate_ontology(json.loads(safe_path(seed_root, "ontology.json").read_bytes()),
+                json.loads(safe_path(seed_root, "inventory.json").read_bytes()),
+                json.loads(safe_path(seed_root, "semantic.json").read_bytes()))
+            if self.pack.get("ontology") != {"schema_version": ontology["schema_version"],
+                    "coverage": sorted(ontology["coverage"], key=lambda row: row["method_id"]),
+                    "audits": sorted(ontology["audits"], key=lambda check: check["id"])}:
+                raise KnowledgeError("invalid_ontology", "Published ontology projection differs from the admitted seed.")
             # Verify the semantic fingerprint, not just the manifest's file hashes.
             semantic_pack = {k: v for k, v in self.pack.items() if k != "snapshot_id"}
             expected = "sha256:" + digest(canonical({"pack": semantic_pack, "inputs": self.manifest["inputs"]}).encode("utf-8"))
@@ -156,8 +165,10 @@ class KnowledgeBase:
             raise KnowledgeError("rights", "Knowledge file-level rights admissions cannot be verified.") from exc
 
     def _check_runtime(self):
+        if set(self.manifest.get("provenance", {}).get("runtime_sha256", {})) != {"contracts.py", "compiler.py", "core.py", "ontology.py"}:
+            raise KnowledgeError("invalid_pack", "Knowledge runtime inventory is incomplete or undeclared.")
         for name, expected in self.manifest.get("provenance", {}).get("runtime_sha256", {}).items():
-            if name not in {"contracts.py", "compiler.py", "core.py"}:
+            if name not in {"contracts.py", "compiler.py", "core.py", "ontology.py"}:
                 raise KnowledgeError("invalid_pack", "Unknown compiler runtime dependency.")
             if digest((Path(__file__).parent / name).read_bytes()) != expected:
                 raise KnowledgeError("stale_pack", "Knowledge runtime changed; compile and reload a matching release.")
@@ -231,10 +242,18 @@ class KnowledgeBase:
             # Preserve the operation's contract while withholding whole records.
             # An omitted scientific record is never rewritten without its caveats.
             original = payload or {}
-            empty = {k: original[k] for k in ("query", "node_id", "claim_id", "method_id", "depth", "max_bytes", "total_matches", "expanded_nodes", "interpretation", "trust", "provenance_depth") if k in original}
+            empty = {k: original[k] for k in ("query", "node_id", "claim_id", "method_id", "depth", "max_bytes", "total_matches", "expanded_nodes", "interpretation", "trust", "provenance_depth", "purpose", "coverage_levels") if k in original}
             for key in ("results", "nodes", "relations", "paths", "groups"):
                 if key in original:
                     empty[key] = []
+            if "checks" in original:
+                empty["checks"] = []
+            if "coverage_rows" in original:
+                empty["coverage_rows"] = []
+            if "coverage_summary" in original:
+                empty["coverage_summary"] = original["coverage_summary"]
+            if isinstance(original.get("coverage"), list):
+                empty["coverage"] = []
             if "node" in original:
                 empty["node"] = None
                 if isinstance(original["node"], dict):
@@ -243,7 +262,7 @@ class KnowledgeBase:
                 empty["requirements"] = {k: [] for k in ("designs", "estimands", "assumptions", "diagnostics", "caveats", "roles_required", "options", "scientific_claim_ids")}
                 empty["requirements"].update(gaps=[warning], engine_support={"declared": {}, "local_availability": "not_checked", "statistical_adapters_imported": False, "withheld": True})
             for key in ("counts", "coverage", "provenance", "capabilities"):
-                if key in original:
+                if key in original and key not in empty:
                     empty[key] = {}
             empty["gaps"] = [warning]
             if "used_bytes" in original:
@@ -488,7 +507,97 @@ class KnowledgeBase:
                         "caveats": caveats, "roles_required": card.get("roles_required", []), "options": card.get("options", []),
                         "engine_support": {"declared": card.get("engines", {}), "local_availability": "not_checked", "statistical_adapters_imported": False},
                         "scientific_claim_ids": sorted(set(claim_ids)), "gaps": node.get("gaps", [])}
+        if ident in {"survival.kaplan_meier", "survival.rmst"}:
+            requirements["interpretation_scope"] = "Unadjusted treatment-arm association; the raw procedure does not adjust for confounding or identify a causal contrast by itself."
+            requirements["causal_interpretation_context"] = [self._node(target, full=False) for rel, target, direction in self.adjacency[ident]
+                if direction == "forward" and rel["predicate"] == "related_to"
+                and self.nodes[target]["kind"] == "assumption" and rel["scope"].startswith("Additional causal-interpretation context;")]
         return self._respond({"method_id": ident, "requirements": requirements, "node": self._node(ident)}, citations=self._citations(node))
+
+    def _ontology_method(self, method_id):
+        if method_id is None:
+            return None
+        ident = self._id(method_id)
+        if ident not in self.nodes or self.nodes[ident]["kind"] not in {"method", "probe"}:
+            raise ValueError("Ontology coverage requires a public method or probe identifier.")
+        return ident
+
+    def get_ontology_coverage(self, method_id=None, limit=100, cursor=None):
+        """Complete registry coverage rows; mappings do not confer scientific review."""
+        self._fresh()
+        ident = self._ontology_method(method_id)
+        if type(limit) is not int or not 1 <= limit <= 100:
+            raise ValueError("Coverage limit must be an integer in 1–100.")
+        rows = [row for row in self.pack["ontology"]["coverage"] if ident is None or row["method_id"] == ident]
+        query_key = digest(canonical(["ontology_coverage", ident, limit]).encode("utf-8"))
+        offset = self._cursor(query_key, value=cursor, count=len(rows))
+        selected, citations, omissions, consumed = [], {}, [], 0
+        interpretation = ("registry_only declares a catalogue entry; editorial_context adds sourced navigation; "
+                          "scoped_evidence links exact original note claims. None establishes human review, "
+                          "whole-method correctness or identification for a study.")
+        payload = {"method_id": ident, "coverage": selected, "total_matches": len(rows),
+                   "coverage_levels": list(COVERAGE_LEVELS), "interpretation": interpretation,
+                   "gaps": [] if rows else ["No coverage record exists in the declared registry scope."]}
+        payload.pop("coverage")
+        payload.update(coverage_rows=selected, coverage_summary=self._ontology_summary(rows))
+        for row in rows[offset:offset + limit]:
+            validate_rights(row["rights"], public=True)
+            row_citations = [self._citation(source) for source in row["source_ids"]]
+            complete_row = {**copy.deepcopy(row), "record_kind": self.nodes[row["method_id"]]["kind"], "citations": row_citations}
+            candidate_citations = {**citations, **{item["source_id"]: item for item in row_citations}}
+            trial = self._envelope({**payload, "coverage_rows": selected + [complete_row]}, citations=list(candidate_citations.values()), bounded=False)
+            # Leave space for pagination/omission diagnostics; never strip qualifiers.
+            if len(canonical(trial).encode("utf-8")) + 2048 > MAX_RESPONSE_BYTES:
+                if selected:
+                    break
+                omissions.append({"id": row["method_id"], "reason": "complete_coverage_record_exceeds_page_budget"})
+                consumed += 1
+                continue
+            selected.append(complete_row)
+            citations = candidate_citations
+            consumed += 1
+        more = offset + consumed < len(rows)
+        return self._respond({**payload, "coverage_rows": selected}, citations=list(citations.values()),
+            status="partial" if more or omissions else "ok" if selected else "abstained",
+            omissions=omissions, cursor=self._cursor(query_key, offset + consumed) if more else None, truncated=more)
+
+    def get_audit_checklist(self, method_id=None):
+        """Methodological questions only; never reads or approves implementation files."""
+        self._fresh()
+        ident = self._ontology_method(method_id)
+        allowed = None if ident is None else set(next(row["audit_ids"] for row in self.pack["ontology"]["coverage"] if row["method_id"] == ident))
+        checks = [copy.deepcopy(check) for check in self.pack["ontology"]["audits"] if allowed is None or check["id"] in allowed]
+        for check in checks:
+            check["assessment"] = "not_assessed"
+        citations = {}
+        for check in checks:
+            validate_rights(check["rights"], public=True)
+            check["citations"] = [self._citation(source) for source in check["source_ids"]]
+            for source in check["source_ids"]:
+                citations[source] = self._citation(source)
+        return self._respond({"method_id": ident, "checks": checks,
+            "coverage": self._ontology_summary([row for row in self.pack["ontology"]["coverage"] if ident is None or row["method_id"] == ident]),
+            "purpose": "Methodological recommendations for authorized implementation audits and precise causal framing.",
+            "interpretation": "These sourced, agent-authored audit questions guide authorized code review. A checklist is not a completed audit or an approval to read files, run code or alter a study.",
+            "gaps": ["Code locations, study evidence, execution results and independent human assessment must be supplied by the authorized auditor."]},
+            citations=list(citations.values()), status="ok" if checks else "abstained")
+
+    def _ontology_summary(self, rows):
+        source_ids = {source for row in rows for source in row["source_ids"]}
+        return {"registry_records": len(rows),
+            "methods": sum(self.nodes[row["method_id"]]["kind"] == "method" for row in rows),
+            "probes": sum(self.nodes[row["method_id"]]["kind"] == "probe" for row in rows),
+            "editorial_mapped": sum(bool(row["concept_ids"]) for row in rows),
+            "with_scoped_evidence": sum(bool(row["claim_ids"]) for row in rows),
+            "human_reviewed": sum(row["review"].get("human_review") is True for row in rows),
+            "unresolved_sources": sum(self.nodes[source].get("resolved") is False for source in source_ids)}
+
+    # Short names retain the standalone host API; explicit names remain public.
+    def coverage(self, method_id=None, limit=100, cursor=None):
+        return self.get_ontology_coverage(method_id=method_id, limit=limit, cursor=cursor)
+
+    def checklist(self, method_id=None):
+        return self.get_audit_checklist(method_id=method_id)
 
     def build_context(self, query, max_bytes=16384):
         self._fresh()
@@ -498,7 +607,16 @@ class KnowledgeBase:
             raise ValueError("Context budget must be an integer in 1024–131072 bytes.")
         ranked = self._rank(query)
         private_result = re.search(r"\bmy\s+(?:dataset|data|study|project|result)|\b(?:p[- ]?value|numerical estimate)\b", query, re.I)
-        candidates = [] if private_result else [i for i, score in ranked if self.nodes[i]["kind"] == "claim" and self.nodes[i]["review"].get("semantic") == "agent_context_review"]
+        query_tokens = _tokens(query)
+        def sufficient_context(node):
+            # One generic word in a longer unrelated question is lexical
+            # discovery, not evidence adequate to answer that question.
+            terms = set(_tokens(node["title"] + " " + node["summary"]))
+            aliases = " ".join(node.get("aliases", [])).casefold()
+            matched = sum(t in terms or t in node["id"].casefold() or t in aliases for t in query_tokens)
+            return matched >= min(2, len(query_tokens))
+        candidates = [] if private_result else [i for i, score in ranked if self.nodes[i]["kind"] == "claim"
+            and self.nodes[i]["review"].get("semantic") == "agent_context_review" and sufficient_context(self.nodes[i])]
         groups, citations, omissions = [], {}, []
         gap = "This knowledge-only pack has no project data or computed run results." if private_result else "No semantically reviewed evidence found in this pack for the query; this is not evidence of absence."
         result = self._envelope({"query": query, "groups": groups, "nodes": [], "max_bytes": max_bytes, "used_bytes": 0,
@@ -545,6 +663,7 @@ class KnowledgeBase:
             validate_rights(node["rights"], body=node["kind"] != "source", public=public)
         value = {"schema_version": "capy.knowledge.bundle.v1", "snapshot_id": self.snapshot_id, "release": self.release,
                  "nodes": copy.deepcopy(self.pack["nodes"]), "relations": copy.deepcopy(self.pack["relations"]),
+                 "ontology": copy.deepcopy(self.pack["ontology"]),
                  "rights_manifest": [{"id": n["id"], "rights": n["rights"]} for n in self.pack["nodes"]],
                  "provenance": self.pack.get("provenance", {}), "excluded": ["personal overlays", "third-party publication bodies", "project data", "credentials"],
                  "reproduction": json.loads(safe_path(self.root, "reproduction.json").read_text(encoding="utf-8"))}

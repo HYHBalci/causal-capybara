@@ -52,7 +52,32 @@
     },
     "review": {
       "$ref": "review.schema.json"
+    },
+    "ontology_role": {
+      "type": "string",
+      "enum": [
+        "causal_foundation",
+        "method_idea",
+        "good_practice",
+        "scope_note"
+      ]
     }
   },
-  "additionalProperties": true
+  "additionalProperties": true,
+  "allOf": [
+    {
+      "if": {
+        "required": [
+          "ontology_role"
+        ]
+      },
+      "then": {
+        "properties": {
+          "kind": {
+            "const": "concept"
+          }
+        }
+      }
+    }
+  ]
 }

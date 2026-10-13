@@ -30,6 +30,8 @@ const BASE_SLOTS: Slot[] = [
     help: 'What you think it changed.' },
 ]
 
+const TARGET_LABELS: Record<string, string> = { survival_difference: 'Survival probability difference', RMST_difference: 'Restricted mean time difference', time_ratio: 'AFT time factor' }
+
 const POPULATION_SLOT: Slot = {
   role: 'population', prefix: 'for', placeholder: 'everyone in the data', kind: 'text',
   noun: 'who the answer is about',
@@ -37,6 +39,14 @@ const POPULATION_SLOT: Slot = {
 }
 
 const DESIGN_SLOTS: Record<string, Slot[]> = {
+  survival: [
+    { role: 'treatment', prefix: 'Compare baseline', placeholder: 'treatment (0/1)', kind: 'column',
+      noun: 'the baseline treatment', help: 'Treatment assigned at the common time zero. An observed group contrast is not automatically causal.' },
+    { role: 'duration', prefix: 'with follow-up', placeholder: 'duration', kind: 'column',
+      noun: 'the elapsed follow-up duration', help: 'Positive elapsed time from a common time zero to the event or right censoring, in one unit.' },
+    { role: 'event', prefix: 'and event', placeholder: 'event (1 event, 0 censored)', kind: 'column',
+      noun: 'the single-event indicator', help: 'One event coded 1, right censoring coded 0. Competing events need a different analysis.' },
+  ],
   rd: [
     { role: 'running', prefix: 'at a cutoff on', placeholder: 'running variable', kind: 'column',
       noun: 'the score that decided eligibility',
@@ -117,6 +127,7 @@ export function QuestionStrip() {
     const design = spec.design
     const extra = DESIGN_SLOTS[design] ?? []
     const cmp = COMPARISON_SLOT[design]
+    if (design === 'survival') return [...extra, POPULATION_SLOT]
     if (design === 'rd') return [BASE_SLOTS[1], ...extra, POPULATION_SLOT]
     if (design === 'its') return [BASE_SLOTS[1], ...extra, POPULATION_SLOT]
     return [...BASE_SLOTS, ...extra, POPULATION_SLOT, ...(cmp ? [cmp] : [])]
@@ -149,10 +160,10 @@ export function QuestionStrip() {
         {spec.estimand && (
           <button
             className="chip teal"
-            title={`Read what “${spec.estimand}” means — which people this number averages over`}
+            title={`Read what “${spec.estimand}” means — the target quantity and population`}
             onClick={() => setExplain(`estimand.${spec.estimand!.toLowerCase()}`)}
           >
-            {spec.estimand}
+            {TARGET_LABELS[spec.estimand] ?? spec.estimand}
           </button>
         )}
       </div>

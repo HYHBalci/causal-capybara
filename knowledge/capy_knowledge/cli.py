@@ -40,11 +40,29 @@ def evaluate(kb):
 
 
 def main(argv=None):
+    # Machine-readable JSON/configuration is UTF-8 on redirected Windows pipes
+    # as well as Unix terminals; locale code pages cannot represent this corpus.
+    if hasattr(sys.stdout, "reconfigure"):
+        sys.stdout.reconfigure(encoding="utf-8")
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--pack", type=Path)
     sub = parser.add_subparsers(dest="command", required=True)
     for name in ("release", "validate", "benchmark"):
         sub.add_parser(name)
+    coverage = sub.add_parser("coverage", help="Inspect declared registry and evidence coverage")
+    coverage.add_argument("--method")
+    coverage.add_argument("--limit", type=int, default=50)
+    coverage.add_argument("--cursor")
+    audit = sub.add_parser("audit-checklist", help="Retrieve planning questions, without assessing code or approving a study")
+    audit.add_argument("--method")
+    skill = sub.add_parser("install-skill", help="Install bundled skill into an explicitly chosen project")
+    skill.add_argument("host", choices=("codex", "claude", "antigravity"))
+    skill.add_argument("--project", type=Path, required=True)
+    config = sub.add_parser("configure-client", help="Print or create new MCP configuration; never merge or overwrite")
+    config.add_argument("host", choices=("codex", "claude", "antigravity"))
+    config.add_argument("--python", default=sys.executable)
+    config.add_argument("--pack", dest="configuration_pack")
+    config.add_argument("--output", type=Path)
     search = sub.add_parser("search")
     search.add_argument("query")
     search.add_argument("--limit", type=int, default=20)
@@ -69,7 +87,19 @@ def main(argv=None):
     compile_.add_argument("--output", type=Path, required=True)
     args = parser.parse_args(argv)
     try:
-        if args.command == "compile":
+        if args.command == "install-skill":
+            from .client_setup import SKILL_NAME, install_skill
+            installed = install_skill(args.host, args.project)
+            result = {"skill": SKILL_NAME, "host": args.host, "scope": "selected_project", "installed": str(installed)}
+        elif args.command == "configure-client":
+            from .client_setup import render_config, write_config
+            pack = args.configuration_pack or (str(args.pack) if args.pack else None)
+            if args.output is None:
+                print(render_config(args.host, args.python, pack), end="")
+                return 0
+            write_config(args.host, args.python, pack, args.output)
+            result = {"host": args.host, "configuration_created": True, "existing_configuration_overwritten": False}
+        elif args.command == "compile":
             from .compiler import compile_pack
             pack = compile_pack(args.seed, args.output)
             result = {"snapshot_id": pack["snapshot_id"], "counts": pack["counts"]}
@@ -91,6 +121,10 @@ def main(argv=None):
                 result = kb.build_context(args.query, args.max_bytes)
             elif args.command == "benchmark":
                 result = evaluate(kb)
+            elif args.command == "coverage":
+                result = kb.get_ontology_coverage(args.method, args.limit, args.cursor)
+            elif args.command == "audit-checklist":
+                result = kb.get_audit_checklist(args.method)
             else:
                 result = kb.export_bundle()
                 args.output.parent.mkdir(parents=True, exist_ok=True)
@@ -98,6 +132,6 @@ def main(argv=None):
                 result = {"snapshot_id": kb.snapshot_id, "public_export": True, "overlay_included": False}
         print(canonical(result))
         return 1 if args.command == "benchmark" and not result["passed"] else 0
-    except (KnowledgeError, KeyError, ValueError) as exc:
+    except (KnowledgeError, KeyError, ValueError, OSError) as exc:
         print(canonical({"error": getattr(exc, "code", "invalid_request"), "message": str(exc)}), file=sys.stderr)
         return 2

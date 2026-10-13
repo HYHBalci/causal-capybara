@@ -101,6 +101,7 @@ NOT_AN_EFFECT = {
     ("close_elections", "rd.density_test"),
 }
 MISSES_ON_PURPOSE = {
+    ("survival_followup", "survival.rmst"),
     # The demonstration this example exists for: the wrong method, run so it can be seen missing.
     ("medicaid", "did.twfe"),
     # Almost no comparison person looks like a trainee, so the weights concentrate on a handful of
@@ -111,6 +112,7 @@ MISSES_ON_PURPOSE = {
 # (relative tolerance, absolute floor) on the built-in effect, for a method that is aiming at it.
 # Sized to the spread the shipped seeds actually produce, so that a regression trips them.
 TOLERANCES = {
+    "survival_followup": (0.15, 0.25),
     "lalonde": (0.40, 450.0),          # terrible overlap: the methods genuinely spread out
     "minimum_wage": (0.15, 0.25),
     "medicaid": (0.25, 0.30),
@@ -209,6 +211,7 @@ def test_off_target_methods_are_explained_by_the_example():
         assert len(prose) > 200, f"{eid} has almost no explanatory prose"
         # The point the example has to make, in whatever words it chooses.
         cues = {
+            ("survival_followup", "survival.rmst"): ("unadjusted", "confound", "misses"),
             ("close_elections", "rd.density_test"): ("density", "sorting", "cliff"),
             ("rct_noncompliance", "rct.cace"): ("complier", "not the same number"),
             ("medicaid", "did.twfe"): ("wrong method", "wrong number", "does not"),

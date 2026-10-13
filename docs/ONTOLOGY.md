@@ -1,11 +1,17 @@
 # Offline causal knowledge and MCP
 
 This companion package publishes the current method/reference catalogue and a
-small qualified causal knowledge graph without requiring the desktop app, R,
+qualified causal knowledge graph without requiring the desktop app, R,
 statistical engines, a graph service or model credentials. The tree is a navigation
 view over typed records. Its relationships do not identify a study's causal effect.
 
-The initial seed includes agent-authored AIPW/ATT and staggered DiD explanations.
+The expanded seed maps every registered method and probe to concepts, audit
+questions and references. It includes identification, experimental and observational
+designs, weighting, matching, IV, RD, DiD, synthetic controls, longitudinal methods,
+mediation, heterogeneity, interference, transportability and survival. Survival
+concepts distinguish censoring, competing events, RMST, hazard ratios and AFT time
+ratios. Sourced editorial navigation and exact-note evidence have separate coverage
+labels; the tree records remaining gaps and claims agent review only.
 Structural validation and source/rights checks are automated; semantic support and
 human review are recorded separately. A passing benchmark is a bounded retrieval
 check, not a scientific certification.
@@ -37,8 +43,9 @@ not as a conversational shell. An installed release uses its bundled compiled
 public pack. Compilation is separate from retrieval; a query never repairs or
 builds a pack. `--pack /absolute/compiled/public-pack` selects an existing pack.
 
-The six tools are `search_knowledge`, `get_knowledge_node`, `get_source_evidence`,
-`traverse_relations`, `get_method_requirements` and `build_research_context`.
+The eight tools are `search_knowledge`, `get_knowledge_node`, `get_source_evidence`,
+`traverse_relations`, `get_method_requirements`, `build_research_context`,
+`get_ontology_coverage` and `get_audit_checklist`.
 Search accepts type/design/estimand filters and a snapshot-bound cursor. Traversal
 permits one hop and allowlisted relations. Limits are at most 50 records; context
 budgets range from 1 KiB to 64 KiB. The transport rejects complete responses above
@@ -52,13 +59,22 @@ answer. Relevance scores do not measure confidence. Unknown IDs, stale packs,
 rights restrictions and invalid cursors return classified refusals. Source URLs
 are citations, never instructions to fetch remote content.
 
-The resources are `capy://knowledge/release` and `capy://knowledge/{id}`. The three
-prompts are `inspect_design`, `compare_methods` and `cited_research_brief`.
+Resources include `capy://knowledge/release`, `capy://knowledge/{id}`,
+`capy://ontology/coverage` and `capy://audit/checklist`; coverage and checklist
+templates accept a method ID. The five prompts are `inspect_design`,
+`compare_methods`, `cited_research_brief`, `audit_research_design` and
+`map_method_ideas`.
 Hosts differ in resource/prompt support; all operations have tool-based fallbacks.
 The server exposes no study mutations, curation, shell/R/Python execution,
 sampling, elicitation, project filesystem or network connector.
 
 The desktop research tree and contextual assistant use the same knowledge API.
+Method records show coverage, causal practice questions, required audit evidence,
+conditions, gaps and citations, including in the installed offline copy. A
+checklist starts `not_assessed`. The portable skill guides an authorized host to
+inspect code, cite file locations, verify results and report findings; the MCP
+itself only retrieves public guidance. See [survival implementation](SURVIVAL.md)
+for supported estimands, numerical checks and model limitations.
 Selected-context previews, opt-in local/approved cloud providers and structured
 study proposals live in the separate application/sidecar bridge. Native approval,
 revision/expiry/replay checks and existing job execution enforce study changes;

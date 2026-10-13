@@ -21,13 +21,13 @@ from capy_knowledge.contracts import canonical, digest
 
 
 CONTROL_FILES = {
-    "inventory.json", "semantic.json", "benchmark.json",
+    "inventory.json", "semantic.json", "benchmark.json", "ontology.json",
     "schemas/claim.schema.json", "schemas/context.schema.json",
     "schemas/node.schema.json", "schemas/proposal.schema.json",
     "schemas/relation.schema.json", "schemas/review.schema.json",
     "schemas/rights.schema.json", "schemas/source.schema.json",
     "schemas/semantic.schema.json", "schemas/inventory.schema.json",
-    "schemas/benchmark.schema.json",
+    "schemas/benchmark.schema.json", "schemas/ontology.schema.json",
 }
 LEAK = "Private draft that has no public publishing permission."
 REFUSAL_CODES = {"rights", "invalid_seed", "invalid_path", "stale_pack", "invalid_pack"}

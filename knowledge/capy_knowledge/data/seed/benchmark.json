@@ -1,7 +1,7 @@
 {
   "schema_version": "1",
-  "frozen_at": "2026-10-12",
-  "scope": "Original AIPW and staggered-adoption DiD seed; retrieval relevance and abstention fixtures, not proof of scientific validity.",
+  "frozen_at": "2026-10-13",
+  "scope": "Original 40 AIPW/DiD fixtures retained unchanged, with 15 added causal-foundation, practice, design and survival fixtures; retrieval relevance and abstention, not scientific validity.",
   "freeze_policy": "Queries and expectations were fixed before evaluating retrieval. Change only through an explicit benchmark review, never to conceal a retrieval failure.",
   "thresholds": {
     "answerable_top5": 0.9,
@@ -628,6 +628,246 @@
         "date": "2026-10-12"
       },
       "purpose": "An impossible device request absent from the pack."
+    },
+    {
+      "id": "ontology-causal-framing",
+      "query": "Does a balanced fitted regression identify an intervention effect?",
+      "expected_ids": [
+        "claim:causal-framing"
+      ],
+      "answerable": true,
+      "purpose": "Distinguish causal identification from association or prediction.",
+      "review": {
+        "actor": "Codex agent",
+        "actor_type": "agent",
+        "semantic": "agent_context_review",
+        "human_review": false,
+        "date": "2026-10-13"
+      }
+    },
+    {
+      "id": "ontology-target-time",
+      "query": "How can future exposure labels create immortal-time bias at time zero?",
+      "expected_ids": [
+        "claim:target-time"
+      ],
+      "answerable": true,
+      "purpose": "Inspect eligibility, assignment and follow-up alignment.",
+      "review": {
+        "actor": "Codex agent",
+        "actor_type": "agent",
+        "semantic": "agent_context_review",
+        "human_review": false,
+        "date": "2026-10-13"
+      }
+    },
+    {
+      "id": "ontology-adjustment-design",
+      "query": "Why can adjusting for mediators or colliders change a total effect?",
+      "expected_ids": [
+        "claim:adjustment-design"
+      ],
+      "answerable": true,
+      "purpose": "Inspect adjustment timing and causal variable roles.",
+      "review": {
+        "actor": "Codex agent",
+        "actor_type": "agent",
+        "semantic": "agent_context_review",
+        "human_review": false,
+        "date": "2026-10-13"
+      }
+    },
+    {
+      "id": "ontology-weight-target",
+      "query": "How do ATE ATT overlap weights and clipping change the target?",
+      "expected_ids": [
+        "claim:weight-target"
+      ],
+      "answerable": true,
+      "purpose": "Keep weight equations, support and population distinct.",
+      "review": {
+        "actor": "Codex agent",
+        "actor_type": "agent",
+        "semantic": "agent_context_review",
+        "human_review": false,
+        "date": "2026-10-13"
+      }
+    },
+    {
+      "id": "ontology-nuisance-learning",
+      "query": "Why do orthogonal scores and cross-fitting retain causal assumptions?",
+      "expected_ids": [
+        "claim:nuisance-learning"
+      ],
+      "answerable": true,
+      "purpose": "Separate nuisance learning from identification and uncertainty.",
+      "review": {
+        "actor": "Codex agent",
+        "actor_type": "agent",
+        "semantic": "agent_context_review",
+        "human_review": false,
+        "date": "2026-10-13"
+      }
+    },
+    {
+      "id": "ontology-iv-local",
+      "query": "Does an instrument with a strong first stage identify everyone’s ATE?",
+      "expected_ids": [
+        "claim:iv-local"
+      ],
+      "answerable": true,
+      "purpose": "Report validity assumptions and the complier/local target.",
+      "review": {
+        "actor": "Codex agent",
+        "actor_type": "agent",
+        "semantic": "agent_context_review",
+        "human_review": false,
+        "date": "2026-10-13"
+      }
+    },
+    {
+      "id": "ontology-rd-local",
+      "query": "What distinguishes local-randomization fuzzy and kink RD targets?",
+      "expected_ids": [
+        "claim:rd-local"
+      ],
+      "answerable": true,
+      "purpose": "Keep cutoff designs and estimator conditions distinct.",
+      "review": {
+        "actor": "Codex agent",
+        "actor_type": "agent",
+        "semantic": "agent_context_review",
+        "human_review": false,
+        "date": "2026-10-13"
+      }
+    },
+    {
+      "id": "ontology-longitudinal-feedback",
+      "query": "Why can ordinary adjustment fail with treatment-confounder feedback?",
+      "expected_ids": [
+        "claim:longitudinal-feedback"
+      ],
+      "answerable": true,
+      "purpose": "Define intervention histories and sequential assumptions.",
+      "review": {
+        "actor": "Codex agent",
+        "actor_type": "agent",
+        "semantic": "agent_context_review",
+        "human_review": false,
+        "date": "2026-10-13"
+      }
+    },
+    {
+      "id": "ontology-mediation-target",
+      "query": "Does randomized treatment identify natural mediator effects automatically?",
+      "expected_ids": [
+        "claim:mediation-target"
+      ],
+      "answerable": true,
+      "purpose": "Define mediation target and additional identifying assumptions.",
+      "review": {
+        "actor": "Codex agent",
+        "actor_type": "agent",
+        "semantic": "agent_context_review",
+        "human_review": false,
+        "date": "2026-10-13"
+      }
+    },
+    {
+      "id": "ontology-population-effects",
+      "query": "How do exposure mappings and transport populations alter the effect?",
+      "expected_ids": [
+        "claim:population-effects"
+      ],
+      "answerable": true,
+      "purpose": "Define unit interference and source/target support.",
+      "review": {
+        "actor": "Codex agent",
+        "actor_type": "agent",
+        "semantic": "agent_context_review",
+        "human_review": false,
+        "date": "2026-10-13"
+      }
+    },
+    {
+      "id": "ontology-survival-marginal",
+      "query": "How do survival probability difference and RMST depend on a shared horizon?",
+      "expected_ids": [
+        "claim:survival-marginal"
+      ],
+      "answerable": true,
+      "purpose": "Define marginal event-time targets, duration units and target averaging.",
+      "review": {
+        "actor": "Codex agent",
+        "actor_type": "agent",
+        "semantic": "agent_context_review",
+        "human_review": false,
+        "date": "2026-10-13"
+      }
+    },
+    {
+      "id": "ontology-survival-censoring",
+      "query": "Does conditional independent censoring justify raw Kaplan–Meier curves?",
+      "expected_ids": [
+        "claim:survival-censoring"
+      ],
+      "answerable": true,
+      "purpose": "Match observation assumptions to the actual survival procedure.",
+      "review": {
+        "actor": "Codex agent",
+        "actor_type": "agent",
+        "semantic": "agent_context_review",
+        "human_review": false,
+        "date": "2026-10-13"
+      }
+    },
+    {
+      "id": "ontology-aft-time-ratio",
+      "query": "Is ordinary AFT regression equivalent to a structural failure-time model?",
+      "expected_ids": [
+        "claim:aft-time-ratio"
+      ],
+      "answerable": true,
+      "purpose": "Separate model-based conditional time ratios from structural causal models.",
+      "review": {
+        "actor": "Codex agent",
+        "actor_type": "agent",
+        "semantic": "agent_context_review",
+        "human_review": false,
+        "date": "2026-10-13"
+      }
+    },
+    {
+      "id": "ontology-competing-target",
+      "query": "Does censoring competing death preserve a cumulative-incidence target?",
+      "expected_ids": [
+        "claim:competing-target"
+      ],
+      "answerable": true,
+      "purpose": "Make competing-event strategy and causal question explicit.",
+      "review": {
+        "actor": "Codex agent",
+        "actor_type": "agent",
+        "semantic": "agent_context_review",
+        "human_review": false,
+        "date": "2026-10-13"
+      }
+    },
+    {
+      "id": "ontology-audit-reproducibility",
+      "query": "Do reproducible input hashes and passing numerical tests prove identification?",
+      "expected_ids": [
+        "claim:audit-reproducibility"
+      ],
+      "answerable": true,
+      "purpose": "Audit traceable computation while keeping identification separate.",
+      "review": {
+        "actor": "Codex agent",
+        "actor_type": "agent",
+        "semantic": "agent_context_review",
+        "human_review": false,
+        "date": "2026-10-13"
+      }
     }
   ]
 }

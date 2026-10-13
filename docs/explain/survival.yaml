@@ -1,0 +1,77 @@
+schema: capy.explain
+version: 1
+entries:
+  design.survival:
+    title: Time-to-event studies and causal questions
+    short: Define the event, time zero, baseline intervention, population, observation mechanism and horizon before fitting a survival model.
+    detail: A duration/event pair records the earlier of event time and censoring time, plus whether the single event occurred. The app supports positive elapsed times, independent people, baseline binary treatment and right censoring. It refuses competing-event codes, delayed entry, interval censoring, repeated-person records and time-varying treatments. A survival model describes event times; the study design and identifying assumptions determine whether a contrast supports a causal interpretation.
+    common_mistake: Starting follow-up before treatment classification is complete, creating immortal-time bias; or interpreting any fitted treatment coefficient as causal.
+    references: ["Hernán and Robins (2020), Causal Inference: What If", "Hernán (2010), The Hazards of Hazard Ratios"]
+    see_also: [concept.survival_time_zero, concept.survival_censoring, concept.survival_competing_events, estimand.rmst_difference]
+
+  method.survival.kaplan_meier:
+    title: Unadjusted Kaplan–Meier survival contrast
+    short: The product-limit estimator accounts for right censoring in observed groups; their probability difference at tau is an association.
+    detail: Events are processed before censoring at tied times. Independent censoring within each group is required for the raw curves. Independence only conditional on other prognostic covariates does not suffice. The app requires a common supported horizon and explicit time unit, reports censoring/risk-set counts and uses seeded within-group subject bootstrap intervals. Bootstrap samples without horizon support are refused and reported. Baseline covariates are not adjusted by this method.
+    common_mistake: Calling a raw difference between selected treatment groups a causal treatment effect, or silently treating competing death as ordinary censoring.
+    references: ["Kaplan and Meier (1958), Nonparametric Estimation from Incomplete Observations", "Hernán (2010), The Hazards of Hazard Ratios"]
+    see_also: [method.survival.aft, concept.survival_censoring]
+
+  method.survival.rmst:
+    title: Unadjusted restricted mean survival contrast
+    short: Integrate each observed Kaplan–Meier curve from zero through the same tau; subtract treatment 0 from treatment 1 in time units.
+    detail: RMST is the expected event-free time restricted to a prespecified horizon. It does not require proportional hazards or an extrapolated infinite tail. Here the two raw group distributions are different observed populations, so their contrast remains unadjusted. Independent censoring within each arm, independent people and support through tau are required. A sparse tail is flagged. Seeded within-group bootstrap intervals resample people and recompute the whole curve integral.
+    common_mistake: Describing restricted event-free time as lifetime gained, or choosing tau after viewing the treatment differences.
+    references: ["Uno et al. (2014), Moving Beyond the Hazard Ratio in Quantifying the Between-Group Difference in Survival Analysis"]
+    see_also: [estimand.rmst_difference, method.survival.aft]
+
+  method.survival.aft:
+    title: Censored AFT regression and causal standardization
+    short: Fit a right-censored common-scale log-normal or Weibull AFT model, then distinguish its conditional time factor from marginal standardized survival and RMST.
+    detail: The likelihood uses the event-time density for events and survival probability for right-censored observations. For a supported horizon, predict both treatments for every complete-case baseline covariate profile and average over that empirical target population. Survival/RMST standardization is causal only under justified consistency, no interference, exchangeability, treatment positivity, independent censoring conditional on treatment/covariates and correct model form. Those conditions remain untested. Each subject bootstrap sample refits the likelihood and re-averages over its resampled target population. The optimizer must converge to a finite interior solution with stable positive curvature. A complete-case target may differ from the original population; the flow reports missingness.
+    math: "log(T) = beta0 + betaA*A + betaL*L + sigma*epsilon. Time factor r = exp(betaA). Weibull shape = 1/sigma and scale(L,A) = exp(mu(L,A)). S^a(tau) = mean_i S(tau | A=a, L_i); RMST^a(tau) = integral_0^tau S^a(u) du. RMST^1(tau) is not generally r times RMST^0(tau)."
+    common_mistake: Calling exp(betaA) a hazard ratio, a marginal causal effect or a structural failure-time estimate. The implemented model has a common shape, no treatment interactions and baseline treatment only.
+    references: ["Wei (1992), The accelerated failure time model: a useful alternative to the Cox regression model in survival analysis", "Hernán (2010), The Hazards of Hazard Ratios", "Hernán and Robins (2020), Causal Inference: What If"]
+    see_also: [estimand.time_ratio, estimand.survival_difference, estimand.rmst_difference, concept.survival_hazard]
+
+  concept.survival_time_zero:
+    title: Align eligibility, treatment and follow-up
+    short: Time zero is when eligibility is assessed, the baseline treatment strategy is classified and follow-up begins.
+    detail: Counting event-free follow-up before a person could be classified as treated creates immortal-time bias. A baseline treatment analysis cannot silently stand in for a treatment that changes during follow-up. Delayed entry also changes the risk sets and is unsupported by these adapters.
+    references: ["Hernán and Robins (2020), Causal Inference: What If"]
+
+  concept.survival_censoring:
+    title: Censoring is an observation mechanism
+    short: Right censoring means follow-up ends before the event is observed; the event time remains unknown.
+    detail: Administrative end of follow-up and prognosis-related dropout can have different implications. Raw arm-specific Kaplan–Meier needs independence within arms. The adjusted AFT likelihood assumes independence given treatment and included baseline covariates. Counts and model convergence do not verify either condition. Positivity of observation through the horizon and meaningful conditional treatment support also need substantive review.
+    references: ["Hernán and Robins (2020), Causal Inference: What If"]
+
+  concept.survival_hazard:
+    title: Hazard, survival probability and time ratios
+    short: A hazard is an instantaneous event rate among those still event-free. It is not an event probability.
+    detail: A hazard ratio conditions on evolving risk sets and does not equal a survival probability or risk ratio. AFT exp(betaA) stretches conditional event times under a common log-time shape. A Weibull AFT model also implies a hazard ratio exp(-betaA/sigma), a different quantity. The app reports the requested time factor, probability difference or RMST difference with its scale; it does not substitute one for another.
+    references: ["Hernán (2010), The Hazards of Hazard Ratios", "Wei (1992), The accelerated failure time model: a useful alternative to the Cox regression model in survival analysis"]
+
+  concept.survival_competing_events:
+    title: Competing events require a causal question
+    short: An event that prevents the outcome of interest is not automatically ordinary right censoring.
+    detail: The cumulative incidence of an event with competing death, a hypothetical intervention eliminating competing death and separable treatment effects are different targets. None is supplied by recoding competing death to zero in these single-event adapters. Choose and justify an appropriate competing-risk design and estimator separately.
+    references: ["Hernán and Robins (2020), Causal Inference: What If"]
+
+  assumption.survival_consistency:
+    title: A well-defined baseline intervention
+    short: Observed event times must agree with the potential event times under the treatment actually received, with meaningful treatment versions.
+    detail: Define the treatment strategy, event, time zero and duration unit. A model coefficient cannot repair an ill-defined intervention. This remains untested.
+    references: ["Hernán and Robins (2020), Causal Inference: What If"]
+
+  assumption.survival_no_interference:
+    title: No interference between people
+    short: One person's event time is assumed unaffected by other people's treatment assignments.
+    detail: Contagion, shared care resources and spillovers may violate this condition. These adapters also assume independent subjects for resampling; clustered uncertainty requires another adapter. This remains untested.
+    references: ["Hernán and Robins (2020), Causal Inference: What If"]
+
+  assumption.conditional_independent_censoring:
+    title: Conditional independent censoring
+    short: Given baseline treatment and covariates, censoring must not convey additional information about the unobserved event time.
+    detail: The AFT likelihood relies on this untested condition. Raw Kaplan–Meier instead needs independence within each treatment group; the conditional statement alone cannot justify a raw group curve. Prognosis-dependent dropout, unmeasured predictors and unsupported observation horizons need review.
+    references: ["Hernán and Robins (2020), Causal Inference: What If"]
