@@ -84,7 +84,7 @@ jobs:
             python "tests/python/test_$t.py"
           done
       - name: Application regressions and offline studies
-        run: python -m pytest tests/python/test_learn.py tests/python/test_literature.py tests/python/test_recents.py tests/python/test_realdata.py tests/python/test_robustness.py tests/python/test_readiness.py tests/python/test_scripts.py tests/python/test_catalogue_concurrency.py tests/python/test_engine_install.py tests/python/test_engine_install_jobs.py tests/python/test_assistant_ontology.py tests/python/test_ontology_adversarial.py tests/python/test_store_lifecycle.py tests/python/test_survival.py tests/python/test_survival_heterogeneity.py tests/python/test_heterogeneity.py tests/python/test_heterogeneity_review.py tests/python/test_cli_result_output.py tests/python/test_ontology_http_audits.py tests/python/test_did_reference_regressions.py tests/python/test_adoption_sketch.py -q
+        run: python -m pytest tests/python/test_learn.py tests/python/test_literature.py tests/python/test_recents.py tests/python/test_realdata.py tests/python/test_robustness.py tests/python/test_readiness.py tests/python/test_scripts.py tests/python/test_catalogue_concurrency.py tests/python/test_engine_install.py tests/python/test_engine_install_jobs.py tests/python/test_assistant_ontology.py tests/python/test_ontology_adversarial.py tests/python/test_store_lifecycle.py tests/python/test_survival.py tests/python/test_survival_heterogeneity.py tests/python/test_heterogeneity.py tests/python/test_heterogeneity_review.py tests/python/test_cli_result_output.py tests/python/test_ontology_http_audits.py tests/python/test_did_reference_regressions.py tests/python/test_adoption_sketch.py tests/python/test_recommendations.py -q
       - name: A run validates against capy.result.v1, end to end
         shell: bash
         run: |
@@ -207,6 +207,7 @@ jobs:
     runs-on: ubuntu-latest
     env:
       PYTHONPATH: engines/python:sidecar
+      CAPY_REQUIRE_R_REFERENCE: "1"
     steps:
       - uses: actions/checkout@v4
       - name: Configure isolated test workspace

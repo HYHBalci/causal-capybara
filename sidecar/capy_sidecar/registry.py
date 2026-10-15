@@ -231,12 +231,30 @@ def recommend(spec: dict[str, Any], facts: dict[str, Any] | None = None) -> dict
     design_id = str(spec.get("design") or "undecided")
     roles = spec.get("roles") or {}
     estimand_id = spec.get("estimand")
-    candidates = methods_for_design(design_id)
+    candidates = list(methods_for_design(design_id))
+    candidate_ids = {m["id"] for m in candidates}
+    # Changing a design must not strand a previous selection outside the cards.
+    # Keep it inspectable/removable, with its incompatibility explained below.
+    for selected in spec.get("methods") or []:
+        mid = selected.get("method_id")
+        if mid and mid not in candidate_ids:
+            candidates.append(method(mid) or dict(CARD_DEFAULTS, id=mid, title=mid,
+                                                  explain_key=f"method.{mid}",
+                                                  missing_from_catalogue=True))
+            candidate_ids.add(mid)
     recommended: list[dict[str, Any]] = []
     reasonable: list[dict[str, Any]] = []
     unsuitable: list[dict[str, Any]] = []
 
     for m in candidates:
+        if m.get("missing_from_catalogue"):
+            unsuitable.append(_card(m, blocked=True,
+                                    reason="This selected method is no longer in the catalogue. Remove it from the comparison before estimating."))
+            continue
+        if design_id not in (m.get("designs") or []):
+            unsuitable.append(_card(m, blocked=True,
+                                    reason="This selected method does not support the current research design."))
+            continue
         missing = [r for r in (m.get("roles_required") or []) if not _has_role(roles, r)]
         why: list[str] = []
         against: list[str] = []
@@ -276,6 +294,9 @@ def recommend(spec: dict[str, Any], facts: dict[str, Any] | None = None) -> dict
             "did.callaway_santanna", "did.sun_abraham", "did.bjs_imputation", "did.gardner_2s"
         ):
             why.append("Adoption is staggered, and this estimator was built for exactly that.")
+        if (design_id == "did" and facts.get("two_period_adoption")
+                and m["id"] == "did.twoway_2x2" and m.get("python_available")):
+            why.append("There are two periods, a group first treated after baseline, and an untreated comparison group in both periods.")
         if facts.get("n") and facts["n"] < 200 and "forest" in m["id"]:
             against.append("The sample is small for a machine-learning estimator.")
         if m.get("why_recommended"):
@@ -291,15 +312,27 @@ def recommend(spec: dict[str, Any], facts: dict[str, Any] | None = None) -> dict
         else:
             reasonable.append(card)
 
-    recommended.sort(key=lambda c: (-len(c["why"]), c["id"]))
+    def priority(card: dict[str, Any]) -> tuple[bool, int, str]:
+        # python_available reflects a registered adapter; engines.r may only
+        # name an external reference package, so it is not an availability test.
+        canonical = (design_id == "did" and facts.get("two_period_adoption")
+                     and card["id"] == "did.twoway_2x2" and card.get("python_available"))
+        return (not canonical, -len(card["why"]), card["id"])
+
+    recommended.sort(key=priority)
     if not recommended and reasonable:
         recommended = [c for c in reasonable if not c["id"].startswith("heterogeneity.")][:2]
         promoted = {c["id"] for c in recommended}
         reasonable = [c for c in reasonable if c["id"] not in promoted]
+    # The short headline is a presentation limit, never a catalogue filter.
+    # Previously every recommended card after the fourth silently disappeared,
+    # including methods already selected in the project.
+    reasonable = recommended[4:] + reasonable
+    recommended = recommended[:4]
     return {
         "design": design_id,
         "estimand": estimand_id,
-        "recommended": recommended[:4],
+        "recommended": recommended,
         "reasonable": reasonable,
         "unsuitable": unsuitable,
         "default_set": [c["id"] for c in recommended[:3]],

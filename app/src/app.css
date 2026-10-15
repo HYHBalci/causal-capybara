@@ -978,6 +978,7 @@ button.status-provisional:hover { color: var(--ink); }
 .provisional-action .btn { flex: none; }
 .provisional-also { font-weight: 600; }
 .provisional-review-cta { margin-top: 2px; }
+.provisional-review-cta .btn { max-width: 100%; white-space: normal; text-align: left; }
 .provisional-review-cta.compact .btn { font-size: 11.5px; padding: 3px 9px; }
 .provisional-reviewed { gap: 7px; flex-wrap: wrap; }
 

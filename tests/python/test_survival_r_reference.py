@@ -28,8 +28,8 @@ sys.path.insert(0, str(ROOT / "engines" / "python"))
 sys.path.insert(0, str(ROOT / "sidecar"))
 
 from capy_py.contracts import run_method
-from capy_sidecar.engines import find_rscript
 from capy_sidecar.examples import _survival_followup
+from r_reference_support import r_reference_executable
 
 
 # Written by this test, using public R APIs and base-R numerical integration.
@@ -99,9 +99,7 @@ def _rows(path: Path) -> list[dict]:
 
 @pytest.fixture(scope="module")
 def audit(tmp_path_factory):
-    exe = find_rscript()
-    if not exe:
-        pytest.skip("Rscript is unavailable; R survival concordance is a release check")
+    exe = r_reference_executable("survival")
     work = tmp_path_factory.mktemp("survival-r-reference")
     frame, roles, truth, _ = _survival_followup()
     frame.to_csv(work / "example.csv", index=False)
@@ -109,8 +107,6 @@ def audit(tmp_path_factory):
     process = subprocess.run([exe, "--vanilla", str(work / "reference.R"),
                               str(work / "example.csv"), str(work)],
                              capture_output=True, text=True, timeout=180, cwd=ROOT)
-    if process.returncode == 42:
-        pytest.skip("R package survival is unavailable")
     assert process.returncode == 0, f"R reference failed:\n{process.stdout}\n{process.stderr}"
     versions = dict(line.split("=", 1) for line in (work / "versions.txt").read_text().splitlines())
     report = {"example": "survival_followup", "n": len(frame),

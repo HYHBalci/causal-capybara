@@ -804,6 +804,18 @@ def design_facts(df: pd.DataFrame, spec: dict[str, Any]) -> dict[str, Any]:
             shape = capy_roles.panel_shape(work, roles["unit"], roles["time"])
             facts.update({"n_units": shape["n_units"], "n_periods": shape["n_periods"],
                           "balanced": shape["balanced"]})
+            # A single cohort alone may consist entirely of already-treated
+            # units. Only prefer the canonical 2x2 when adoption is after an
+            # observed baseline and both groups contribute all four cells.
+            numeric_time = pd.to_numeric(work[roles["time"]], errors="coerce")
+            periods = sorted(numeric_time.dropna().unique())
+            treated = cohorts[~never]
+            cells = set(zip(work[roles["unit"]].isin(treated.index), numeric_time))
+            facts["two_period_adoption"] = bool(
+                len(periods) == 2 and facts["n_cohorts"] == 1 and len(treated)
+                and float(treated.iloc[0]) == periods[-1]
+                and {(group, period) for group in (False, True) for period in periods} <= cells
+            )
         if design in ("observational", "longitudinal", "mediation", "survival") and roles.get("treatment"):
             confs = capy_roles.confounders(spec)
             if confs:

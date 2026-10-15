@@ -15,7 +15,7 @@ const browser = await chromium.launch({ headless: true, ...(process.env.CAPY_BRO
 const context = await browser.newContext({ viewport: { width: 1440, height: 1000 }, acceptDownloads: true })
 const page = await context.newPage()
 page.setDefaultTimeout(30000)
-const pageErrors = [], checks = [], accessibility = [], charts = []
+const pageErrors = [], checks = [], accessibility = [], charts = [], controls = []
 let failure = null
 page.on('pageerror', (error) => pageErrors.push(error.message))
 await page.route('**/*', async (route) => {
@@ -90,6 +90,16 @@ async function renderedFigure(target, name, { labels, cells, minCellHeight } = {
   }
   charts.push({ name, ...geometry, legend_labels: renderedLabels, cells: heights.length,
     minimum_svg_cell_height: heights.length ? Math.min(...heights) : null })
+  // A locator screenshot cannot show the whole tall unit chart through its
+  // scrollable parent. Keep its normal full PNG export as inspectable evidence.
+  if (geometry.canvasHeight > 1000) {
+    const pngDownload = page.waitForEvent('download')
+    await target.getByRole('button', { name: 'Save PNG', exact: true }).click()
+    const pngFile = path.join(output, `${name}-export.png`)
+    await (await pngDownload).saveAs(pngFile)
+    const bytes = await readFile(pngFile)
+    assert.deepEqual([...bytes.subarray(0, 8)], [137, 80, 78, 71, 13, 10, 26, 10])
+  }
   await target.screenshot({ path: path.join(output, `${name}.png`) })
 }
 
@@ -117,6 +127,10 @@ try {
     const defaultMethods = original.methods.filter((method) => method.included !== false)
     assert.deepEqual(defaultMethods.map((method) => method.method_id).sort(), Object.keys(scenario.expected).sort())
     await page.locator('.board-split').waitFor()
+    const openingToast = page.getByRole('region', { name: 'Notifications' }).locator('.toast')
+      .filter({ hasText: `Opened ${scenario.title}` })
+    await openingToast.waitFor()
+    await openingToast.getByRole('button', { name: 'Dismiss', exact: true }).click()
     const drawn = page.waitForResponse((response) => response.url().endsWith(`/specs/${specId}/sketch`) && response.request().method() === 'POST')
     await page.locator('.board-actions').getByRole('button', { name: 'Diagnose', exact: true }).click()
     const sketch = await (await drawn).json()
@@ -145,6 +159,20 @@ try {
       await page.setViewportSize({ width, height: 1000 })
       await renderedFigure(rollout, `${scenario.id}-rollout-${width}`, { labels: ['Untreated', 'Treated'], cells: cohortLabels.length * scenario.periods, minCellHeight: 16 })
       await renderedFigure(trends, `${scenario.id}-trends-${width}`, { labels: cohortLabels })
+      const reviewButton = page.locator('.provisional-review-cta').getByRole('button', { name: /^I have reviewed/ })
+      await reviewButton.scrollIntoViewIfNeeded()
+      const reviewGeometry = await reviewButton.evaluate((element) => {
+        const button = element.getBoundingClientRect(), parent = element.parentElement.getBoundingClientRect()
+        return { left: button.left, right: button.right, width: button.width, parentLeft: parent.left, parentRight: parent.right,
+          viewport: window.innerWidth, clientWidth: element.clientWidth, scrollWidth: element.scrollWidth }
+      })
+      assert(reviewGeometry.width > 0 && reviewGeometry.left >= reviewGeometry.parentLeft - 1 && reviewGeometry.right <= reviewGeometry.parentRight + 1,
+        `Diagnostic review button overflows its card at ${width}px: ${JSON.stringify(reviewGeometry)}`)
+      assert(reviewGeometry.left >= 0 && reviewGeometry.right <= width && reviewGeometry.scrollWidth <= reviewGeometry.clientWidth + 1,
+        `Diagnostic review label is clipped at ${width}px: ${JSON.stringify(reviewGeometry)}`)
+      controls.push({ name: `${scenario.id}-review-${width}`, ...reviewGeometry })
+      await reviewButton.screenshot({ path: path.join(output, `${scenario.id}-review-${width}.png`) })
+      await trends.scrollIntoViewIfNeeded()
       await audit(`${scenario.id}-diagnose-${width}`)
     }
     await detail.locator('summary').click()
@@ -214,12 +242,13 @@ try {
   assert.deepEqual(pageErrors, [], 'Unexpected browser runtime errors')
 } catch (error) {
   failure = { message: String(error?.stack || error) }
+  console.error(failure.message)
   await page.screenshot({ path: path.join(output, 'failure.png') }).catch(() => {})
   console.error((await page.locator('body').innerText().catch(() => '')).slice(-5000))
   process.exitCode = 1
 } finally {
   await writeFile(path.join(output, 'results.json'), JSON.stringify({ passed: !failure && checks.length === cases.length,
-    expected_cases: cases.length, checks, charts, accessibility, page_errors: pageErrors, failure }, null, 2))
+    expected_cases: cases.length, checks, charts, controls, accessibility, page_errors: pageErrors, failure }, null, 2))
   await page.unrouteAll({ behavior: 'ignoreErrors' })
   await browser.close()
 }

@@ -19,8 +19,13 @@ ROOT = Path(__file__).resolve().parents[2]
 sys.path[:0] = [str(ROOT / "engines/python"), str(ROOT / "sidecar"), str(ROOT / "tests/python")]
 
 from capy_py.contracts import run_method
-from capy_sidecar.engines import find_rscript
 from test_cross_engine import run_r
+from r_reference_support import r_reference_executable
+
+
+@pytest.fixture(scope="module")
+def r_adapter():
+    return r_reference_executable("jsonlite")
 
 
 def panel(periods=8, *, unbalanced=False):
@@ -87,13 +92,12 @@ def test_did_python_and_export_match_explicit_statsmodels(method, periods, unbal
     assert exported.conf_int(alpha=.1)[j] == pytest.approx([result["ci_low"],result["ci_high"]], abs=1e-9)
 
 
-@pytest.mark.skipif(not find_rscript(), reason="R is not installed")
 @pytest.mark.parametrize("method,periods,unbalanced", [
     ("did.twoway_2x2", 2, False),
     ("did.twfe", 8, False),
     ("did.twfe", 8, True),
 ])
-def test_did_r_matches_explicit_statsmodels(method, periods, unbalanced, tmp_path):
+def test_did_r_matches_explicit_statsmodels(method, periods, unbalanced, tmp_path, r_adapter):
     df = panel(periods, unbalanced=unbalanced)
     result = run_r(method, spec(), df, tmp_path / "r", options={"ci_level": .90})
     assert result["status"] == "ok", result.get("error")
@@ -168,8 +172,7 @@ def test_twfe_python_reference_uses_effective_rank(covariate_kind):
     assert fitted.conf_int(alpha=.1)[index] == pytest.approx([result["ci_low"], result["ci_high"]], abs=1e-9)
 
 
-@pytest.mark.skipif(not find_rscript(), reason="R is not installed")
-def test_r_2x2_excludes_units_already_treated_at_baseline(tmp_path):
+def test_r_2x2_excludes_units_already_treated_at_baseline(tmp_path, r_adapter):
     df = panel(periods=2)
     already = df.unit.isin([f"u{u:02d}" for u in range(8)])
     df.loc[already, "d"] = 1.0
@@ -184,3 +187,19 @@ def test_r_2x2_excludes_units_already_treated_at_baseline(tmp_path):
     assert result["estimate"] == pytest.approx(expected.params.iloc[index], abs=1e-9)
     assert result["se"] == pytest.approx(expected.bse.iloc[index], abs=1e-9)
     assert [result["ci_low"], result["ci_high"]] == pytest.approx(expected.conf_int(alpha=.1).iloc[index], abs=1e-9)
+
+
+@pytest.mark.parametrize("required", [False, True])
+@pytest.mark.parametrize("missing", ["Rscript", "jsonlite"])
+def test_r_reference_dependency_gate(monkeypatch, required, missing):
+    """Optional Python jobs skip, but the mandatory R gate cannot lose coverage."""
+    from types import SimpleNamespace
+    import r_reference_support as support
+
+    monkeypatch.setenv("CAPY_REQUIRE_R_REFERENCE", "1" if required else "0")
+    monkeypatch.setattr(support, "find_rscript", lambda: None if missing == "Rscript" else "Rscript")
+    monkeypatch.setattr(support.subprocess, "run", lambda *args, **kwargs:
+                        SimpleNamespace(returncode=42, stdout="jsonlite", stderr=""))
+    expected = pytest.fail.Exception if required else pytest.skip.Exception
+    with pytest.raises(expected, match=missing):
+        support.r_reference_executable("jsonlite")

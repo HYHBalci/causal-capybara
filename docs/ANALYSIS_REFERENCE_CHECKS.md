@@ -109,6 +109,12 @@ lines as observed means. Individual-unit detail is expandable and keeps a
 readable row-based height. The gallery and tours distinguish the two-period
 minimum-wage example from staggered Medicaid expansion.
 
+The hosted workflow also exposed selected methods disappearing when the
+recommendation list kept only its first four candidates. Overflow recommendations
+now remain in the visible alternatives, and two-period studies prioritize the
+canonical 2×2 comparison. The diagnostic-review button wraps inside its panel
+at narrower widths.
+
 Data-level regressions check all 410 stores and 51 states, cohort ordering,
 mixed treatment, missing panel cells and detail selection. Six actual chart
 specifications compile and render to SVG without Vega warnings. Frontend tests
@@ -144,8 +150,9 @@ python -m pytest tests/python/test_did_reference_regressions.py tests/python/tes
 python tests/python/test_cross_engine.py
 ```
 
-R-specific checks explicitly skip if R or `survival` is missing. The dedicated
-cross-engine CI job installs them and runs these checks. Set
+R-specific checks explicitly skip when a local reference dependency is missing.
+The dedicated cross-engine CI job installs R, `jsonlite` and `survival`, and sets
+`CAPY_REQUIRE_R_REFERENCE=1` so a missing dependency fails the required check. Set
 `CAPY_SURVIVAL_R_REPORT` to a file path to retain numerical results and versions.
 Local reference versions were R 4.4.3, survival 3.8.3, NumPy 2.5.2, pandas 3.0.5,
 SciPy 1.18.1 and statsmodels 0.15.0.

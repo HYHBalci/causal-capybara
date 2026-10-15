@@ -10,6 +10,7 @@ import pytest
 ROOT = Path(__file__).resolve().parents[2]
 sys.path[:0] = [str(ROOT / "sidecar"), str(ROOT / "engines/python")]
 from capy_sidecar import scripts
+from r_reference_support import r_reference_executable
 
 
 def test_python_literal_preserves_strings_and_nested_json_values():
@@ -52,11 +53,9 @@ def test_exported_r_did_reference_reproduces_python_estimate_and_cluster_ci(tmp_
     import numpy as np
     import pandas as pd
     from capy_py.contracts import run_method
-    from capy_sidecar import engines, examples
+    from capy_sidecar import examples
 
-    rscript = engines.find_rscript()
-    if not rscript:
-        pytest.skip("Rscript is not installed")
+    rscript = r_reference_executable()
     frame, roles, _, _ = examples.GENERATORS["minimum_wage"]()
     if adjust:
         rng = np.random.default_rng(182)
