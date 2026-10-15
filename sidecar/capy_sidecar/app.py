@@ -8,10 +8,12 @@ from __future__ import annotations
 
 import json
 import sys
+import tempfile
 from pathlib import Path
 from typing import Any
 
-from fastapi import Body, FastAPI, HTTPException, Query
+from fastapi import Body, FastAPI, HTTPException, Query, Request
+from starlette.concurrency import run_in_threadpool
 from fastapi.middleware.cors import CORSMiddleware
 from starlette.middleware.trustedhost import TrustedHostMiddleware
 from fastapi.responses import JSONResponse, PlainTextResponse
@@ -390,6 +392,18 @@ def delete_object(project_id: str, object_id: str) -> dict[str, Any]:
 # Data
 # ---------------------------------------------------------------------------
 
+MAX_BROWSER_UPLOAD_BYTES = 256 * 1024 * 1024
+
+
+def _store_import(proj: Project, path: str, options: dict | None = None, *, filename: str | None = None) -> dict[str, Any]:
+    try:
+        imported = dataio.read_any(path, options or {})
+    except Exception as exc:
+        raise _fail(exc) from None
+    proj.set_data(imported.df, original_path=path, original_path_label=filename,
+                  import_options=imported.options, columns=imported.columns, checksum=imported.checksum)
+    return {"project": proj.summary(), "columns": imported.columns, "notes": imported.notes, "options": imported.options}
+
 
 @app.post("/projects/{project_id}/import")
 def import_data(project_id: str, body: dict[str, Any] = Body(...)) -> dict[str, Any]:
@@ -397,25 +411,44 @@ def import_data(project_id: str, body: dict[str, Any] = Body(...)) -> dict[str, 
     path = body.get("path")
     if not path:
         raise HTTPException(400, "Give the path of a data file to import.")
-    try:
-        imported = dataio.read_any(path, body.get("options") or {})
-    except dataio.ImportError_ as exc:
-        raise _fail(exc) from None
-    except Exception as exc:
-        raise _fail(exc) from None
-    proj.set_data(
-        imported.df,
-        original_path=str(path),
-        import_options=imported.options,
-        columns=imported.columns,
-        checksum=imported.checksum,
-    )
-    return {
-        "project": proj.summary(),
-        "columns": imported.columns,
-        "notes": imported.notes,
-        "options": imported.options,
-    }
+    return _store_import(proj, str(path), body.get("options"))
+
+
+@app.post("/projects/{project_id}/import-upload")
+async def import_upload(project_id: str, request: Request, filename: str = Query(..., min_length=1, max_length=255)) -> dict[str, Any]:
+    """Receive a browser-selected file locally, without trusting a client path."""
+    proj = _project(project_id)
+    reserved = {"CON", "PRN", "AUX", "NUL", *(f"COM{i}" for i in range(1, 10)), *(f"LPT{i}" for i in range(1, 10))}
+    if (any(char in filename for char in '/\\:<>"|?*') or any(ord(char) < 32 for char in filename)
+            or filename.endswith((' ', '.')) or filename.split('.', 1)[0].upper() in reserved):
+        raise HTTPException(400, "Choose a data file with a plain filename, without folders or special path characters.")
+    if Path(filename).suffix.lower() not in dataio.SUPPORTED:
+        raise HTTPException(400, f"Unsupported data format. Supported: {', '.join(sorted(dataio.SUPPORTED))}.")
+    if request.headers.get('content-type', '').split(';', 1)[0].lower() != 'application/octet-stream':
+        raise HTTPException(415, "Send the selected file as binary data.")
+    size_limit = "Browser import supports files up to 256 MiB. Use the full-path import for larger files."
+    if request.headers.get('content-length'):
+        try:
+            declared_size = int(request.headers['content-length'])
+        except ValueError:
+            raise HTTPException(400, "The upload size is invalid.") from None
+        if declared_size < 0:
+            raise HTTPException(400, "The upload size is invalid.")
+        if declared_size > MAX_BROWSER_UPLOAD_BYTES:
+            raise HTTPException(413, size_limit)
+    proj.ensure_dirs()
+    with tempfile.TemporaryDirectory(prefix='.upload-', dir=proj.data_dir) as directory:
+        uploaded = Path(directory) / filename
+        total = 0
+        with uploaded.open('wb') as target:
+            async for chunk in request.stream():
+                total += len(chunk)
+                if total > MAX_BROWSER_UPLOAD_BYTES:
+                    raise HTTPException(413, size_limit)
+                target.write(chunk)
+        if not total:
+            raise HTTPException(400, "The selected file is empty. Choose a file containing data.")
+        return await run_in_threadpool(_store_import, proj, str(uploaded), filename=filename)
 
 
 @app.get("/projects/{project_id}/data/formats")
@@ -428,6 +461,19 @@ def data_columns(project_id: str) -> list[dict[str, Any]]:
     proj = _project(project_id)
     cols = (proj.meta.get("data") or {}).get("columns")
     if cols:
+        # Older imports inferred "binary" for zero or one observed value. Repair
+        # that display hint from the stored data without rewriting the import,
+        # its labels, or its values. A declared Boolean type remains binary.
+        stale = [col for col in cols if col.get("kind") == "binary" and col.get("n_unique") in (0, 1)]
+        if stale:
+            try:
+                df = proj.data()
+            except StoreError as exc:
+                raise _fail(exc, 404) from None
+            corrected = {col["name"]: dataio.infer_kind(df[col["name"]])
+                         for col in stale if col.get("name") in df.columns}
+            return [dict(col, kind=corrected[col["name"]]) if col.get("name") in corrected else col
+                    for col in cols]
         return cols
     try:
         return dataio.profile_columns(proj.data())

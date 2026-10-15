@@ -12,12 +12,13 @@
 
 import { useState } from 'react'
 import { useStore } from '../store'
-import type { Artifact, ColumnMeta, DesignZone } from '../types'
+import type { Artifact, DesignZone } from '../types'
 import { ArtifactView } from '../components/VegaChart'
 import { MarkReviewedButton } from '../components/Provisional'
 import { useSplitPane } from '../components/SplitPane'
 import { Schematic } from './Schematic'
 import { count } from '../format'
+import { canAssignColumn, roleColumnOptions } from '../roleColumns'
 
 export function DesignBoard() {
   const spec = useStore((s) => s.spec)
@@ -95,6 +96,7 @@ function Zone({ zone }: { zone: DesignZone }) {
   const setRole = useStore((s) => s.setRole)
   const setExplain = useStore((s) => s.setExplain)
   const guardrails = useStore((s) => s.guardrails)
+  const toast = useStore((s) => s.toast)
   const [over, setOver] = useState(false)
   const [picking, setPicking] = useState(false)
 
@@ -105,8 +107,7 @@ function Zone({ zone }: { zone: DesignZone }) {
   const isValue = zone.kind === 'value' || zone.kind === 'values'
   const flagged = new Set((guardrails?.bad_controls ?? []).map((b) => b.variable))
 
-  const accepts = (c: ColumnMeta) => !zone.accepts?.length || zone.accepts.includes(c.kind)
-  const options = columns.filter(accepts)
+  const options = roleColumnOptions(columns, zone.accepts, raw)
 
   const add = (name: string) => {
     if (zone.multiple) setRole(zone.role, [...new Set([...list, name])], `Added ${name} to ${zone.label}`)
@@ -123,10 +124,13 @@ function Zone({ zone }: { zone: DesignZone }) {
       }}
       onDragLeave={() => setOver(false)}
       onDrop={(e) => {
+        if (isValue) return
         e.preventDefault()
         setOver(false)
         const name = e.dataTransfer.getData('text/capy-variable')
-        if (name) add(name)
+        const column = columns.find((candidate) => candidate.name === name)
+        if (column && canAssignColumn(column, zone.accepts)) add(name)
+        else if (name) toast('info', `${zone.label} takes ${acceptedKinds(zone)}.`)
       }}
       role="group"
       aria-label={`${zone.label}${zone.required ? ' (required)' : ''}`}
@@ -192,7 +196,13 @@ function Zone({ zone }: { zone: DesignZone }) {
         <div className="zone-picker card">
           <div className="scroll" style={{ maxHeight: 220 }}>
             {options.map((c) => (
-              <button key={c.name} className="qslot-option" onClick={() => add(c.name)}>
+              <button key={c.name} className={`qslot-option${(zone.multiple ? list.includes(c.name) : single === c.name) ? ' on' : ''}`}
+                aria-pressed={zone.multiple ? list.includes(c.name) : single === c.name}
+                onClick={() => {
+                  if (zone.multiple && list.includes(c.name)) setRole(zone.role, list.filter((name) => name !== c.name), `Removed ${c.name} from ${zone.label}`)
+                  else if (!zone.multiple && single === c.name) setRole(zone.role, null, `Cleared ${zone.label}`)
+                  else add(c.name)
+                }}>
                 <span className={`kind-icon ${c.kind}`} aria-hidden />
                 <span className="grow">{c.name}</span>
                 <span className="tiny hint">{c.kind}</span>

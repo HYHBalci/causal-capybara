@@ -153,6 +153,11 @@ export const api = {
       `/projects/${id}/import`,
       { path, options },
     ),
+  uploadData: (id: string, file: File) =>
+    request<{ project: ProjectSummary; columns: unknown[]; notes: string[]; options: Record<string, unknown> }>(
+      `/projects/${id}/import-upload?filename=${encodeURIComponent(file.name)}`,
+      { method: 'POST', body: file, headers: { 'Content-Type': 'application/octet-stream' } },
+    ),
   columns: (id: string) => get<import('./types').ColumnMeta[]>(`/projects/${id}/data/columns`),
   rows: (id: string, opts: { offset?: number; limit?: number; columns?: string; sort?: string; descending?: boolean }) =>
     get<{ total: number; offset: number; columns: string[]; rows: unknown[][] }>(

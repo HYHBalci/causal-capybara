@@ -51,6 +51,9 @@ export function DataSheet() {
   }, [columns, filter, sortBy, spec?.roles])
 
   const selectedCol = columns.find((c) => c.name === selected) ?? null
+  const selectVariable = (name: string) => setSelected((current) => current === name ? null : name)
+
+  useEffect(() => { setSelected(null) }, [project?.id])
 
   if (!project) return null
   if (!project.has_data) return <ImportPane />
@@ -93,7 +96,8 @@ export function DataSheet() {
                     e.dataTransfer.setData('text/capy-variable', c.name)
                     e.dataTransfer.effectAllowed = 'copy'
                   }}
-                  onClick={() => setSelected(c.name)}
+                  onClick={() => selectVariable(c.name)}
+                  aria-pressed={selectedCol?.name === c.name}
                   title={`${c.kind} · ${c.pct_missing}% missing · ${c.n_unique} distinct`}
                 >
                   <span className={`kind-icon ${c.kind}`} aria-hidden />
@@ -108,12 +112,14 @@ export function DataSheet() {
             {!shown.length && <p className="pad hint">No variable matches.</p>}
           </div>
           <div className="var-rail-foot tiny hint">
-            {columns.length} variables · drag one onto the question strip or the board
+            {columns.length} variables · click to inspect, click again to clear.
+            Drag onto the question strip or board to assign a role.
           </div>
         </div>
 
         <div className="col grow" style={{ minWidth: 0, minHeight: 0 }}>
-          <Sheet key={project.id} columns={columns} projectId={project.id} total={project.n ?? 0} onSelect={setSelected} />
+          <Sheet key={project.id} columns={columns} projectId={project.id} total={project.n ?? 0}
+                 selected={selectedCol?.name ?? null} onSelect={selectVariable} />
           {healthOpen && health && <HealthPanel onClose={() => setHealthOpen(false)} />}
           {!healthOpen && (
             <button className="btn ghost sm health-reopen" onClick={() => setHealthOpen(true)}>
@@ -123,14 +129,19 @@ export function DataSheet() {
         </div>
 
         {selectedCol && (
-          <div className="var-detail scroll" style={{ width: detail.size ?? undefined }}>
+          <section className="var-detail scroll" aria-label={`Variable details: ${selectedCol.name}`}
+                   style={{ width: detail.size ?? undefined }}>
             <Resizer
               axis="x" side="left" invert label="Variable details width"
               current={detail.size ?? 296} onChange={detail.setSize} onReset={detail.reset}
               min={200} max={() => Math.round(window.innerWidth * 0.5)}
             />
+            <div className="var-detail-head">
+              <span className="panel-title">Variable details</span>
+              <button className="btn ghost sm" aria-label="Close variable details" onClick={() => setSelected(null)}>✕</button>
+            </div>
             <VariableInspector column={selectedCol} />
-          </div>
+          </section>
         )}
       </div>
     </div>
@@ -138,8 +149,8 @@ export function DataSheet() {
 }
 
 function Sheet({
-  columns, projectId, total, onSelect,
-}: { columns: ColumnMeta[]; projectId: string; total: number; onSelect: (n: string) => void }) {
+  columns, projectId, total, selected, onSelect,
+}: { columns: ColumnMeta[]; projectId: string; total: number; selected: string | null; onSelect: (n: string) => void }) {
   const [page, setPage] = useState<{ dataKey: string; rows: unknown[][]; offset: number } | null>(null)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -226,6 +237,7 @@ function Sheet({
                   <th key={c.name} aria-sort={sort?.col === c.name ? (sort.desc ? 'descending' : 'ascending') : 'none'}>
                     <span className="sheet-col-wrap">
                       <button className="sheet-col" onClick={() => onSelect(c.name)}
+                              aria-pressed={selected === c.name}
                               title={`${c.kind} · ${c.pct_missing}% missing · ${c.n_unique} distinct — click for details`}>
                         <span className={`kind-icon ${c.kind}`} aria-hidden />
                         {c.name}
@@ -368,21 +380,13 @@ function Stat({ label, value, tone }: { label: string; value: string; tone?: 'ok
   )
 }
 
-/** Getting a dataset in.
- *
- * This was one text box under the words "Type the path of a data file", which
- * asked a person who may never have used a terminal to know what an absolute
- * path is and to retype it without a typo -- and answered a mistake with
- * "There is no file at ...". The desktop shell has had the file dialog
- * registered and permitted since the first build, and the window has had
- * dragDropEnabled set the whole time; neither was ever reachable, because the
- * JavaScript half of the Tauri API was not a dependency. Both work now, and
- * the typed path stays as the third way in rather than the only one.
- */
+/** Desktop selection supplies a native path; browser selection supplies File
+ * bytes to the local engine. Both retain the optional typed-path workflow. */
 function ImportPane() {
   const importData = useStore((s) => s.importData)
   const project = useStore((s) => s.project)!
-  const toast = useStore((s) => s.toast)
+  const importing = useStore((s) => s.busy) === 'Reading the file'
+  const fileInput = useRef<HTMLInputElement>(null)
   const [path, setPath] = useState('')
   const [formats, setFormats] = useState<Record<string, string>>({})
   const [hovering, setHovering] = useState(false)
@@ -403,14 +407,11 @@ function ImportPane() {
   const extensions = Object.keys(formats).map((e) => e.replace(/^\./, '')).filter(Boolean)
 
   const browse = async () => {
+    if (!isDesktop()) { fileInput.current?.click(); return }
     const picked = await pickFile(
       extensions.length ? [{ name: 'Data files', extensions }] : undefined,
     )
     if (picked) void importData(picked)
-    else if (!isDesktop()) {
-      toast('info', 'Choosing a file needs the installed app.',
-        'In a browser tab, paste the full path of the file instead.')
-    }
   }
 
   return (
@@ -418,7 +419,10 @@ function ImportPane() {
       className={`empty-state import-drop${hovering ? ' over' : ''}`}
       onDragOver={(e) => { e.preventDefault(); setHovering(true) }}
       onDragLeave={() => setHovering(false)}
-      onDrop={(e) => { e.preventDefault(); setHovering(false) }}
+      onDrop={(e) => {
+        e.preventDefault(); setHovering(false)
+        if (!isDesktop() && e.dataTransfer.files[0]) void importData(e.dataTransfer.files[0])
+      }}
     >
       <div className="empty-art" aria-hidden>
         <svg width="64" height="64" viewBox="0 0 24 24">
@@ -435,7 +439,14 @@ function ImportPane() {
         keeps working even if the original moves.
       </p>
 
-      <button className="btn primary lg" onClick={() => void browse()}>Choose a file…</button>
+      {!isDesktop() && <input ref={fileInput} type="file" hidden aria-label="Choose a data file"
+        accept={extensions.length ? extensions.map((extension) => `.${extension}`).join(',') : undefined}
+        onChange={(event) => {
+          const file = event.currentTarget.files?.[0]
+          event.currentTarget.value = ''
+          if (file) void importData(file)
+        }} />}
+      <button className="btn primary lg" disabled={importing} onClick={() => void browse()}>Choose a file…</button>
 
       <details className="import-typed">
         <summary className="tiny hint">Or paste the full path of the file</summary>
@@ -448,7 +459,7 @@ function ImportPane() {
             onChange={(e) => setPath(e.target.value)}
             onKeyDown={(e) => { if (e.key === 'Enter' && path.trim()) void importData(path.trim()) }}
           />
-          <button className="btn" disabled={!path.trim()} onClick={() => void importData(path.trim())}>
+          <button className="btn" disabled={importing || !path.trim()} onClick={() => void importData(path.trim())}>
             Import
           </button>
         </div>
@@ -457,7 +468,8 @@ function ImportPane() {
       <p className="tiny hint" style={{ marginTop: 12, maxWidth: 560 }}>
         Reads {Object.values(formats).filter((v, i, a) => a.indexOf(v) === i).join(', ') ||
           'CSV, Parquet, Stata, SPSS, SAS, Excel, Arrow and Gretl workfiles'}.
-        Value labels and dates survive the round trip. Nothing is uploaded anywhere.
+        Value labels and dates survive the round trip. Files stay on this machine.
+        {!isDesktop() && ' Browser imports send the selected file to the local analysis engine (up to 256 MiB).'}
       </p>
     </div>
   )

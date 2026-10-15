@@ -444,6 +444,8 @@
   border-left: 1px solid var(--rule); background: var(--paper-raised);
 }
 .var-title { margin: 0 0 8px; font-size: var(--t-section); font-weight: 680; display: flex; align-items: center; gap: 8px; }
+.var-detail-head { display: flex; align-items: center; justify-content: space-between; gap: 8px; padding: 8px 12px; border-bottom: 1px solid var(--rule); }
+.sheet-col[aria-pressed="true"] { color: var(--teal-text); background: var(--teal-soft); }
 
 .sheet { min-height: 0; }
 .sheet-head { padding: 8px 14px; gap: 10px; border-bottom: 1px solid var(--rule); background: var(--paper-raised); }

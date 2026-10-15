@@ -519,14 +519,17 @@ class Project:
 
     def set_data(self, df, *, original_path: str | None = None, import_options: dict[str, Any] | None = None,
                  columns: list[dict[str, Any]] | None = None, checksum: str | None = None,
-                 copy_original: bool = True) -> None:
+                 copy_original: bool = True, original_path_label: str | None = None) -> None:
+        # Browser uploads have a filename but no client filesystem path. Keep
+        # that label in provenance while copying from the temporary source.
         with self._lock:
             self._set_data(df, original_path=original_path, import_options=import_options,
-                           columns=columns, checksum=checksum, copy_original=copy_original)
+                           columns=columns, checksum=checksum, copy_original=copy_original,
+                           original_path_label=original_path_label)
 
     def _set_data(self, df, *, original_path: str | None = None, import_options: dict[str, Any] | None = None,
                   columns: list[dict[str, Any]] | None = None, checksum: str | None = None,
-                  copy_original: bool = True) -> None:
+                  copy_original: bool = True, original_path_label: str | None = None) -> None:
         self.ensure_dirs()
         temporary = self.parquet_path.with_name(f".analysis.{uuid.uuid4().hex[:8]}.part")
         try:
@@ -550,7 +553,7 @@ class Project:
                     original_copy = None
         with self._lock:
             self.meta["data"] = {
-                "original_path": str(original_path) if original_path else None,
+                "original_path": original_path_label if original_path_label is not None else str(original_path) if original_path else None,
                 "original_copy": original_copy,
                 "original_checksum": checksum,
                 "parquet_path": str(self.parquet_path),

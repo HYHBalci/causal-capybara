@@ -15,6 +15,7 @@ import { Resizer, usePanelSize } from './Resizer'
 import { count } from '../format'
 import { References } from './References'
 import { AskButton } from './AskButton'
+import { canAssignColumn, roleColumnOptions, roleColumnSelection } from '../roleColumns'
 
 // The status vocabulary moved to Assumptions.tsx, where the shared list lives.
 // Re-exported so nothing that imported it from here has to change.
@@ -262,12 +263,7 @@ function RolesSection() {
         // -- a two-period panel profiles its time column as binary, so the DiD
         // time slot rendered "(none)" for a board that had one. Whatever is
         // actually set stays in the list, accepted kind or not.
-        const assigned = new Set(
-          (Array.isArray(raw) ? raw : [raw]).filter((v): v is string => typeof v === 'string'),
-        )
-        const options = columns.filter(
-          (c) => assigned.has(c.name) || !accepts.length || accepts.includes(c.kind),
-        )
+        const options = roleColumnOptions(columns, accepts, raw)
         if (z.multiple) {
           const list = (raw as string[]) ?? []
           return (
@@ -389,6 +385,9 @@ export function VariableInspector({ column }: { column: ColumnMeta }) {
   const spec = useStore((s) => s.spec)
   const setRole = useStore((s) => s.setRole)
   const designs = useStore((s) => s.designs)
+  const newSpec = useStore((s) => s.newSpec)
+  const creatingSpec = useStore((s) => s.creatingSpec)
+  const setView = useStore((s) => s.setView)
   const [dist, setDist] = useState<{ kind: string; rows: Record<string, number | string>[] } | null>(null)
 
   useEffect(() => {
@@ -453,15 +452,34 @@ export function VariableInspector({ column }: { column: ColumnMeta }) {
         </div>
       )}
 
+      {!spec && (
+        <div className="field" style={{ marginTop: 12 }}>
+          <p className="tiny hint">Start a question to choose the treatment, outcome and other roles. Unassigned columns can stay in your data.</p>
+          <button className="btn sm" disabled={creatingSpec} aria-busy={creatingSpec}
+                  onClick={() => void newSpec()}>{creatingSpec ? 'Starting question…' : 'Create a question'}</button>
+        </div>
+      )}
+      {spec && !design && (
+        <div className="field" style={{ marginTop: 12 }}>
+          <p className="tiny hint">Choose a design to assign additional roles. Treatment and outcome can also be selected in the question strip.</p>
+          <button className="btn sm" onClick={() => setView('design')}>Choose a design</button>
+        </div>
+      )}
+
       {design && spec && (
         <>
           <div className="panel-title" style={{ marginTop: 12 }}>Assign a role</div>
           <div className="row wrap" style={{ gap: 4 }}>
-            {design.zones.map((z) => (
+            {design.zones.filter((z) => z.kind !== 'value' && z.kind !== 'values').map((z) => {
+              const assigned = roleColumnSelection((spec.roles as Record<string, unknown>)[z.role]).includes(column.name)
+              const accepts = canAssignColumn(column, z.accepts)
+              return (
               <button
                 key={z.role}
-                className={`btn sm${role === z.role ? ' primary' : ''}`}
-                title={z.help}
+                className={`btn sm${assigned ? ' primary' : ''}`}
+                aria-pressed={assigned}
+                disabled={!assigned && !accepts}
+                title={!assigned && !accepts ? `This role accepts ${(z.accepts ?? []).join(', ')} variables.` : z.help}
                 onClick={() => {
                   const cur = (spec.roles as Record<string, unknown>)[z.role]
                   if (z.multiple) {
@@ -476,7 +494,8 @@ export function VariableInspector({ column }: { column: ColumnMeta }) {
               >
                 {z.label}
               </button>
-            ))}
+              )
+            })}
           </div>
         </>
       )}
@@ -494,6 +513,8 @@ function currentRole(roles: Record<string, unknown>, name: string): string | nul
 }
 
 function suggestRole(c: ColumnMeta): string | null {
+  if (c.n_unique === 0) return 'No observed values. This column can stay in your data; choose variables with observed values for your question.'
+  if (c.n_unique === 1) return 'Only one observed value. This column can stay as metadata, but it cannot distinguish treatment groups or explain variation in an outcome.'
   const n = c.name.toLowerCase()
   if (/^(post_|after_)|_post$|_after$|followup|follow_up|endline/.test(n)) {
     return `"${c.name}" is named like something measured after treatment. Adjusting for a descendant of treatment blocks part of the effect. This is a suggestion, not an automatic role.`

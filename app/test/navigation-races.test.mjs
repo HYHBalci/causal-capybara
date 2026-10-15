@@ -96,6 +96,35 @@ test('duplicate imports into one project are not sent concurrently', async () =>
   assert.equal(useStore.getState().selectedObjectId, null)
 })
 
+test('browser file imports use byte upload and retain the shared duplicate-import guard', async () => {
+  reset()
+  const uploaded = deferred()
+  const file = new File(['a,b\n1,2\n'], 'browser.csv')
+  let uploads = 0
+  api.uploadData = (id, selected) => { assert.equal(id, 'original'); assert.equal(selected, file); uploads++; return uploaded.promise }
+  api.importData = () => { throw Error('A browser File must not become a server path') }
+  const importing = useStore.getState().importData(file); await tick()
+  await useStore.getState().importData('concurrent.csv')
+  assert.equal(uploads, 1)
+  uploaded.resolve({ project: { n: 1, p: 2 }, notes: [] }); await importing
+  assert.equal(useStore.getState().busy, null)
+  assert.equal(useStore.getState().view, 'data')
+})
+
+test('a browser upload finishing after project navigation cannot restore the old dataset', async () => {
+  reset()
+  const uploaded = deferred()
+  let columnRequests = 0
+  api.uploadData = () => uploaded.promise
+  api.columns = async () => { columnRequests++; return [] }
+  const importing = useStore.getState().importData(new File(['a\n1\n'], 'old.csv')); await tick()
+  api.openProject = async () => project('new-project')
+  await useStore.getState().openProject('new-project')
+  uploaded.resolve({ project: { n: 1, p: 1 }, notes: [] }); await importing
+  assert.equal(useStore.getState().project.id, 'new-project')
+  assert.equal(columnRequests, 0)
+})
+
 const job = (id, created = '2026-09-21T10:00:00Z') => ({ id, created, status: 'running', progress: 0 })
 
 test('polling keeps equal-timestamp methods in their displayed order', async () => {
