@@ -1,5 +1,41 @@
 # Ontology, survival and outcome heterogeneity verification
 
+## 15 October: native CLI setup and reviewed context handoff
+
+The [AI integration](AI_INTEGRATIONS.md) adds one project setup command for
+Codex, Claude Code, Grok Build and Antigravity, plus app context handoffs for the
+first three. It uses native MCP/skill interfaces and leaves sign-in to each
+client. No subscription tokens are read or proxied by Capybara.
+
+Local validation passed: 65 setup/client/installation tests (two Windows
+symlink-privilege skips), 40 assistant/HTTP tests, 71 frontend tests, TypeScript,
+production build, published request-schema checks and byte-exact knowledge/skill
+checks. Independent review found no concrete privacy, freshness or authentication
+boundary blocker. The public knowledge snapshot remains unchanged below.
+
+A fresh virtual environment installed the independent wheel with its MCP extra.
+Isolated Python queries and repeated setup succeeded for all four clients from
+a fresh directory, without source imports. The wheel SHA-256 was
+`e9e5a818d5b429a55318b8bde331eba2ff47d96fbff0ac349e4e252ca8dad76b`;
+wheel archive timestamps may differ between builds.
+
+Installed Grok CLI `1.0.13 (5e9a58528b76)` detected the generated project server.
+Its doctor first refused the untrusted fixture folder, as expected. After
+explicitly trusting that inspected fixture with the CLI's own `--trust` option,
+the server started, completed MCP protocol `2025-11-25` initialization and
+discovered all eight tools. This used a separate fixture configuration and made
+no provider request. It verifies local connection and discovery, not model
+consumption of the skill or an authenticated research conversation.
+
+The earlier analysis/UI checkpoint `c4da4f6` passed all nine hosted jobs:
+[main CI](https://github.com/HYHBalci/causal-capybara/actions/runs/38758432733)
+and [standalone CI](https://github.com/HYHBalci/causal-capybara/actions/runs/38758432662).
+Its browser artifact contains 53 accessibility screens with zero violations,
+five checked policy estimates, eight heterogeneity workflows and live/synthetic
+ontology checks. The new handoff tests additionally exercise all three client
+exports and discard stale responses; consult the current PR checks for their
+hosted execution result. Authenticated client gates remain as agreed.
+
 ## 15 October: reference analyses, policy charts and package recovery
 
 The updated public knowledge snapshot is

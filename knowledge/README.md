@@ -22,10 +22,31 @@ An independent installation uses `pip install ./knowledge`; optional MCP support
 uses `pip install './knowledge[mcp]'`. The ordinary library has no dependencies.
 The 0.3.0 wheel bundles the graph, MCP entry point and portable four-file audit
 skill. From any project after installation, use `capy-knowledge install-skill
-codex --project /absolute/project` (also `claude` or `antigravity`) and
+codex --project /absolute/project` (also `claude`, `grok` or `antigravity`) and
 `capy-knowledge configure-client codex` to print configuration for the current
 interpreter. Skill installation is explicit and project scoped; existing
 customized skills and configuration files are preserved.
+
+For one-command project integration, install the `[mcp]` extra and run:
+
+```text
+capy-knowledge setup-client codex --project .
+capy-knowledge setup-client claude --project .
+capy-knowledge setup-client grok --project .
+```
+
+Choose one client, or configure several in the same project. `antigravity` also
+works. Add `--dry-run` to preview without project writes, and `--python` to select
+the installed interpreter that the client will run. Setup checks that interpreter
+in isolated mode, installs the verified skill, and merges only its MCP server.
+It preserves unrelated settings, backs up changed configuration files, and refuses
+conflicting server entries or customized skills. Repeated setup is idempotent.
+Backups can contain existing private configuration and should stay private.
+Sign in through the native client's own interface; setup never starts a client,
+reads its authentication store, or converts a subscription login into an API key.
+Grok support targets official Grok Build, with `.grok/config.toml` and
+`.grok/skills`. All hosts retain their own trust and permission prompts.
+
 Normal queries open published SQLite handles read-only and never rebuild assets,
 call a model, download a paper or access a study. Compilation is an explicit
 maintenance command: `python tools/build_knowledge.py`. It statically interprets

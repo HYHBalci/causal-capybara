@@ -9,13 +9,49 @@ wheel installation.
 Use `python -m pip install -c knowledge/constraints-mcp.txt './knowledge[mcp]'`
 from the checkout to reproduce the tested optional runtime closure. The
 Windows-only dependency has an explicit platform marker.
-Generate configuration with the installed interpreter's absolute path. The
+
+Connect a project with one command after installing the package:
+
+```sh
+capy-knowledge setup-client codex --project .
+capy-knowledge setup-client claude --project .
+capy-knowledge setup-client grok --project .
+```
+
+Choose the client you use; `antigravity` is also supported. Add `--dry-run` to
+inspect the proposed skill and configuration paths without writing project files.
+`--python /absolute/venv/bin/python` chooses a different interpreter; otherwise
+setup uses the interpreter running `capy-knowledge`. A bounded isolated import
+check confirms that interpreter can load the installed MCP, including its optional
+dependencies, without relying on the source directory or `PYTHONPATH`.
+
+Setup installs the verified bundled skill and adds only `capy_knowledge` to the
+project's MCP settings. It preserves other settings and servers, keeps TOML
+comments, and creates a byte-for-byte backup beside an existing configuration
+before merging it. The JSON response names that backup; it may contain your
+existing private settings, so keep it private. Repeating the command leaves an
+identical installation unchanged. A customized skill, conflicting Capybara server,
+duplicate JSON keys, invalid configuration or closed TOML table causes refusal
+before either artifact is published. Symlinks and Windows junctions are rejected.
+A project lock serializes setup commands, and file snapshots detect configuration
+edits during staging. The helper never starts Codex, Claude Code or Grok, changes
+their authentication, or reads their authentication stores.
+
+Start the selected native client in the project and sign in there normally.
+Accept its own project/MCP trust prompts. For Grok Build, `grok inspect` shows
+discovered skills and servers, and `grok mcp doctor capy_knowledge` checks the local
+server connection. These setup files expose public research tools; they do not
+grant permission to edit a study. See [AI integrations](AI_INTEGRATIONS.md) for
+the app's inspected-context handoff and the distinction from API-key providers.
+
+To generate a configuration snippet, use the installed interpreter's absolute path. The
 generator prints by default; `--output` creates a new file and refuses overwrite.
 Review a merge into existing settings yourself so unrelated servers remain intact.
 
 ```sh
 capy-knowledge configure-client codex --python /absolute/venv/bin/python
 capy-knowledge configure-client claude --python /absolute/venv/bin/python
+capy-knowledge configure-client grok --python /absolute/venv/bin/python
 capy-knowledge configure-client antigravity --python /absolute/venv/bin/python
 ```
 
@@ -31,6 +67,7 @@ when Python imports take longer than the host's default startup grace period.
 |---|---|---|
 | Codex | `[mcp_servers.capy_knowledge]` in the client's `config.toml`; project `.codex/config.toml` requires a trusted project | `.agents/skills/causal-capybara-research/SKILL.md` |
 | Claude Code | `.mcp.json`, `mcpServers.capy_knowledge`, `type: stdio`; project trust/approval applies | `.claude/skills/causal-capybara-research/SKILL.md` |
+| Grok Build | `.grok/config.toml`, `[mcp_servers.capy_knowledge]`, enabled with 20-second startup and 60-second tool timeouts | `.grok/skills/causal-capybara-research/SKILL.md` |
 | Antigravity | `.agents/mcp_config.json`, `mcpServers.capy_knowledge`, `command`/`args` | `.agents/skills/causal-capybara-research/SKILL.md` |
 
 Install into an explicitly selected project:
@@ -38,6 +75,7 @@ Install into an explicitly selected project:
 ```sh
 capy-knowledge install-skill codex --project /absolute/project
 capy-knowledge install-skill claude --project /absolute/project
+capy-knowledge install-skill grok --project /absolute/project
 capy-knowledge install-skill antigravity --project /absolute/project
 ```
 
@@ -48,7 +86,7 @@ copy. No global user settings are changed. Installation does not approve a serve
 or a study action; follow the host's normal trust UI. The repository's
 `clients/configure.py` and `clients/install_skill.py` remain equivalent source
 checkout entry points. `clients/standalone_smoke.py` tests an installed wheel from
-a fresh directory with Python source imports disabled, including all three
+a fresh directory with Python source imports disabled, including all four
 project skill destinations and configuration formats.
 
 After discovery, ask the same question in each host:
@@ -104,6 +142,7 @@ cannot switch protocol eras after its first request.
 | Official stdio transport | Python SDK 2.3.0 | Wire tests and offline seed probe, recorded by tests | Required |
 | Codex CLI | 0.159.0 | Actual isolated process called `build_research_context`, `get_method_requirements` and `get_source_evidence`; canonical knowledge snapshot verified | Actual MCP query passed; skill-file read remains unverified |
 | Claude Code | Unavailable on this test host | Generated project config parsed; portable skill install tested | Pending real client |
+| Grok Build | Native client authentication is separate | Generated project TOML parsed; portable skill install and setup merge tested | Actual authenticated research session remains a release gate |
 | Antigravity | Unavailable on this test host | Generated project config parsed; portable skill install tested | Pending real client |
 
 Client documentation checked on 2026-10-12: [Codex MCP](https://developers.openai.com/codex/mcp),
@@ -113,6 +152,14 @@ Client documentation checked on 2026-10-12: [Codex MCP](https://developers.opena
 [Antigravity MCP](https://antigravity.google/docs/mcp),
 [Antigravity skills](https://antigravity.google/docs/skills), and
 [Agent Skills specification](https://agentskills.io/specification).
+
+Grok Build configuration and skill discovery checked on 2026-10-15 against its
+[settings](https://docs.x.ai/build/settings),
+[MCP servers](https://docs.x.ai/build/features/mcp-servers),
+[skills](https://docs.x.ai/build/features/skills-plugins-marketplaces), and
+[CLI reference](https://docs.x.ai/build/cli/reference). The `grok` profile targets
+the official Grok Build client; unrelated third-party tools with the same command
+name can use different formats.
 
 An MCP server can be local while inference remains remote. These tools read only
 the public pack; a cloud host may transmit returned material to its model provider.

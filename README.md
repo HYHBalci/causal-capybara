@@ -28,6 +28,9 @@ scales, prespecified baseline modifiers, joint inference and multiplicity guidan
 “Ask about this” assembles context you can inspect and redact before using offline help, Ollama,
 or an explicitly selected cloud provider. Study proposals require the desktop's approval of the
 exact diff; estimation still uses the existing R/Python job pipeline.
+You can also [continue in Codex, Claude Code or Grok CLI](docs/AI_INTEGRATIONS.md)
+using the local MCP, audit skill and a reviewed context handoff. Each CLI keeps
+its own sign-in and permissions.
 
 Install only the lightweight knowledge service, without the statistical engines:
 
@@ -35,9 +38,7 @@ Install only the lightweight knowledge service, without the statistical engines:
 python -m pip install './knowledge[mcp]'
 capy-knowledge validate
 capy-knowledge coverage --method survival.aft
-capy-knowledge install-skill codex --project /absolute/project
-capy-knowledge configure-client codex
-capy-knowledge-mcp
+capy-knowledge setup-client codex --project /absolute/project
 ```
 
 The independent wheel bundles the graph and audit skill; it can be used without

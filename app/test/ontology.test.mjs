@@ -103,3 +103,19 @@ test('browser preview cannot obtain approval authority through HTTP', async () =
   assert.equal(await research.approvalAuthority(), null)
   assert.equal(requests, 0)
 })
+
+test('CLI handoff sends only the inspected context identity, forwards its cancellation signal and reports stale-context errors', async () => {
+  const previousFetch = globalThis.fetch
+  const controller = new AbortController()
+  const payload = { context_id: 'context:inspected', context_hash: 'sha256:inspected', client: 'grok' }
+  try {
+    globalThis.fetch = async (url, init) => {
+      assert.equal(url, '/api/assistant/handoff')
+      assert.equal(init.method, 'POST')
+      assert.equal(init.signal, controller.signal)
+      assert.deepEqual(JSON.parse(init.body), payload)
+      return new Response(JSON.stringify({ detail: { code: 'stale_context', message: 'Study changed. Inspect fresh context.' } }), { status: 409, headers: { 'Content-Type': 'application/json' } })
+    }
+    await assert.rejects(research.researchApi.handoff(payload, controller.signal), /Study changed\. Inspect fresh context\./)
+  } finally { globalThis.fetch = previousFetch }
+})

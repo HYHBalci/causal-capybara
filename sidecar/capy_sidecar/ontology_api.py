@@ -46,6 +46,12 @@ class ProposalRequest(Contract):
     reason: str | None = Field(default=None, max_length=1000)
 
 
+class HandoffRequest(Contract):
+    context_id: str = Field(max_length=200)
+    context_hash: str = Field(max_length=100)
+    client: Literal["codex", "claude", "grok"]
+
+
 class ApprovalRequest(Contract):
     action: Literal["apply", "run"]
     methods: list[dict[str, Any]] = Field(default_factory=list, max_length=10)
@@ -152,6 +158,13 @@ def context(body: ContextRequest):
         raise HTTPException(400, "Specify project_id and spec_id together.")
     guards = api().guardrails(project.id, spec["id"]) if project and spec and body.include_study else None
     return call(assistant.SERVICE.context, body.model_dump(), project, spec, guards)
+
+
+@router.post("/assistant/handoff")
+def handoff(body: HandoffRequest):
+    context = call(assistant.SERVICE.validated_context, body.context_id)
+    project = api()._project(context["project_id"]) if context.get("project_id") else None
+    return call(assistant.SERVICE.handoff, body.model_dump(), project)
 
 
 @router.post("/assistant/chat")

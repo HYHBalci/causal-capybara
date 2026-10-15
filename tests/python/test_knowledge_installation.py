@@ -77,7 +77,7 @@ def test_cli_configuration_is_explicit_and_preserves_existing_file(host, tmp_pat
     assert main(["configure-client", host, "--output", str(output)]) == 0
     capsys.readouterr()
     parsed = setup.validate_config(host, output.read_text())
-    key = "mcp_servers" if host == "codex" else "mcpServers"
+    key = "mcp_servers" if host in setup.TOML_HOSTS else "mcpServers"
     assert parsed[key][setup.SERVER_NAME]["args"] == ["-m", "capy_knowledge.mcp"]
     original = output.read_bytes()
     assert main(["configure-client", host, "--output", str(output)]) == 2

@@ -25,7 +25,7 @@ install = load_module("install_skill")
 def test_config_roundtrip_and_no_provider_environment(host):
     content = configure.render_config(host, sys.executable)
     parsed = configure.validate_config(host, content)
-    key = "mcp_servers" if host == "codex" else "mcpServers"
+    key = "mcp_servers" if host in {"codex", "grok"} else "mcpServers"
     assert "env" not in parsed[key]["capy_knowledge"]
     assert parsed[key]["capy_knowledge"]["args"] == ["-m", "capy_knowledge.mcp"]
 
@@ -35,7 +35,7 @@ def test_paths_with_spaces_and_pack_roundtrip(host, tmp_path):
     pack = tmp_path / "public pack"
     pack.mkdir()
     parsed = configure.validate_config(host, configure.render_config(host, sys.executable, str(pack)))
-    key = "mcp_servers" if host == "codex" else "mcpServers"
+    key = "mcp_servers" if host in {"codex", "grok"} else "mcpServers"
     assert parsed[key]["capy_knowledge"]["args"][-1] == str(pack.resolve())
 
 

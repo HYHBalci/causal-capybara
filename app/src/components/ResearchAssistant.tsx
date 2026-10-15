@@ -6,6 +6,7 @@ import { methodOptionsPreview, proposalChanges, proposalDiff, record, words } fr
 import { useResearch } from '../research/store'
 import type { AssistantAnswer, AssistantProvider, ResearchRecord, StudyProposal } from '../research/types'
 import { KnowledgeCitations } from './KnowledgeCitations'
+import { AssistantHandoff } from './AssistantHandoff'
 import { useDialogFocus } from './useDialogFocus'
 
 const REDACTIONS = [
@@ -150,6 +151,7 @@ function AssistantDialog() {
         <p className="tiny hint">This is the server-held context associated with this request. Redacting a group above creates a new context and hash.</p>
         <pre className="research-json" tabIndex={0} role="region" aria-label="Exact assistant context">{JSON.stringify(context, null, 2)}</pre>
       </section>}
+      <AssistantHandoff key={`${validContext ? words(context?.context_id) : 'unprepared'}:${signature}`} context={validContext ? context : null} />
       <fieldset className="research-provider"><legend>Optional model</legend>
         <label>Answer mode<select value={provider} onChange={(event) => changeProvider(event.target.value as AssistantProvider)} disabled={!!busy}>
           <option value="offline">Sources only — AI disabled</option><option value="ollama">Local model through Ollama</option><option value="openai-compatible">Cloud / OpenAI-compatible provider</option>

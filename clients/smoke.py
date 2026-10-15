@@ -152,7 +152,7 @@ def protocol_smoke(pack: str | None = None) -> dict:
 
 def client_inventory() -> dict:
     result = {}
-    for host in ("codex", "claude", "antigravity"):
+    for host in ("codex", "claude", "grok", "antigravity"):
         validate_config(host, render_config(host, sys.executable))
         executable = shutil.which(host)
         entry = {"config_schema": "passed", "actual_query": "not_run", "skill_discovery": "not_run"}

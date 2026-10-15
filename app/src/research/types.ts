@@ -53,6 +53,18 @@ export interface KnowledgeCoverage extends KnowledgeEnvelope { coverage_rows: Re
 export interface KnowledgeAudit extends KnowledgeEnvelope { checks: ResearchRecord[]; interpretation?: string }
 export interface ResearchSelection extends ResearchRecord { kind: string; id: string; title: string }
 export type AssistantProvider = 'offline' | 'ollama' | 'openai-compatible'
+export type AssistantHandoffClient = 'codex' | 'claude' | 'grok'
+
+export interface AssistantHandoff {
+  schema: 'capy.assistant.handoff'
+  version: 1
+  client: AssistantHandoffClient
+  filename: string
+  prompt: string
+  context_hash: string
+  knowledge_snapshot: string
+  cloud_request_made: false
+}
 
 export interface StudyProposal extends ResearchRecord {
   proposal_id: string

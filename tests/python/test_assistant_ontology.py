@@ -40,6 +40,103 @@ def prepare(proj, spec, changes):
     return assistant.SERVICE.prepare(proj, spec, {"base_revision": assistant.revision(spec), "changes": changes})
 
 
+@pytest.mark.parametrize("host", ["codex", "claude", "grok"])
+def test_cli_handoff_exports_only_inspected_context_without_inference(study, monkeypatch, host):
+    proj, spec = study
+    svc = assistant.SERVICE
+    context = svc.context({"query": "AIPW ATT overlap", "include_study": True,
+                           "redactions": ["study.question", "study.roles", "guardrails"]}, proj, spec)
+    before = proj.spec_path(spec["id"]).read_bytes()
+    async def forbidden(*args, **kwargs):
+        raise AssertionError("A CLI handoff must never request model inference")
+    monkeypatch.setattr(assistant, "provider_reply", forbidden)
+    with TestClient(api.app, base_url="http://127.0.0.1:8760") as client:
+        response = client.post("/assistant/handoff", json={"context_id": context["context_id"],
+                               "context_hash": context["context_hash"], "client": host})
+    assert response.status_code == 200, response.text
+    handoff = response.json()
+    assert handoff["client"] == host and handoff["cloud_request_made"] is False
+    assert handoff["context_hash"] == context["context_hash"]
+    assert handoff["knowledge_snapshot"] == context["knowledge"]["snapshot_id"]
+    prompt = handoff["prompt"]
+    shared = json.loads(prompt.split("BEGIN QUOTED RESEARCH CONTEXT (JSON)\n", 1)[1].rsplit("\nEND QUOTED", 1)[0])
+    assert shared["knowledge"] == context["knowledge"]  # Includes rights, review and citation locators.
+    assert shared["study"] == context["study"]
+    assert "roles" not in shared["study"] and "question" not in shared["study"]
+    assert shared["guardrails"] is None
+    for private in ("never disclose", "hidden-secret", "source.csv", "test-desktop-authority",
+                    context["context_id"], "project_scope_hash", "base_revision", "data_revision"):
+        assert private not in prompt
+    assert "causal-capybara-research" in prompt and "capy_knowledge" in prompt
+    assert "separate approval" in prompt
+    assert proj.spec_path(spec["id"]).read_bytes() == before
+    audit = json.loads((proj.path / "assistant-audit.jsonl").read_text().splitlines()[-1])
+    assert audit["event"] == "handoff.prepared" and audit["cloud_request_made"] is False
+    assert "prompt" not in audit and "study" not in audit
+
+
+def test_cli_handoff_rejects_credentials_unknown_clients_and_wrong_hash(study):
+    proj, spec = study
+    context = assistant.SERVICE.context({"query": "AIPW ATT"}, proj, spec)
+    body = {"context_id": context["context_id"], "context_hash": context["context_hash"], "client": "codex"}
+    with TestClient(api.app, base_url="http://127.0.0.1:8760") as client:
+        for extra in ({"api_key": "not-accepted"}, {"client": "arbitrary-shell"}, {"approved": True}, {"command": "anything"}):
+            assert client.post("/assistant/handoff", json={**body, **extra}).status_code == 422
+        response = client.post("/assistant/handoff", json={**body, "context_hash": "edited"})
+        assert response.status_code == 409 and response.json()["detail"]["code"] == "context_mismatch"
+    assert not (proj.path / "assistant-audit.jsonl").exists()
+
+
+@pytest.mark.parametrize("change", ["study", "data", "expiry", "snapshot"])
+def test_cli_handoff_requires_fresh_server_context(study, monkeypatch, change):
+    proj, spec = study
+    svc = assistant.SERVICE
+    context = svc.context({"query": "AIPW ATT", "include_study": True}, proj, spec)
+    body = {"context_id": context["context_id"], "context_hash": context["context_hash"], "client": "grok"}
+    if change == "study":
+        proj.save_spec({**spec, "title": "New revision"})
+    elif change == "data":
+        proj.set_data(proj.data().assign(y=0))
+    elif change == "expiry":
+        svc.contexts.items[context["context_id"]] = (time.monotonic() - 1, context)
+    else:
+        from types import SimpleNamespace
+        monkeypatch.setattr(assistant, "knowledge", lambda: SimpleNamespace(release_info=lambda: {"snapshot_id": "changed"}))
+    with TestClient(api.app, base_url="http://127.0.0.1:8760") as client:
+        response = client.post("/assistant/handoff", json=body)
+    assert response.status_code == (410 if change == "expiry" else 409)
+    assert not (proj.path / "assistant-audit.jsonl").exists()
+
+
+def test_public_cli_handoff_contains_no_study_when_sharing_is_disabled():
+    svc = assistant.AssistantService()
+    context = svc.context({"query": "survival AFT censoring"})
+    handoff = svc.handoff({"context_id": context["context_id"], "context_hash": context["context_hash"], "client": "claude"})
+    assert '"study":null' in handoff["prompt"]
+    assert '"selected_runs":[]' in handoff["prompt"]
+    assert handoff["cloud_request_made"] is False
+
+
+def test_cli_handoff_preserves_numeric_run_summary_and_checks_its_revision(study, monkeypatch):
+    proj, spec = study
+    run = {"run_id": "private-run-id", "spec_id": spec["id"], "method": "obs.aipw", "engine": "python",
+           "estimate": 2.5, "se": .2, "ci_low": 2.1, "ci_high": 2.9, "n": 240, "seed": 42}
+    monkeypatch.setattr(proj, "run", lambda ident: copy.deepcopy(run))
+    svc = assistant.SERVICE
+    context = svc.context({"query": "AIPW ATT", "include_study": True, "selected_run_ids": [run["run_id"]],
+                           "selection": {"kind": "results", "id": "private-result-id", "run_id": run["run_id"]}}, proj, spec)
+    body = {"context_id": context["context_id"], "context_hash": context["context_hash"], "client": "codex"}
+    prompt = svc.handoff(body, proj)["prompt"]
+    shared = json.loads(prompt.split("BEGIN QUOTED RESEARCH CONTEXT (JSON)\n", 1)[1].rsplit("\nEND QUOTED", 1)[0])
+    assert shared["selected_runs"][0]["estimate"] == 2.5
+    assert shared["selected_runs"][0]["seed"] == 42
+    assert "private-run-id" not in prompt and "private-result-id" not in prompt
+    assert "run_id" not in shared["selected_runs"][0] and "spec_id" not in shared["selected_runs"][0]
+    run["estimate"] = 9
+    with pytest.raises(assistant.AssistantError, match="Selected result changed"):
+        svc.handoff(body, proj)
+
+
 def approve(proj, spec, proposal, action="apply", methods=None):
     return assistant.SERVICE.approve(proposal["proposal_id"], proj, spec,
                                      {"action": action, "methods": methods or []}, "test-desktop-authority")

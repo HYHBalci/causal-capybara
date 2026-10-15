@@ -31,7 +31,7 @@ def smoke():
         if any(check.get("assessment") != "not_assessed" for check in checklist["checks"]):
             raise AssertionError("A knowledge checklist must not claim to assess a study.")
         installations = {}
-        for host in ("codex", "claude", "antigravity"):
+        for host in ("codex", "claude", "grok", "antigravity"):
             value = json.loads(run_cli(["install-skill", host, "--project", str(project)], project))
             target = Path(value["installed"])
             if not target.is_relative_to(project) or not (target / "SKILL.md").is_file():
@@ -41,6 +41,12 @@ def smoke():
             configuration = run_cli(["configure-client", host], project)
             if "capy_knowledge" not in configuration:
                 raise AssertionError("Standalone MCP configuration omitted its server.")
+            setup = json.loads(run_cli(["setup-client", host, "--project", str(project)], project))
+            if not Path(setup["configuration"]["path"]).is_relative_to(project):
+                raise AssertionError("Client setup escaped its selected project.")
+            repeated = json.loads(run_cli(["setup-client", host, "--project", str(project)], project))
+            if repeated["configuration"]["action"] != "unchanged" or repeated["skill"]["action"] != "unchanged":
+                raise AssertionError("Repeated client setup changed existing artifacts.")
             installations[host] = "passed"
         return {"status": "passed", "source_checkout_required": False, "isolated_python": True,
                 "snapshot_id": release["snapshot_id"], "release": release["release"],

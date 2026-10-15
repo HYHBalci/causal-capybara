@@ -56,7 +56,7 @@ jobs:
           capy-knowledge validate
           capy-knowledge benchmark
       - name: Protocol, rights, core and client adapter tests
-        run: python -m pytest tests/python/test_knowledge.py tests/python/test_knowledge_publishing.py tests/python/test_knowledge_benchmark.py tests/python/test_knowledge_mcp.py tests/python/test_knowledge_mcp_budget.py tests/python/test_knowledge_installation.py tests/python/test_ontology_coverage.py tests/python/test_heterogeneity_ontology.py tests/python/test_ontology_clients.py -q
+        run: python -m pytest tests/python/test_knowledge.py tests/python/test_knowledge_publishing.py tests/python/test_knowledge_benchmark.py tests/python/test_knowledge_mcp.py tests/python/test_knowledge_mcp_budget.py tests/python/test_knowledge_installation.py tests/python/test_ontology_coverage.py tests/python/test_heterogeneity_ontology.py tests/python/test_ontology_clients.py tests/python/test_client_setup.py -q
       - name: Offline cited seed smoke and host inventory
         run: python clients/smoke.py --output ontology-smoke.json
       - name: Build independent distribution wheel

@@ -9,6 +9,7 @@ from pathlib import Path
 
 from .contracts import KnowledgeError, canonical
 from .core import KnowledgeBase
+from .client_setup import HOSTS
 
 
 def evaluate(kb):
@@ -56,13 +57,19 @@ def main(argv=None):
     audit = sub.add_parser("audit-checklist", help="Retrieve planning questions, without assessing code or approving a study")
     audit.add_argument("--method")
     skill = sub.add_parser("install-skill", help="Install bundled skill into an explicitly chosen project")
-    skill.add_argument("host", choices=("codex", "claude", "antigravity"))
+    skill.add_argument("host", choices=HOSTS)
     skill.add_argument("--project", type=Path, required=True)
     config = sub.add_parser("configure-client", help="Print or create new MCP configuration; never merge or overwrite")
-    config.add_argument("host", choices=("codex", "claude", "antigravity"))
+    config.add_argument("host", choices=HOSTS)
     config.add_argument("--python", default=sys.executable)
     config.add_argument("--pack", dest="configuration_pack")
     config.add_argument("--output", type=Path)
+    setup = sub.add_parser("setup-client", help="Install the verified skill and merge its project MCP configuration")
+    setup.add_argument("host", choices=HOSTS)
+    setup.add_argument("--project", type=Path, required=True)
+    setup.add_argument("--python", default=sys.executable)
+    setup.add_argument("--pack", dest="configuration_pack")
+    setup.add_argument("--dry-run", action="store_true", help="Inspect both destinations without writing files")
     search = sub.add_parser("search")
     search.add_argument("query")
     search.add_argument("--limit", type=int, default=20)
@@ -87,7 +94,11 @@ def main(argv=None):
     compile_.add_argument("--output", type=Path, required=True)
     args = parser.parse_args(argv)
     try:
-        if args.command == "install-skill":
+        if args.command == "setup-client":
+            from .client_setup import setup_client
+            pack = args.configuration_pack or (str(args.pack) if args.pack else None)
+            result = setup_client(args.host, args.project, args.python, pack, dry_run=args.dry_run)
+        elif args.command == "install-skill":
             from .client_setup import SKILL_NAME, install_skill
             installed = install_skill(args.host, args.project)
             result = {"skill": SKILL_NAME, "host": args.host, "scope": "selected_project", "installed": str(installed)}

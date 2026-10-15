@@ -1,6 +1,6 @@
 import { request } from '../api'
 import { isDesktop } from '../desktop'
-import type { AssistantAnswer, AssistantProvider, KnowledgeAudit, KnowledgeCoverage, KnowledgeDetail, KnowledgeEnvelope, KnowledgeEvidence, KnowledgeRelations, KnowledgeSearch, ReproductionEvaluation, ResearchRecord, StudyProposal } from './types'
+import type { AssistantAnswer, AssistantHandoff, AssistantHandoffClient, AssistantProvider, KnowledgeAudit, KnowledgeCoverage, KnowledgeDetail, KnowledgeEnvelope, KnowledgeEvidence, KnowledgeRelations, KnowledgeSearch, ReproductionEvaluation, ResearchRecord, StudyProposal } from './types'
 
 function qs(params: Record<string, string | number | undefined>): string {
   const values = new URLSearchParams()
@@ -22,6 +22,7 @@ export const researchApi = {
   coverage: (id: string, signal?: AbortSignal) => get<KnowledgeCoverage>(`/knowledge/coverage${qs({ method_id: id, limit: 1 })}`, signal),
   audit: (id: string, signal?: AbortSignal) => get<KnowledgeAudit>(`/knowledge/audit-checklist${qs({ method_id: id })}`, signal),
   context: (body: ResearchRecord, signal?: AbortSignal) => post<ResearchRecord>('/assistant/context', body, signal),
+  handoff: (body: { context_id: string; context_hash: string; client: AssistantHandoffClient }, signal?: AbortSignal) => post<AssistantHandoff>('/assistant/handoff', body, signal),
   revokeContext: (id: string) => request<ResearchRecord>(`/assistant/contexts/${encodeURIComponent(id)}`, { method: 'DELETE', signal: AbortSignal.timeout(5000) }),
   chat: (body: { context_id: string; query: string; provider: AssistantProvider; model?: string; endpoint?: string; api_key?: string; cloud_consent: boolean }, signal?: AbortSignal) => post<AssistantAnswer>('/assistant/chat', body, signal),
   proposal: (body: ResearchRecord, signal?: AbortSignal) => post<StudyProposal>('/assistant/proposals', body, signal),

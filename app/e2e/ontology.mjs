@@ -1,7 +1,7 @@
 /** Browser interaction/authorization tests with synthetic API responses.
  * Run against `npm run dev`; no papers, models or private projects are contacted. */
 import assert from 'node:assert/strict'
-import { mkdir, writeFile } from 'node:fs/promises'
+import { mkdir, readFile, writeFile } from 'node:fs/promises'
 import path from 'node:path'
 import { chromium } from 'playwright'
 import AxeBuilder from '@axe-core/playwright'
@@ -11,9 +11,9 @@ const mode = process.env.CAPY_ONTOLOGY_LIVE_ENGINE ? 'live' : 'synthetic'
 const output = path.resolve(process.env.CAPY_ONTOLOGY_AUDIT_DIR || `../.audit/ontology-browser/${mode}`)
 await mkdir(output, { recursive: true })
 const browser = await chromium.launch({ headless: true, ...(process.env.CAPY_BROWSER_CHANNEL ? { channel: process.env.CAPY_BROWSER_CHANNEL } : {}) })
-const context = await browser.newContext({ viewport: { width: 1440, height: 980 } })
+const context = await browser.newContext({ viewport: { width: 1440, height: 980 }, acceptDownloads: true })
 const page = await context.newPage()
-const errors = [], accessibility = [], keyboard = []
+const errors = [], accessibility = [], keyboard = [], handoffs = []
 let failure = null
 page.on('pageerror', (error) => errors.push(error.message))
 async function checkKeyboardRegion(region, name) {
@@ -30,7 +30,49 @@ async function checkKeyboardRegion(region, name) {
 async function saveEvidence() {
   await writeFile(path.join(output, 'results.json'), JSON.stringify({ mode,
     passed: !failure && !errors.length && accessibility.every((screen) => !screen.violations.length),
-    accessibility, keyboard, page_errors: errors, failure }, null, 2))
+    accessibility, keyboard, handoffs, page_errors: errors, failure }, null, 2))
+}
+const handoffSummary = 'Continue in Codex, Claude Code or Grok CLI'
+async function exerciseHandoff(dialog, prepared, client) {
+  await dialog.getByLabel('CLI client', { exact: true }).selectOption(client)
+  assert(await dialog.getByText(`capy-knowledge setup-client ${client} --project .`, { exact: true }).isVisible())
+  const responseReady = page.waitForResponse((response) => response.url().endsWith('/assistant/handoff') && response.request().method() === 'POST')
+  await dialog.getByRole('button', { name: 'Prepare CLI handoff', exact: true }).click()
+  const response = await responseReady
+  assert.equal(response.status(), 200)
+  assert.deepEqual(response.request().postDataJSON(), { context_id: prepared.context_id, context_hash: prepared.context_hash, client })
+  const result = await response.json()
+  assert.equal(result.schema, 'capy.assistant.handoff')
+  assert.equal(result.client, client)
+  assert.equal(result.context_hash, prepared.context_hash)
+  assert.equal(result.knowledge_snapshot, prepared.knowledge.snapshot_id)
+  assert.equal(result.cloud_request_made, false)
+  const prompt = dialog.getByRole('textbox', { name: 'Exact CLI handoff prompt', exact: true })
+  await prompt.waitFor()
+  assert(await prompt.evaluate((element) => element.readOnly))
+  assert.equal(await prompt.inputValue(), result.prompt)
+  assert(!result.prompt.includes(prepared.context_id), 'Internal context identifiers must stay out of the exported prompt')
+  assert(!result.prompt.includes('C:\\private\\dataset.csv'))
+  const shared = JSON.parse(result.prompt.split('BEGIN QUOTED RESEARCH CONTEXT (JSON)\n')[1].split('\nEND QUOTED RESEARCH CONTEXT')[0])
+  assert.equal(shared.query, prepared.query)
+  assert.deepEqual(shared.knowledge, prepared.knowledge, 'All inspected citations, scopes and evidence must survive the handoff')
+  assert.equal(shared.study, null)
+  assert.deepEqual(shared.selected_runs, [])
+  for (const field of ['context_id', 'context_hash', 'project_id', 'spec_id', 'base_revision', 'data_revision', 'project_scope_hash']) assert(!(field in shared))
+  await prompt.focus()
+  assert(await prompt.evaluate((element) => element === document.activeElement), 'The exact prompt must be keyboard accessible')
+  await context.grantPermissions(['clipboard-read', 'clipboard-write'], { origin: new URL(url).origin })
+  await dialog.getByRole('button', { name: 'Copy CLI handoff', exact: true }).click()
+  await dialog.getByRole('status').filter({ hasText: 'CLI handoff copied.' }).waitFor()
+  assert.equal(await page.evaluate(() => navigator.clipboard.readText()), result.prompt)
+  const downloadReady = page.waitForEvent('download')
+  await dialog.getByRole('button', { name: 'Save CLI handoff', exact: true }).click()
+  const download = await downloadReady
+  assert.equal(download.suggestedFilename(), 'capybara-research-handoff.txt')
+  const exported = path.join(output, `${client}-${download.suggestedFilename()}`)
+  await download.saveAs(exported)
+  assert.equal(await readFile(exported, 'utf8'), result.prompt, 'Saved bytes must match the inspected prompt exactly')
+  handoffs.push({ client, context_hash: result.context_hash, knowledge_snapshot: result.knowledge_snapshot, cloud_request_made: result.cloud_request_made, prompt_characters: result.prompt.length, clipboard_matches: true, download_matches: true })
 }
 if (process.env.CAPY_ONTOLOGY_LIVE_ENGINE) {
   const engine = process.env.CAPY_ONTOLOGY_LIVE_ENGINE.replace(/\/$/, '')
@@ -69,6 +111,9 @@ if (process.env.CAPY_ONTOLOGY_LIVE_ENGINE) {
     assert.equal(prepared.study, null)
     assert(!JSON.stringify(prepared).includes('C:\\private\\dataset.csv'))
     assert.equal(prepared.query, prepared.knowledge.query, 'Nested knowledge question must use the same redaction')
+    await dialog.getByText(handoffSummary, { exact: true }).click()
+    for (const client of ['codex', 'claude', 'grok']) await exerciseHandoff(dialog, prepared, client)
+    await audit('live-cli-handoff')
     const chatResponse = page.waitForResponse((response) => response.url().endsWith('/assistant/chat') && response.request().method() === 'POST')
     await dialog.getByRole('button', { name: 'Retrieve cited answer' }).click()
     const answer = await (await chatResponse).json()
@@ -77,6 +122,10 @@ if (process.env.CAPY_ONTOLOGY_LIVE_ENGINE) {
     assert.equal(answer.knowledge_snapshot, prepared.knowledge.snapshot_id)
     assert(answer.citations.length > 0)
     await dialog.getByRole('region', { name: 'Assistant response' }).waitFor()
+    await dialog.getByLabel('Your research question').fill('Changed research question invalidates the previous CLI handoff')
+    assert.equal(await dialog.getByRole('textbox', { name: 'Exact CLI handoff prompt', exact: true }).count(), 0)
+    await dialog.getByText(handoffSummary, { exact: true }).click()
+    assert(await dialog.getByRole('button', { name: 'Prepare CLI handoff', exact: true }).isDisabled())
     await page.keyboard.press('Escape')
     await page.getByRole('button', { name: 'Home', exact: true }).click()
     await page.locator('.starter').first().click()
@@ -152,7 +201,7 @@ const method = { id: 'obs.aipw', kind: 'method', title: 'Doubly robust (AIPW)', 
 const claim = { ...method, id: 'claim:fixture', kind: 'claim', title: 'Target-specific overlap', summary: 'Double robustness does not repair absent identification.', conditions: ['Untreated counterfactuals for treated units'], counterevidence: ['Measured balance does not prove exchangeability'] }
 const envelope = (payload) => ({ schema_version: 'capy.knowledge.response.v1', snapshot_id: 'sha256:fixture', release: 'test', status: 'ok', citations: [citation], omissions: [], pagination: { next_cursor: null, truncated: false }, ...payload })
 let cloudRequests = 0, approvalRequests = 0, contextBodies = [], proposalBodies = [], failProvider = false, holdProvider = false, staleProposal = false, reproductionBodies = [], offlineKnowledge = false, abstainTraversal = false, abstainNode = false
-let simulatedDesktop = false, simulatedApplied = false
+let simulatedDesktop = false, simulatedApplied = false, holdHandoff = false, releaseHandoff = null
 const syntheticSpec = { schema: 'capy.spec', version: 1, id: 's', modified: 'test', design: 'observational', estimand: 'ATE', question: {}, roles: {}, methods: [{ method_id: 'obs.aipw', engine: 'python', options: {} }], assumptions: [], diagnostics_viewed: [] }
 const cachedQueries = new Map()
 const revokedContextIds = []
@@ -189,6 +238,15 @@ await page.route('**/*', async (route) => {
   } else if (path.startsWith('/assistant/contexts/') && request.method() === 'DELETE') {
     revokedContextIds.push(decodeURIComponent(path.split('/').at(-1)))
     result = { status: 'revoked' }
+  } else if (path === '/assistant/handoff') {
+    assert.deepEqual(Object.keys(body).sort(), ['client', 'context_hash', 'context_id'])
+    assert.equal(body.context_hash, `hash:${body.context_id.split(':')[1]}`)
+    result = { schema: 'capy.assistant.handoff', version: 1, client: body.client, context_hash: body.context_hash,
+      filename: 'capybara-research-handoff.txt', knowledge_snapshot: 'sha256:fixture', cloud_request_made: false,
+      prompt: `Synthetic handoff for ${cachedQueries.get(body.context_id)}` }
+    if (holdHandoff) await new Promise((resolve) => { releaseHandoff = resolve })
+    // A context edit intentionally aborts the browser fetch while this fixture is pending.
+    return route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify(result) }).catch((error) => { if (!request.failure()) throw error })
   } else if (path === '/assistant/chat') {
     assert(!('context' in body), 'Client must send a cached context ID, not arbitrary context')
     assert.equal(body.query, cachedQueries.get(body.context_id), 'The inspected, server-redacted question must be sent')
@@ -271,6 +329,23 @@ try {
   await dialog.getByRole('button', { name: 'Retrieve cited answer' }).click()
   await dialog.getByText('Consider identification assumptions and ATT overlap before interpreting AIPW.').waitFor()
   assert.equal(cloudRequests, 0)
+  await dialog.getByText(handoffSummary, { exact: true }).click()
+  const delayedHandoff = page.waitForRequest((request) => request.url().endsWith('/assistant/handoff'))
+  holdHandoff = true
+  await dialog.getByRole('button', { name: 'Prepare CLI handoff', exact: true }).click()
+  await delayedHandoff
+  const abortedHandoff = page.waitForEvent('requestfailed', { predicate: (request) => request.url().endsWith('/assistant/handoff') })
+  await dialog.getByLabel('Your research question').fill('Changed question during pending handoff')
+  // Resolve the intercepted response after invalidation, without a timing-based sleep.
+  assert.equal(typeof releaseHandoff, 'function')
+  releaseHandoff(); holdHandoff = false
+  await abortedHandoff
+  await dialog.getByText(handoffSummary, { exact: true }).click()
+  assert(await dialog.getByRole('button', { name: 'Prepare CLI handoff', exact: true }).isDisabled())
+  assert.equal(await dialog.getByRole('textbox', { name: 'Exact CLI handoff prompt', exact: true }).count(), 0)
+  await dialog.getByRole('button', { name: 'Prepare and inspect context', exact: true }).click()
+  await dialog.getByRole('button', { name: 'Retrieve cited answer', exact: true }).waitFor({ state: 'visible' })
+  await page.waitForFunction(() => [...document.querySelectorAll('.research-assistant button')].some((button) => button.textContent === 'Retrieve cited answer' && !button.disabled))
   await audit()
   for (let i = 0; i < 18; i++) { await page.keyboard.press(i % 2 ? 'Tab' : 'Shift+Tab'); assert(await dialog.evaluate((element) => element.contains(document.activeElement))) }
 
