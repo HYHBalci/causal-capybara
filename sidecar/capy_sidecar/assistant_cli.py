@@ -170,6 +170,26 @@ class OwnedProcess:
         if not resumed:
             raise OSError("Could not resume contained CLI.")
 
+    def _signal_group(self, signum):
+        try:
+            os.killpg(self.process.pid, signum)
+        except ProcessLookupError:
+            return
+        except PermissionError as denied:
+            # Darwin's killpg1 filters zombie members and returns EPERM if
+            # none remain eligible. A bounded-output writer can exit after its
+            # pipe closes but before the capture loop reaps it. Reap only our
+            # exact child, then retry the group so live descendants still get
+            # the signal. A live leader or a second denial remains an error.
+            try:
+                self.process.wait(timeout=.1)
+            except subprocess.TimeoutExpired:
+                raise denied
+            try:
+                os.killpg(self.process.pid, signum)
+            except ProcessLookupError:
+                return
+
     def stop(self):
         with self._close_lock:
             if self._closed or self._stopped:
@@ -177,10 +197,7 @@ class OwnedProcess:
             if self.job:
                 self.kernel.TerminateJobObject(self.job, 1)
             elif os.name != "nt" and hasattr(self, "process"):
-                try:
-                    os.killpg(self.process.pid, signal.SIGTERM)
-                except ProcessLookupError:
-                    pass
+                self._signal_group(signal.SIGTERM)
             elif hasattr(self, "process") and self.process.poll() is None:
                 self.process.kill()
             if hasattr(self, "process"):
@@ -191,10 +208,7 @@ class OwnedProcess:
                 # The leader may have exited while a child ignored SIGTERM.
                 # Always finish the owned group, not just a live leader.
                 if os.name != "nt":
-                    try:
-                        os.killpg(self.process.pid, signal.SIGKILL)
-                    except ProcessLookupError:
-                        pass
+                    self._signal_group(signal.SIGKILL)
                 elif self.process.poll() is None:
                     self.process.kill()
                 self.process.wait(timeout=3)

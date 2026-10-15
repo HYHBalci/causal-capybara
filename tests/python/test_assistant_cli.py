@@ -357,3 +357,35 @@ def test_markdown_reference_links_reject_credentials_and_malformed_urls(url):
     answer, refs, unknown = cli.markdown("Reply", context, {"client": "codex"})
     assert refs == [{"id": "source:known", "title": "Known source", "url": None}]
     assert url not in answer and not unknown
+
+
+@pytest.mark.parametrize("signum", [15, 9], ids=["terminate", "kill"])
+@pytest.mark.parametrize("after_reap", ["absent", "descendant", "denied", "live"])
+def test_group_permission_error_only_recovers_after_owned_child_exits(monkeypatch, signum, after_reap):
+    """Model Darwin's zombie EPERM without hiding a live-process denial."""
+    events = []
+    denied = PermissionError(1, "Operation not permitted")
+    def wait(*, timeout):
+        events.append(("reap-owned-child", timeout))
+        if after_reap == "live":
+            raise cli.subprocess.TimeoutExpired("owned fixture", timeout)
+        return 0
+    owner = cli.OwnedProcess.__new__(cli.OwnedProcess)
+    owner.process = SimpleNamespace(pid=424242, wait=wait)
+    def signal_group(pid, sig):
+        assert pid == owner.process.pid and sig == signum
+        events.append(("signal-owned-group", sig))
+        if len(events) == 1 or after_reap == "denied":
+            raise denied
+        if after_reap == "absent":
+            raise ProcessLookupError(3, "No such process")
+        assert after_reap == "descendant"
+    monkeypatch.setattr(cli.os, "killpg", signal_group, raising=False)
+    if after_reap in {"live", "denied"}:
+        with pytest.raises(PermissionError) as caught:
+            owner._signal_group(signum)
+        assert caught.value is denied
+    else:
+        owner._signal_group(signum)
+    assert events[:2] == [("signal-owned-group", signum), ("reap-owned-child", .1)]
+    assert len(events) == (2 if after_reap == "live" else 3)
