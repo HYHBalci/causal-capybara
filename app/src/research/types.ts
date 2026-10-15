@@ -55,6 +55,38 @@ export interface ResearchSelection extends ResearchRecord { kind: string; id: st
 export type AssistantProvider = 'offline' | 'ollama' | 'openai-compatible'
 export type AssistantHandoffClient = 'codex' | 'claude' | 'grok'
 
+export interface AssistantCliClient {
+  client: AssistantHandoffClient
+  label: string
+  installed: boolean
+  available: boolean
+  version: string | null
+  reason: string | null
+  efforts: string[]
+  requires_native_config_consent?: boolean
+}
+
+export interface AssistantCliJob {
+  schema: 'capy.assistant.cli.job'
+  version: 1
+  job_id: string
+  request_id: string
+  status: 'queued' | 'running' | 'completed' | 'failed' | 'cancelled'
+  client: AssistantHandoffClient
+  model: string | null
+  effort: string | null
+  context_hash: string
+  knowledge_snapshot: string
+  created_at: string
+  started_at: string | null
+  finished_at: string | null
+  answer_markdown: string | null
+  filename: string
+  error: { code: string; message: string } | null
+  cloud_request_made: boolean | null
+  cli_invoked?: boolean
+}
+
 export interface AssistantHandoff {
   schema: 'capy.assistant.handoff'
   version: 1

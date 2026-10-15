@@ -344,6 +344,8 @@ class Project:
         spec.setdefault("created", now_iso())
         spec["modified"] = now_iso()
         with self._lock:
+            from .data_selection import validate_references
+            validate_references(self, spec=spec)
             previous_path = self.spec_path(spec["id"])
             if previous_path.exists():
                 previous = _load_yaml(previous_path, "question")
@@ -464,6 +466,9 @@ class Project:
         d = self._obj_dir(kind)
         d.mkdir(parents=True, exist_ok=True)
         with self._lock:
+            if kind == "dag":
+                from .data_selection import validate_references
+                validate_references(self, dag=obj)
             _atomic_write(d / f"{obj['id']}.json", json.dumps(obj, indent=2))
             if not any(o.get("id") == obj["id"] for o in self.objects()):
                 self.add_object(kind, id=obj["id"], name=obj.get("name") or obj.get("title"), status="ran")
@@ -505,14 +510,23 @@ class Project:
         """The analysis table, as pandas. Cached until the parquet changes."""
         import pandas as pd
 
-        p = self.parquet_path
-        if not p.exists():
-            raise StoreError("This project has no data yet. Import a file first.")
-        mtime = p.stat().st_mtime
-        if reload or self._data_cache is None or self._data_mtime != mtime:
-            self._data_cache = pd.read_parquet(p)
-            self._data_mtime = mtime
-        return self._data_cache
+        with self._lock:
+            p = self.parquet_path
+            if not p.exists():
+                raise StoreError("This project has no data yet. Import a file first.")
+            mtime = p.stat().st_mtime
+            if reload or self._data_cache is None or self._data_mtime != mtime:
+                self._data_cache = pd.read_parquet(p)
+                self._data_mtime = mtime
+            return self._data_cache
+
+    def data_selection(self) -> dict[str, Any]:
+        from .data_selection import describe
+        return describe(self)
+
+    def select_columns(self, included_columns, expected_revision) -> dict[str, Any]:
+        from .data_selection import select
+        return select(self, included_columns, expected_revision)
 
     def has_data(self) -> bool:
         return self.parquet_path.exists()
@@ -561,6 +575,7 @@ class Project:
                 "n": int(len(df)),
                 "p": int(df.shape[1]),
                 "columns": columns or [],
+                "revision": new_id("data"),
             }
             self.save()
             for spec in self.specs():

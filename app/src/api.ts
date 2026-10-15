@@ -5,7 +5,7 @@
  */
 
 import type {
-  Comparison, DataHealth, DatasetProvenance, DesignCard, EngineStatus, EstimandCard,
+  Comparison, DataColumnSelection, DataHealth, DatasetProvenance, DesignCard, EngineStatus, EstimandCard,
   ExampleTile, ExplainEntry, InstallationRecord, InstallationResponse,
   Guardrails, Job, LearnArticle, LearnRow, MethodCard, ProjectFull, ProjectSummary,
   Recommendation, Report, RunResult,
@@ -159,6 +159,11 @@ export const api = {
       { method: 'POST', body: file, headers: { 'Content-Type': 'application/octet-stream' } },
     ),
   columns: (id: string) => get<import('./types').ColumnMeta[]>(`/projects/${id}/data/columns`),
+  columnSelection: (id: string) => get<DataColumnSelection>(`/projects/${id}/data/selection`),
+  selectColumns: (id: string, included: string[], revision: string) =>
+    request<DataColumnSelection>(`/projects/${id}/data/selection`, {
+      method: 'PUT', body: JSON.stringify({ included_columns: included, expected_revision: revision }),
+    }),
   rows: (id: string, opts: { offset?: number; limit?: number; columns?: string; sort?: string; descending?: boolean }) =>
     get<{ total: number; offset: number; columns: string[]; rows: unknown[][] }>(
       `/projects/${id}/data/rows${q(opts)}`,

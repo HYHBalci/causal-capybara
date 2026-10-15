@@ -7,7 +7,7 @@ from typing import Any, Literal
 from fastapi import APIRouter, Header, HTTPException, Request
 from pydantic import BaseModel, ConfigDict, Field
 
-from . import assistant
+from . import assistant, assistant_cli
 from .store import StoreError
 
 router = APIRouter()
@@ -23,8 +23,12 @@ class ContextRequest(Contract):
     spec_id: str | None = None
     selection: dict[str, str | None] | None = None
     include_study: bool = False
+    include_columns: bool = False
+    include_diagnostics: bool = False
+    include_code: bool = False
+    notes: str | None = Field(default=None, max_length=8000)
     selected_run_ids: list[str] = Field(default_factory=list, max_length=5)
-    redactions: list[str] = Field(default_factory=list, max_length=8)
+    redactions: list[str] = Field(default_factory=list, max_length=12)
     previous_context_id: str | None = None
 
 
@@ -50,6 +54,14 @@ class HandoffRequest(Contract):
     context_id: str = Field(max_length=200)
     context_hash: str = Field(max_length=100)
     client: Literal["codex", "claude", "grok"]
+
+
+class CLIJobRequest(HandoffRequest):
+    request_id: str = Field(pattern=r"^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$")
+    model: str | None = Field(default=None, max_length=150, pattern=r"^[A-Za-z0-9][A-Za-z0-9._:/-]{0,149}$")
+    effort: Literal["low", "medium", "high", "xhigh", "max"] | None = None
+    cloud_consent: bool = False
+    native_config_consent: bool = False
 
 
 class ApprovalRequest(Contract):
@@ -165,6 +177,33 @@ def handoff(body: HandoffRequest):
     context = call(assistant.SERVICE.validated_context, body.context_id)
     project = api()._project(context["project_id"]) if context.get("project_id") else None
     return call(assistant.SERVICE.handoff, body.model_dump(), project)
+
+
+@router.get("/assistant/cli/clients")
+def cli_clients():
+    return assistant_cli.SERVICE.discovery.all()
+
+
+@router.post("/assistant/cli/jobs", status_code=202)
+def cli_start(body: CLIJobRequest):
+    inspected = call(assistant.SERVICE.validated_context, body.context_id)
+    project = api()._project(inspected["project_id"]) if inspected.get("project_id") else None
+    return call(assistant_cli.SERVICE.start, body.model_dump(), project)
+
+
+@router.get("/assistant/cli/jobs/{job_id}")
+def cli_status(job_id: str):
+    return call(assistant_cli.SERVICE.get, job_id)
+
+
+@router.post("/assistant/cli/jobs/{job_id}/cancel")
+def cli_cancel_job(job_id: str):
+    return call(assistant_cli.SERVICE.cancel_job, job_id)
+
+
+@router.post("/assistant/cli/requests/{request_id}/cancel")
+def cli_cancel_request(request_id: str):
+    return call(assistant_cli.SERVICE.cancel_request, request_id)
 
 
 @router.post("/assistant/chat")

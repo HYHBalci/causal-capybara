@@ -28,9 +28,13 @@ scales, prespecified baseline modifiers, joint inference and multiplicity guidan
 “Ask about this” assembles context you can inspect and redact before using offline help, Ollama,
 or an explicitly selected cloud provider. Study proposals require the desktop's approval of the
 exact diff; estimation still uses the existing R/Python job pipeline.
-You can also [continue in Codex, Claude Code or Grok CLI](docs/AI_INTEGRATIONS.md)
-using the local MCP, audit skill and a reviewed context handoff. Each CLI keeps
-its own sign-in and permissions.
+You can also [ask through Codex, Claude Code or Grok CLI](docs/AI_INTEGRATIONS.md)
+and receive a formatted answer inside the app, with a Markdown download.
+Choose study fields, results, diagnostics, code excerpts and notes before sending.
+Each CLI keeps its own sign-in; native configuration and policy require explicit acknowledgement.
+The local MCP, audit skill and copied context handoff remain available independently.
+The imported-data screen now lets you include or restore columns while preserving the full import.
+See the [data selection and research workflow](docs/RESEARCH_WORKFLOW.md).
 
 Install only the lightweight knowledge service, without the statistical engines:
 

@@ -14,6 +14,7 @@
     "tauri": "tauri",
     "test:ui": "node e2e/readiness.mjs",
     "test:ontology": "node e2e/ontology.mjs",
+    "test:cli": "node e2e/cli.mjs",
     "test:heterogeneity": "node e2e/heterogeneity.mjs",
     "test:policy": "node e2e/policy.mjs",
     "test:import": "node e2e/import.mjs"

@@ -347,10 +347,19 @@ def get_project(project_id: str) -> dict[str, Any]:
 @app.patch("/projects/{project_id}")
 def patch_project(project_id: str, patch: dict[str, Any] = Body(...)) -> dict[str, Any]:
     proj = _project(project_id)
-    for key in ("name", "profile", "seed", "roles_global"):
-        if key in patch:
-            proj.meta[key] = patch[key]
-    proj.save()
+    from .data_selection import SelectionConflict, validate_references
+    with proj._lock:
+        try:
+            if "roles_global" in patch:
+                validate_references(proj, roles_global=patch["roles_global"])
+        except SelectionConflict as exc:
+            raise _fail(exc, 409) from None
+        except StoreError as exc:
+            raise _fail(exc) from None
+        for key in ("name", "profile", "seed", "roles_global"):
+            if key in patch:
+                proj.meta[key] = patch[key]
+        proj.save()
     return proj.summary()
 
 
@@ -508,6 +517,25 @@ def data_rows(
     }
 
 
+@app.get("/projects/{project_id}/data/selection")
+def data_selection(project_id: str) -> dict[str, Any]:
+    try:
+        return _project(project_id).data_selection()
+    except StoreError as exc:
+        raise _fail(exc) from None
+
+
+@app.put("/projects/{project_id}/data/selection")
+def select_data_columns(project_id: str, body: dict[str, Any] = Body(...)) -> dict[str, Any]:
+    from .data_selection import SelectionConflict
+    try:
+        return _project(project_id).select_columns(body.get("included_columns"), body.get("expected_revision"))
+    except SelectionConflict as exc:
+        raise _fail(exc, 409) from None
+    except (StoreError, ValueError) as exc:
+        raise _fail(exc) from None
+
+
 @app.get("/projects/{project_id}/data/health")
 def data_health(project_id: str, spec_id: str | None = None) -> dict[str, Any]:
     proj = _project(project_id)
@@ -550,7 +578,13 @@ def list_specs(project_id: str) -> list[dict[str, Any]]:
 def save_spec(project_id: str, spec: dict[str, Any] = Body(...)) -> dict[str, Any]:
     proj = _project(project_id)
     spec.setdefault("seed", proj.meta.get("seed"))
-    return proj.save_spec(spec)
+    from .data_selection import SelectionConflict
+    try:
+        return proj.save_spec(spec)
+    except SelectionConflict as exc:
+        raise _fail(exc, 409) from None
+    except StoreError as exc:
+        raise _fail(exc) from None
 
 
 @app.get("/projects/{project_id}/specs/{spec_id}")
@@ -849,7 +883,13 @@ def save_dag(project_id: str, body: dict[str, Any] = Body(...)) -> dict[str, Any
     body.setdefault("schema", "capy.dag")
     body.setdefault("version", 1)
     body.setdefault("id", new_id("dag"))
-    return proj.save_json_object("dag", body)
+    from .data_selection import SelectionConflict
+    try:
+        return proj.save_json_object("dag", body)
+    except SelectionConflict as exc:
+        raise _fail(exc, 409) from None
+    except StoreError as exc:
+        raise _fail(exc) from None
 
 
 @app.get("/projects/{project_id}/dags/{dag_id}")

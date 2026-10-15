@@ -6,7 +6,7 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "sidecar"))
-from capy_sidecar.ontology_api import (ApprovalRequest, ChatRequest, ContextRequest,
+from capy_sidecar.ontology_api import (ApprovalRequest, ChatRequest, CLIJobRequest, ContextRequest,
     ExecutionRequest, HandoffRequest, KnowledgeContextRequest, ProposalRequest, ReproductionRequest)
 
 parser = argparse.ArgumentParser(description=__doc__)
@@ -16,7 +16,8 @@ stale = []
 for name, model in {"context.request": ContextRequest, "chat.request": ChatRequest,
                     "proposal.request": ProposalRequest, "approval.request": ApprovalRequest,
                     "execution.request": ExecutionRequest, "knowledge-context.request": KnowledgeContextRequest,
-                    "reproduction.request": ReproductionRequest, "handoff.request": HandoffRequest}.items():
+                    "reproduction.request": ReproductionRequest, "handoff.request": HandoffRequest,
+                    "cli-job.request": CLIJobRequest}.items():
     schema = model.model_json_schema()
     schema["$schema"] = "https://json-schema.org/draft/2020-12/schema"
     schema["$id"] = f"https://causalcapybara.dev/schemas/capy.assistant.{name}.v1.json"

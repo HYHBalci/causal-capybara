@@ -12,7 +12,7 @@ import { engineStatus, restartEngine } from './desktop'
 import { count } from './format'
 import { SaveQueue } from './saveQueue'
 import type {
-  AssumptionCatalogEntry, ColumnMeta, Comparison, DataHealth, DesignCard, EngineStatus, EstimandCard,
+  AssumptionCatalogEntry, ColumnMeta, Comparison, DataColumnSelection, DataHealth, DesignCard, EngineStatus, EstimandCard,
   ExplainEntry, Guardrails, Job, MethodCard, MethodHealth, Profile, ProjectFull, ProjectSummary,
   Recommendation, RunResult, RunSummary, Sketch, Spec,
 } from './types'
@@ -155,6 +155,7 @@ interface State {
   openDataset: (datasetId: string) => Promise<void>
   refreshProject: () => Promise<void>
   importData: (source: string | File) => Promise<void>
+  applyColumnSelection: (included: string[], revision: string) => Promise<DataColumnSelection | null>
 
   newSpec: () => Promise<void>
   loadSpec: (specId: string) => Promise<void>
@@ -568,6 +569,7 @@ export const useStore = create<State>((set, get) => ({
       for (const note of res.notes ?? []) get().toast('info', note)
       get().toast('success', `Imported ${count(res.project.n)} rows and ${res.project.p} variables`)
       if (!get().spec) await get().newSpec()
+      if (current()) set({ view: 'data' })
     } catch (err) {
       if (current()) get().toast('error', 'Import failed', msg(err))
     } finally {
@@ -577,6 +579,44 @@ export const useStore = create<State>((set, get) => ({
   },
 
   /* ------------------------------------------------------------------ */
+
+  async applyColumnSelection(included, revision) {
+    const { project } = get()
+    if (!project) return null
+    if (importingProjects.has(project.id)) throw new Error('Wait for the current data change to finish.')
+    const projectSeq = projectOpenSeq
+    const current = () => projectSeq === projectOpenSeq && get().project?.id === project.id
+    importingProjects.add(project.id)
+    set({ busy: 'Applying column selection' })
+    try {
+      await get().flushSpec()
+      if (!current()) return null
+      const selection = await api.selectColumns(project.id, included, revision)
+      if (!current()) return null
+      ++specRevision; ++sketchSeq; ++guardrailSeq; ++recommendSeq
+      const columns = selection.columns.filter((column) => selection.included_columns.includes(column.name))
+      set((state) => ({ columns, project: state.project ? { ...state.project, ...selection.project,
+          meta: { ...state.project.meta, data: { ...(state.project.meta?.data as Record<string, unknown>), revision: selection.revision } } } : null,
+        spec: state.spec ? { ...state.spec, diagnostics_viewed: [] } : null,
+        sketch: null, sketchLoading: false, guardrails: null, health: null,
+        recommendation: null, recommendationError: null, recommendationLoading: false,
+        selectedRunIds: [], comparison: null }))
+      const specId = get().spec?.id
+      const [full, spec, health] = await Promise.all([
+        api.project(project.id).catch(() => null),
+        specId ? api.spec(project.id, specId).catch(() => null) : Promise.resolve(null),
+        api.dataHealth(project.id, specId).catch(() => null),
+      ])
+      if (!current()) return null
+      set({ ...(full ? { project: full } : {}), selectedObjectId: null,
+        ...(get().spec?.id === specId ? { ...(spec ? { spec } : {}), health } : {}) })
+      get().toast('success', `${columns.length} of ${selection.p_total} columns included`, 'The full imported data is kept so you can restore columns later.')
+      return selection
+    } finally {
+      importingProjects.delete(project.id)
+      if (current()) set({ busy: null })
+    }
+  },
 
   async newSpec() {
     const { project } = get()

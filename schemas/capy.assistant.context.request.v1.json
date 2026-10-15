@@ -3,10 +3,38 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "additionalProperties": false,
   "properties": {
+    "include_code": {
+      "default": false,
+      "title": "Include Code",
+      "type": "boolean"
+    },
+    "include_columns": {
+      "default": false,
+      "title": "Include Columns",
+      "type": "boolean"
+    },
+    "include_diagnostics": {
+      "default": false,
+      "title": "Include Diagnostics",
+      "type": "boolean"
+    },
     "include_study": {
       "default": false,
       "title": "Include Study",
       "type": "boolean"
+    },
+    "notes": {
+      "anyOf": [
+        {
+          "maxLength": 8000,
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Notes"
     },
     "previous_context_id": {
       "anyOf": [
@@ -42,7 +70,7 @@
       "items": {
         "type": "string"
       },
-      "maxItems": 8,
+      "maxItems": 12,
       "title": "Redactions",
       "type": "array"
     },

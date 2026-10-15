@@ -61,7 +61,9 @@ async function savedSpec(project, specId, predicate) {
   } while (Date.now() < deadline)
   assert.fail(`Question did not persist the expected selection: ${JSON.stringify(spec)}`)
 }
-const csv = 'data_id,treat01,re78,age,schooling\n' + Array.from({ length: 48 }, (_, i) => `training_fixture,${i % 2},${1000 + (i % 12) * 250 + (i % 2) * 75},${20 + (i % 10)},${8 + (i % 5)}`).join('\n') + '\n'
+const sourceColumns = ['data_id', 'treat01', 're78', 'age', 'schooling']
+const sourceRows = Array.from({ length: 48 }, (_, i) => ['training_fixture', i % 2, 1000 + (i % 12) * 250 + (i % 2) * 75, 20 + (i % 10), 8 + (i % 5)])
+const csv = [sourceColumns, ...sourceRows].map((row) => row.join(',')).join('\n') + '\n'
 async function importFile(project, mode, filename) {
   const uploaded = page.waitForResponse((response) => new URL(response.url()).pathname.endsWith(`/projects/${project.id}/import-upload`) && response.request().method() === 'POST')
   if (mode === 'chooser') {
@@ -100,6 +102,44 @@ async function importFile(project, mode, filename) {
   return imported
 }
 const variable = (name) => page.locator('.var-item').filter({ has: page.locator('.var-name').filter({ hasText: new RegExp(`^${name}$`) }) })
+const includeColumn = (name) => page.getByRole('checkbox', { name: `Include ${name}`, exact: true })
+const columnControls = () => page.getByRole('group', { name: 'Columns to include', exact: true })
+async function assertWorkingColumns(project, included) {
+  const [selection, columns, rows, metadata] = await Promise.all([
+    json(`/projects/${project.id}/data/selection`), json(`/projects/${project.id}/data/columns`),
+    json(`/projects/${project.id}/data/rows?limit=48`), json(`/projects/${project.id}`),
+  ])
+  assert.deepEqual(selection.columns.map((column) => column.name), sourceColumns, 'The original columns must remain available for restoration')
+  assert.deepEqual(selection.included_columns, included)
+  assert.equal(selection.n_total, 48)
+  assert.equal(selection.p_total, 5)
+  assert.deepEqual(columns.map((column) => column.name), included)
+  assert.deepEqual(rows.columns, included)
+  assert.equal(rows.total, 48)
+  assert.equal(metadata.n, 48)
+  assert.equal(metadata.p, included.length)
+  const projected = sourceRows.map((row) => included.map((name) => row[sourceColumns.indexOf(name)]))
+  assert.deepEqual(rows.rows, projected, 'Changing columns must preserve the original row values and order')
+  await page.waitForFunction(({ names, first }) => {
+    const headers = [...document.querySelectorAll('.sheet-table .sheet-col')].map((cell) => cell.textContent.trim())
+    const cells = [...document.querySelectorAll('.sheet-table tbody tr:not(.sheet-spacer):first-child td:not(.sheet-rownum)')].map((cell) => cell.textContent.trim().replaceAll(',', ''))
+    return document.querySelector('.sheet-viewport')?.getAttribute('aria-busy') === 'false'
+      && JSON.stringify(headers) === JSON.stringify(names) && JSON.stringify(cells) === JSON.stringify(first)
+  }, { names: included, first: projected[0].map(String) })
+  return selection
+}
+async function applyColumnSelection(project, included) {
+  const before = await json(`/projects/${project.id}/data/selection`)
+  const applied = page.waitForResponse((response) => new URL(response.url()).pathname.endsWith(`/projects/${project.id}/data/selection`) && response.request().method() === 'PUT')
+  await columnControls().getByRole('button', { name: 'Apply selection', exact: true }).click()
+  const response = await applied
+  assert.equal(response.status(), 200)
+  const request = response.request().postDataJSON()
+  assert.equal(request.expected_revision, before.revision)
+  assert.deepEqual([...request.included_columns].sort(), [...included].sort())
+  await columnControls().getByRole('button', { name: 'Reset selection', exact: true }).waitFor({ state: 'hidden' })
+  return assertWorkingColumns(project, included)
+}
 
 try {
   await page.goto(url)
@@ -127,6 +167,42 @@ try {
   await page.getByRole('button', { name: 'Close variable details', exact: true }).click()
   assert.equal(await page.locator('.var-item[aria-pressed="true"]').count(), 0)
 
+  await columnControls().waitFor()
+  await assertWorkingColumns(project, sourceColumns)
+  for (const name of sourceColumns) assert.equal(await includeColumn(name).isChecked(), true)
+  await columnControls().getByRole('button', { name: 'Clear selection', exact: true }).click()
+  for (const name of sourceColumns) assert.equal(await includeColumn(name).isChecked(), false)
+  assert.equal(await columnControls().getByRole('button', { name: 'Apply selection', exact: true }).isDisabled(), true, 'An empty selection cannot be applied')
+  await columnControls().getByRole('button', { name: 'Select all', exact: true }).click()
+  for (const name of sourceColumns) assert.equal(await includeColumn(name).isChecked(), true)
+  assert.equal(await columnControls().getByRole('button', { name: 'Apply selection', exact: true }).isDisabled(), true, 'An unchanged selection cannot be applied')
+  await includeColumn('schooling').uncheck()
+  await columnControls().getByRole('button', { name: 'Reset selection', exact: true }).click()
+  assert.equal(await includeColumn('schooling').isChecked(), true)
+  await columnControls().getByRole('button', { name: 'Clear selection', exact: true }).click()
+  const subset = ['treat01', 're78', 'age']
+  for (const name of subset) await includeColumn(name).check()
+  await audit('columns-draft-selection')
+  await applyColumnSelection(project, subset)
+  await variable('data_id').click()
+  await page.getByRole('region', { name: 'Variable details: data_id', exact: true }).getByText('Not included in the working data', { exact: false }).waitFor()
+  await audit('columns-excluded-inspection')
+  await page.getByRole('button', { name: 'Close variable details', exact: true }).click()
+  checks.push({ name: 'Column checkboxes, select all, clear, reset and applied working subset', included_columns: subset, source_columns: sourceColumns, n: 48, passed: true })
+
+  await page.reload()
+  await page.locator('.recent-item').filter({ has: page.getByText('Browser chooser regression', { exact: true }) }).click()
+  await menu('Data', 'Data sheet')
+  await assertWorkingColumns(project, subset)
+  for (const name of sourceColumns) assert.equal(await includeColumn(name).isChecked(), subset.includes(name))
+  await page.setViewportSize({ width: 900, height: 1000 })
+  await audit('columns-reopened-900')
+  await page.setViewportSize({ width: 1440, height: 1000 })
+  await columnControls().getByRole('button', { name: 'Select all', exact: true }).click()
+  await applyColumnSelection(project, sourceColumns)
+  await audit('columns-restored')
+  checks.push({ name: 'Applied columns persist after reload and all original values can be restored', included_columns: sourceColumns, n: 48, passed: true })
+
   await menu('Question', 'Design cards')
   await page.locator('.design-card-main').filter({ hasText: 'Adjust for background differences' }).click()
   const strip = page.getByRole('group', { name: 'Causal question', exact: true })
@@ -145,6 +221,20 @@ try {
   assert(!JSON.stringify(saved.roles).includes('schooling'))
   checks.push({ name: 'Question role selection and covariate removal', spec_id: question.id, roles: saved.roles, passed: true })
   await menu('Data', 'Data sheet')
+  const protection = await assertWorkingColumns(project, sourceColumns)
+  for (const name of ['treat01', 're78']) {
+    assert.equal(await includeColumn(name).isChecked(), true)
+    assert.equal(await includeColumn(name).isDisabled(), true, `${name} is protected while the question uses it`)
+    assert(protection.required_columns.some((column) => column.name === name && column.references.some((reference) => reference.spec_id === question.id)))
+  }
+  await columnControls().getByRole('button', { name: 'Clear selection', exact: true }).click()
+  for (const name of sourceColumns) assert.equal(await includeColumn(name).isChecked(), ['treat01', 're78'].includes(name), 'Clear must keep only columns required by saved questions')
+  await audit('columns-required-roles')
+  await applyColumnSelection(project, ['treat01', 're78'])
+  assert.deepEqual((await json(`/projects/${project.id}/specs/${question.id}`)).roles, saved.roles, 'Column selection cannot silently remove assigned roles')
+  await columnControls().getByRole('button', { name: 'Select all', exact: true }).click()
+  await applyColumnSelection(project, sourceColumns)
+  checks.push({ name: 'Used treatment and outcome are protected when clearing and applying columns', required_columns: ['treat01', 're78'], roles: saved.roles, passed: true })
   await page.setViewportSize({ width: 900, height: 1000 })
   await audit('data-selection-cleared-900')
   await page.setViewportSize({ width: 1440, height: 1000 })
@@ -172,7 +262,7 @@ try {
   assert.deepEqual(pathImports, [], 'Browser chooser/drop must never require the server-path import endpoint')
   assert.deepEqual(pageErrors, [])
   assert.deepEqual(accessibility.filter((screen) => screen.violations.length), [])
-  console.log('PASS browser chooser and drag/drop imports, constant metadata, question creation, role selection/removal, reversible variable inspection and persisted question')
+  console.log('PASS browser chooser and drag/drop imports, reversible column inclusion with original-value restoration, protected assigned roles, constant metadata, question creation, reversible variable inspection and persistence')
 } catch (error) {
   failure = String(error?.stack || error)
   await page.screenshot({ path: path.join(output, 'failure.png') }).catch(() => {})

@@ -79,6 +79,7 @@ if (process.env.CAPY_ONTOLOGY_LIVE_ENGINE) {
   try {
     await page.route('**/api/**', async (route) => {
       const request = new URL(route.request().url())
+      if (request.pathname === '/api/assistant/cli/clients') return route.fulfill({ status: 200, contentType: 'application/json', body: '{"clients":[]}' })
       const response = await route.fetch({ url: engine + request.pathname.replace(/^\/api/, '') + request.search })
       await route.fulfill({ response })
     })
@@ -221,6 +222,7 @@ await page.route('**/*', async (route) => {
   else if (path === '/registry/explain') result = {}
   else if (path === '/registry/methods') result = [{ id: 'obs.aipw', title: 'AIPW', options: [{ name: 'folds', type: 'int', default: 5 }], engines: { python: true }, designs: ['observational'], estimands: ['ATE', 'ATT'] }]
   else if (path === '/engines') result = { python: { status: 'healthy', found: true }, r: { status: 'unavailable', found: false } }
+  else if (path === '/assistant/cli/clients') result = { clients: [] }
   else if (path === '/knowledge/search') result = envelope({ results: [method, claim].filter((node) => `${node.title} ${node.summary}`.toLowerCase().includes((parsed.searchParams.get('q') || '').toLowerCase())) })
   else if (path.startsWith('/knowledge/nodes/')) result = abstainNode ? envelope({ status: 'abstained', node: null, omissions: [{ id: 'response_budget', reason: 'Complete node exceeds the response budget' }] }) : envelope({ node: decodeURIComponent(path.split('/').at(-1)) === claim.id ? claim : method })
   else if (path.startsWith('/knowledge/relations/')) result = abstainTraversal ? envelope({ status: 'abstained', gaps: ['Complete neighborhood exceeds the response budget'], omissions: [{ id: 'response_budget', reason: 'Complete neighborhood exceeds the response budget' }] }) : envelope({ nodes: [method, claim], relations: [edge], paths: [] })

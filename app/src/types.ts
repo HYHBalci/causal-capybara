@@ -411,6 +411,16 @@ export interface ProjectFull extends ProjectSummary {
   runs: RunSummary[]
 }
 
+export interface DataColumnSelection {
+  project: ProjectSummary
+  revision: string
+  columns: ColumnMeta[]
+  included_columns: string[]
+  required_columns: { name: string; references: { spec_id?: string; title: string; reason: string }[] }[]
+  n_total: number
+  p_total: number
+}
+
 /* -- engines ------------------------------------------------------------- */
 
 export interface EngineInfo {

@@ -1,6 +1,6 @@
 import { request } from '../api'
 import { isDesktop } from '../desktop'
-import type { AssistantAnswer, AssistantHandoff, AssistantHandoffClient, AssistantProvider, KnowledgeAudit, KnowledgeCoverage, KnowledgeDetail, KnowledgeEnvelope, KnowledgeEvidence, KnowledgeRelations, KnowledgeSearch, ReproductionEvaluation, ResearchRecord, StudyProposal } from './types'
+import type { AssistantAnswer, AssistantCliClient, AssistantCliJob, AssistantHandoff, AssistantHandoffClient, AssistantProvider, KnowledgeAudit, KnowledgeCoverage, KnowledgeDetail, KnowledgeEnvelope, KnowledgeEvidence, KnowledgeRelations, KnowledgeSearch, ReproductionEvaluation, ResearchRecord, StudyProposal } from './types'
 
 function qs(params: Record<string, string | number | undefined>): string {
   const values = new URLSearchParams()
@@ -23,6 +23,10 @@ export const researchApi = {
   audit: (id: string, signal?: AbortSignal) => get<KnowledgeAudit>(`/knowledge/audit-checklist${qs({ method_id: id })}`, signal),
   context: (body: ResearchRecord, signal?: AbortSignal) => post<ResearchRecord>('/assistant/context', body, signal),
   handoff: (body: { context_id: string; context_hash: string; client: AssistantHandoffClient }, signal?: AbortSignal) => post<AssistantHandoff>('/assistant/handoff', body, signal),
+  cliClients: (signal?: AbortSignal) => get<{ clients: AssistantCliClient[] }>('/assistant/cli/clients', signal ?? AbortSignal.timeout(20000)),
+  cliStart: (body: { context_id: string; context_hash: string; client: AssistantHandoffClient; model?: string; effort?: string; cloud_consent: boolean; native_config_consent: boolean; request_id: string }) => post<AssistantCliJob>('/assistant/cli/jobs', body, AbortSignal.timeout(20000)),
+  cliJob: (id: string, signal?: AbortSignal) => get<AssistantCliJob>(`/assistant/cli/jobs/${encodeURIComponent(id)}`, signal ? AbortSignal.any([signal, AbortSignal.timeout(10000)]) : undefined),
+  cliCancelRequest: (id: string) => post<AssistantCliJob | { request_id: string; status: 'cancelled' }>(`/assistant/cli/requests/${encodeURIComponent(id)}/cancel`, {}, AbortSignal.timeout(15000)),
   revokeContext: (id: string) => request<ResearchRecord>(`/assistant/contexts/${encodeURIComponent(id)}`, { method: 'DELETE', signal: AbortSignal.timeout(5000) }),
   chat: (body: { context_id: string; query: string; provider: AssistantProvider; model?: string; endpoint?: string; api_key?: string; cloud_consent: boolean }, signal?: AbortSignal) => post<AssistantAnswer>('/assistant/chat', body, signal),
   proposal: (body: ResearchRecord, signal?: AbortSignal) => post<StudyProposal>('/assistant/proposals', body, signal),

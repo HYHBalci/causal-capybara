@@ -86,7 +86,7 @@ def bounded_text(value: Any, limit: int = 4000) -> str:
     return value.strip()
 
 
-def redact(value: Any, *, max_text: int = 4000) -> Any:
+def redact(value: Any, *, max_text: int | None = 4000) -> Any:
     """Scrub obvious paths/secrets; inspectable field selection is primary."""
     if isinstance(value, dict):
         return {k: redact(v, max_text=max_text) for k, v in value.items()
@@ -96,11 +96,98 @@ def redact(value: Any, *, max_text: int = 4000) -> Any:
     if isinstance(value, str):
         value = re.sub(r"(?i)\b(?:sk-|xai-)[A-Za-z0-9_-]{12,}", "[redacted credential]", value)
         value = re.sub(r"(?i)(?:[A-Z]:[\\/]|\\\\[^\\\s]+\\|(?<![A-Za-z0-9:/])/(?:[\w.~@+-]+/)*[\w.~@+-]+)[^\s\"<>]*", "[redacted path]", value)
-        value = re.sub(r"(?i)(?:password|api[_ -]?key|secret|token)\s*[:=]\s*\S+", "[redacted credential]", value)
-        return value[:max_text]
+        value = re.sub(r'''(?i)(?:password|api[_ -]?key|secret|token)\s*[:=]\s*(?:"(?:\\.|[^"\\])*"|'(?:\\.|[^'\\])*'|\S+)''', "[redacted credential]", value)
+        value = re.sub(r"(?i)\bBearer\s+[A-Za-z0-9._~+/-]+=*", "Bearer [redacted credential]", value)
+        return value if max_text is None else value[:max_text]
     if isinstance(value, float) and not math.isfinite(value):
         return None
     return value
+
+
+CONTEXT_MAX_BYTES = 65536
+CONTEXT_LIMITS = {"max_bytes": CONTEXT_MAX_BYTES, "column_profiles": 200,
+                  "diagnostics_per_run": 50, "code_chars_per_language": 16000,
+                  "research_notes_chars": 8000}
+
+
+def _context_text(value, limit, group, label, omissions):
+    """Explicit excerpts: redaction happens before limiting, and losses are listed."""
+    if value is None:
+        return None
+    if not isinstance(value, str):
+        omissions.append({"id": group, "reason": f"{label} was omitted because it is not text."})
+        return None
+    clean = redact(value, max_text=None)
+    if len(clean) > limit:
+        omissions.append({"id": group, "reason": f"{label} includes the first {limit} of {len(clean)} redacted characters."})
+    return clean[:limit]
+
+
+def _column_context(project, omissions):
+    from . import dataio
+    columns = (project.meta.get("data") or {}).get("columns")
+    if not columns and project.has_data():
+        columns = dataio.profile_columns(project.data())
+    columns = columns or []
+    if not isinstance(columns, list):
+        raise AssistantError("Column profiles could not be read. Refresh the imported data.")
+    limit = CONTEXT_LIMITS["column_profiles"]
+    if len(columns) > limit:
+        omissions.append({"id": "column_profiles", "reason": f"Included {limit} of {len(columns)} column profiles."})
+    result = []
+    for index, column in enumerate(columns[:limit], 1):
+        if not isinstance(column, dict):
+            raise AssistantError("Column profiles could not be read. Refresh the imported data.")
+        item = {}
+        for key in ("name", "dtype", "kind", "n_missing", "pct_missing", "n_unique"):
+            value = column.get(key)
+            if key in {"name", "dtype", "kind"}:
+                item[key] = _context_text(value, 512, "column_profiles", f"Column {index} {key}", omissions)
+            elif value is None or (isinstance(value, (int, float)) and not isinstance(value, bool)):
+                item[key] = redact(value)
+            else:
+                omissions.append({"id": "column_profiles", "reason": f"Column {index} {key} was omitted because it is not numeric."})
+        result.append(item)
+    return result
+
+
+def _diagnostic_context(run, index, omissions):
+    diagnostics = run.get("diagnostics") or []
+    if not isinstance(diagnostics, list):
+        raise AssistantError("Selected run diagnostics are malformed.")
+    limit = CONTEXT_LIMITS["diagnostics_per_run"]
+    if len(diagnostics) > limit:
+        omissions.append({"id": "selected_run_diagnostics", "reason": f"Selected run {index}: included {limit} of {len(diagnostics)} diagnostic summaries."})
+    result = []
+    for number, diagnostic in enumerate(diagnostics[:limit], 1):
+        if not isinstance(diagnostic, dict):
+            raise AssistantError("Selected run diagnostics are malformed.")
+        # Arbitrary values/artifacts can contain observations or distributions.
+        # Only the diagnostic's displayed textual summary is shared here.
+        result.append({key: _context_text(diagnostic.get(key), 2000 if key in {"summary", "worry_when"} else 300,
+                                         "selected_run_diagnostics", f"Run {index}, diagnostic {number}, {key}", omissions)
+                       for key in ("id", "title", "status", "summary", "worry_when", "explain_key")})
+    return {"run_id": run.get("run_id"), "method": redact(run.get("method")), "diagnostics": result}
+
+
+def _code_context(run, index, omissions):
+    scripts = run.get("scripts") or {}
+    if not isinstance(scripts, dict):
+        raise AssistantError("Selected run code is malformed.")
+    result = {}
+    for language in ("r", "python"):
+        source = scripts.get(language)
+        if not source:
+            omissions.append({"id": "selected_run_code", "reason": f"Selected run {index} has no saved {language} code."})
+            continue
+        if not isinstance(source, str):
+            raise AssistantError("Selected run code is malformed.")
+        clean = redact(source, max_text=None)
+        limit = CONTEXT_LIMITS["code_chars_per_language"]
+        text = _context_text(source, limit, "selected_run_code", f"Selected run {index}, {language} code", omissions)
+        result[language] = {"text": text, "truncated": len(clean) > limit,
+                            "redacted_chars": len(clean), "included_chars": len(text)}
+    return {"run_id": run.get("run_id"), "method": redact(run.get("method")), "code": result}
 
 
 _KNOWLEDGE_CACHE = None
@@ -146,7 +233,8 @@ class Ephemeral:
 
 class AssistantService:
     REDACTIONS = {"study.question", "study.roles", "study.assumptions", "study.methods", "study.dag",
-                  "selected_runs", "guardrails", "selection"}
+                  "selected_runs", "guardrails", "selection", "column_profiles", "selected_run_diagnostics",
+                  "selected_run_code", "research_notes"}
     CHANGE_KEYS = {"title", "question", "design", "estimand", "roles", "methods"}
 
     def __init__(self, authority: str | None = None):
@@ -172,12 +260,24 @@ class AssistantService:
         return audit_id
 
     def context(self, body: dict, project=None, spec=None, guardrails=None):
+        if project is not None:
+            with project._lock:
+                return self._context(body, project, spec, guardrails)
+        return self._context(body, project, spec, guardrails)
+
+    def _context(self, body: dict, project=None, spec=None, guardrails=None):
         query = redact(bounded_text(body.get("query", "")))
         kb = knowledge()
         kb_context = kb.build_context(query, max_bytes=16384)
         include = body.get("include_study", False)
         if not isinstance(include, bool):
             raise AssistantError("include_study must be boolean.")
+        options = {name: body.get(name, False) for name in ("include_columns", "include_diagnostics", "include_code")}
+        if any(not isinstance(value, bool) for value in options.values()):
+            raise AssistantError("Context inclusion options must be boolean.")
+        notes = body.get("notes")
+        if notes is not None:
+            notes = bounded_text(notes, CONTEXT_LIMITS["research_notes_chars"])
         selection = body.get("selection") or {}
         if not isinstance(selection, dict) or set(selection) - {"kind", "id", "title", "node_id", "run_id", "method_id", "explain_key"}:
             raise AssistantError("Selection must contain only a kind and stable catalogue identifiers.")
@@ -189,17 +289,29 @@ class AssistantService:
             raise AssistantError("Unknown context redaction.")
         study = None
         selected_runs = []
+        column_profiles, selected_run_diagnostics, selected_run_code = [], [], []
+        research_notes = None
         run_revisions = {}
         dag_revision = None
         omissions = []
+        if notes and "research_notes" not in remove:
+            research_notes = _context_text(notes, CONTEXT_LIMITS["research_notes_chars"], "research_notes", "Research notes", omissions)
         if include:
             if project is None or spec is None:
                 raise AssistantError("Study context requires a project and study specification.")
+            if revision(project.spec(spec["id"])) != revision(spec):
+                raise AssistantError("Study changed. Inspect fresh context.", "stale_context", 409)
             study = {k: redact(spec.get(k)) for k in ("question", "design", "estimand", "roles", "assumptions", "methods", "diagnostics_viewed")}
+            if options["include_columns"] and "column_profiles" not in remove:
+                column_profiles = _column_context(project, omissions)
             run_ids = body.get("selected_run_ids", [])
             if not isinstance(run_ids, list) or len(run_ids) > 5 or any(not isinstance(x, str) for x in run_ids):
                 raise AssistantError("Select at most five run identifiers.")
-            for run_id in run_ids:
+            if not run_ids:
+                for option, group in (("include_diagnostics", "selected_run_diagnostics"), ("include_code", "selected_run_code")):
+                    if options[option] and group not in remove:
+                        omissions.append({"id": group, "reason": "No study runs were selected."})
+            for index, run_id in enumerate(dict.fromkeys(run_ids), 1):
                 run = project.run(run_id)
                 if run.get("spec_id") != spec["id"]:
                     raise AssistantError("Selected run does not belong to this study.")
@@ -207,12 +319,20 @@ class AssistantService:
                 selected_runs.append(redact({k: run.get(k) for k in
                     ("run_id", "spec_id", "method", "engine", "status", "estimand", "estimate", "se", "ci_low", "ci_high", "n", "seed", "package", "package_version", "inference", "provisional", "estimand_label", "interpretation", "survival_target", "heterogeneity_target")}))
                 run_revisions[run_id] = digest(run)
+                if options["include_diagnostics"] and "selected_run_diagnostics" not in remove:
+                    selected_run_diagnostics.append(_diagnostic_context(run, index, omissions))
+                if options["include_code"] and "selected_run_code" not in remove:
+                    selected_run_code.append(_code_context(run, index, omissions))
             if selection.get("kind") == "dag" and selection.get("id"):
                 dag = project.json_object("dag", selection["id"])
                 study["dag"] = redact({k: dag.get(k) for k in ("id", "nodes", "edges", "treatment", "outcome")})
                 dag_revision = {"id": selection["id"], "hash": digest(dag)}
         elif body.get("selected_run_ids"):
             omissions.append({"id": "selected_runs", "reason": "Study sharing is disabled."})
+        if not include:
+            for option, group in (("include_columns", "column_profiles"), ("include_diagnostics", "selected_run_diagnostics"), ("include_code", "selected_run_code")):
+                if options[option]:
+                    omissions.append({"id": group, "reason": "Study sharing is disabled."})
         envelope = {"schema": "capy.assistant.context", "version": 1,
                     "context_id": "context_" + secrets.token_hex(16), "query": redact(query),
                     "knowledge": kb_context, "project_id": project.id if project else None,
@@ -223,23 +343,26 @@ class AssistantService:
                     "run_revisions": run_revisions,
                     "dag_revision": dag_revision,
                     "study": study, "selected_runs": selected_runs,
+                    "column_profiles": column_profiles, "selected_run_diagnostics": selected_run_diagnostics,
+                    "selected_run_code": selected_run_code, "research_notes": research_notes,
                     "guardrails": redact(guardrails) if include else None, "selection": redact(selection),
                     "privacy": {"include_study": include, "raw_rows": False, "cloud_disclosed": False},
+                    "context_limits": dict(CONTEXT_LIMITS), "context_groups": sorted(self.REDACTIONS),
                     "omissions": omissions}
         for path in remove:
             if path.startswith("study."):
                 if study is not None:
                     study.pop(path.split(".")[1], None)
             else:
-                envelope[path] = [] if path == "selected_runs" else None if path == "guardrails" else {}
-            if path == "selected_runs":
-                envelope["run_revisions"] = {}
+                envelope[path] = [] if path in {"selected_runs", "column_profiles", "selected_run_diagnostics", "selected_run_code"} else None if path in {"guardrails", "research_notes"} else {}
             if path == "study.dag":
                 envelope["dag_revision"] = None
             omissions.append({"id": path, "reason": "Removed by the user before context assembly."})
-        if len(canonical(envelope).encode()) > 32768:
-            raise AssistantError("Study context exceeds 32 KiB. Remove context groups.", "context_budget")
+        if not any(envelope[key] for key in ("selected_runs", "selected_run_diagnostics", "selected_run_code")):
+            envelope["run_revisions"] = {}
         envelope["context_hash"] = digest(envelope)
+        if len(canonical(envelope).encode()) > CONTEXT_MAX_BYTES:
+            raise AssistantError("Study context exceeds 64 KiB. Select fewer runs, shorten notes, or remove context groups.", "context_budget")
         with self.lock:
             previous = body.get("previous_context_id")
             if previous:
@@ -284,10 +407,12 @@ class AssistantService:
         # Explicit projection: future internal fields do not silently become
         # exportable. Keep whole evidence groups, citations and qualifications.
         shared = {key: copy.deepcopy(context[key]) for key in
-                  ("query", "knowledge", "study", "selected_runs", "guardrails", "selection", "omissions")}
-        for run in shared["selected_runs"]:
-            for key in ("run_id", "spec_id"):
-                run.pop(key, None)
+                  ("query", "knowledge", "study", "selected_runs", "guardrails", "selection", "omissions",
+                   "column_profiles", "selected_run_diagnostics", "selected_run_code", "research_notes", "context_limits")}
+        for group in ("selected_runs", "selected_run_diagnostics", "selected_run_code"):
+            for run in shared[group]:
+                for key in ("run_id", "spec_id"):
+                    run.pop(key, None)
         if shared["selection"].get("kind") in {"dag", "result", "results", "run"}:
             for key in ("id", "run_id", "node_id"):
                 shared["selection"].pop(key, None)

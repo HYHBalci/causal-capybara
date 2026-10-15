@@ -7,6 +7,7 @@ import { useResearch } from '../research/store'
 import type { AssistantAnswer, AssistantProvider, ResearchRecord, StudyProposal } from '../research/types'
 import { KnowledgeCitations } from './KnowledgeCitations'
 import { AssistantHandoff } from './AssistantHandoff'
+import { AssistantCli } from './AssistantCli'
 import { useDialogFocus } from './useDialogFocus'
 
 const REDACTIONS = [
@@ -31,6 +32,11 @@ function AssistantDialog() {
   const [query, setQuery] = useState(initialQuery)
   const [includeStudy, setIncludeStudy] = useState(false)
   const [redactions, setRedactions] = useState<string[]>([])
+  const [includeColumns, setIncludeColumns] = useState(false)
+  const [includeDiagnostics, setIncludeDiagnostics] = useState(false)
+  const [includeCode, setIncludeCode] = useState(false)
+  const [notes, setNotes] = useState('')
+  const [chosenRunIds, setChosenRunIds] = useState<string[]>(selectedRunIds.slice(0, 5))
   const [provider, setProvider] = useState<AssistantProvider>('offline')
   const [model, setModel] = useState('')
   const [endpoint, setEndpoint] = useState('http://127.0.0.1:11434')
@@ -47,9 +53,11 @@ function AssistantDialog() {
   const dialog = useRef<HTMLDivElement>(null)
   const controller = useRef<AbortController | null>(null)
   const cachedContextId = useRef<string | null>(null)
-  const contextRunIds = selectedRunIds.filter((id) => runs.some((run) => run.run_id === id && run.spec_id === spec?.id)).slice(0, 5)
+  const availableRuns = runs.filter((run) => run.spec_id === spec?.id)
+  const contextRunIds = chosenRunIds.filter((id) => availableRuns.some((run) => run.run_id === id)).slice(0, 5)
   const specContext = spec ? { ...spec, modified: undefined, created: undefined, provenance: undefined } : null
-  const signature = JSON.stringify([query, includeStudy, redactions, selection, project?.id, specContext, selectedRunIds, contextRunIds])
+  const signature = JSON.stringify([query, includeStudy, redactions, selection, project?.id, record(project?.meta?.data).revision, specContext, contextRunIds,
+    includeColumns, includeDiagnostics, includeCode, notes])
   const signatureRef = useRef(signature)
   signatureRef.current = signature
   const validContext = !!context && contextSignature === signature
@@ -80,6 +88,7 @@ function AssistantDialog() {
   }, [signature, contextSignature])
   useEffect(() => { setConsent(false); setAnswer(null) }, [signature, provider, model, endpoint])
   useEffect(() => { if (query !== initialQuery) { setQuery(initialQuery); setContext(null); setAnswer(null) } }, [initialQuery])
+  useEffect(() => { setChosenRunIds(selectedRunIds.slice(0, 5)) }, [project?.id, spec?.id])
 
   async function prepare() {
     controller.current?.abort()
@@ -94,7 +103,10 @@ function AssistantDialog() {
       const current = useStore.getState()
       const prepared = await researchApi.context({ query, selection: includeStudy || !studySelection ? selection ?? {} : {}, include_study: includeStudy,
         project_id: includeStudy ? current.project?.id : undefined, spec_id: includeStudy ? current.spec?.id : undefined,
-        selected_run_ids: includeStudy ? contextRunIds : [], redactions, previous_context_id: words(context?.context_id) || undefined }, request.signal)
+        selected_run_ids: includeStudy ? contextRunIds : [], redactions,
+        include_columns: includeStudy && includeColumns, include_diagnostics: includeStudy && includeDiagnostics,
+        include_code: includeStudy && includeCode, notes,
+        previous_context_id: words(context?.context_id) || undefined }, request.signal)
       if (request.signal.aborted || signatureRef.current !== requestSignature) {
         if (words(prepared.context_id)) void researchApi.revokeContext(words(prepared.context_id)).catch(() => {})
         if (!request.signal.aborted) setNotice('The selection or study changed while context was loading. Prepare context again.')
@@ -131,6 +143,12 @@ function AssistantDialog() {
     setEndpoint(next === 'ollama' ? 'http://127.0.0.1:11434' : 'https://api.openai.com/v1')
   }
 
+  function contextPreset(preset: 'public' | 'design' | 'results' | 'code') {
+    setIncludeStudy(preset !== 'public'); setRedactions(preset === 'design' ? ['selected_runs', 'guardrails', 'selection'] : [])
+    setIncludeColumns(preset !== 'public'); setIncludeDiagnostics(preset === 'results' || preset === 'code')
+    setIncludeCode(preset === 'code'); setContext(null)
+  }
+
   return <div className="palette-scrim assistant-scrim" onClick={close}>
     <div className="research-assistant card scroll" ref={dialog} role="dialog" aria-modal="true" aria-labelledby="assistant-title" onClick={(event) => event.stopPropagation()}>
       <header className="row research-assistant-head"><div className="grow"><span className="eyebrow">CONTEXT AND SOURCES FIRST</span><h2 id="assistant-title">Research assistant</h2></div><button className="btn ghost" onClick={close} aria-label="Close research assistant">Close ✕</button></header>
@@ -138,10 +156,33 @@ function AssistantDialog() {
       {studySelection && !includeStudy && <p className="tiny hint">This study object’s labels and identifiers are withheld until you include study context.</p>}
       <label className="research-query">Your research question<textarea rows={3} value={query} maxLength={4000} onChange={(event) => setQuery(event.target.value)} placeholder="Explain the assumptions and limitations, and show the supporting sources…" /></label>
       <fieldset className="research-context-options"><legend>Choose the context</legend>
+        <div className="row wrap context-presets" role="group" aria-label="Context presets">
+          <button className="btn sm" onClick={() => contextPreset('public')}>Public knowledge</button>
+          <button className="btn sm" disabled={!project || !spec} onClick={() => contextPreset('design')}>Study design</button>
+          <button className="btn sm" disabled={!project || !spec} onClick={() => contextPreset('results')}>Results and diagnostics</button>
+          <button className="btn sm" disabled={!project || !spec} onClick={() => contextPreset('code')}>Implementation review</button>
+        </div>
         <label className="row"><input type="checkbox" checked={includeStudy} disabled={!project || !spec} onChange={(event) => { setIncludeStudy(event.target.checked); setContext(null) }} /> Include the current study and selected results</label>
         <p className="tiny hint">Public knowledge is the default. Study context excludes raw rows, sample values, private reports, full logs, paths and credentials. Column labels, questions and result summaries may still be sensitive.</p>
-        {includeStudy && selectedRunIds.length > contextRunIds.length && <p className="tiny hint">Context includes at most five selected results belonging to this study: {contextRunIds.length} included. Inspect the run identifiers in the preview.</p>}
+        {includeStudy && <p className="tiny hint">Choose up to five results from this question: {contextRunIds.length} selected.</p>}
         {includeStudy && <div className="research-redactions">{REDACTIONS.map(([path, title]) => <label className="row" key={path}><input type="checkbox" checked={!redactions.includes(path)} onChange={(event) => { setRedactions((items) => event.target.checked ? items.filter((item) => item !== path) : [...items, path]); setContext(null) }} /> {title}</label>)}</div>}
+        {includeStudy && <>
+          <div className="research-redactions">
+            <label className="row"><input type="checkbox" checked={includeColumns} onChange={(event) => setIncludeColumns(event.target.checked)} /> Column types and missingness summaries</label>
+            <label className="row"><input type="checkbox" checked={includeDiagnostics} onChange={(event) => setIncludeDiagnostics(event.target.checked)} /> Diagnostics from selected results</label>
+            <label className="row"><input type="checkbox" checked={includeCode} onChange={(event) => setIncludeCode(event.target.checked)} /> Generated R/Python code from selected results</label>
+          </div>
+          {!!availableRuns.length && <fieldset className="assistant-result-choices"><legend>Results to include</legend>
+            {availableRuns.map((run) => <label className="row" key={run.run_id}><input type="checkbox" checked={contextRunIds.includes(run.run_id)}
+              disabled={!contextRunIds.includes(run.run_id) && contextRunIds.length >= 5}
+              onChange={(event) => setChosenRunIds((ids) => event.target.checked ? [...ids, run.run_id] : ids.filter((id) => id !== run.run_id))} />
+              {run.method_label || run.method} · {run.engine} · {run.status}{run.timestamp ? ` · ${new Date(run.timestamp).toLocaleString()}` : ''}
+            </label>)}
+          </fieldset>}
+          {(includeCode || includeDiagnostics) && !contextRunIds.length && <p className="tiny hint">Choose a saved result above to include its diagnostics or generated code.</p>}
+        </>}
+        <label className="research-query">Research notes (optional)<textarea rows={3} maxLength={8000} value={notes} onChange={(event) => setNotes(event.target.value)} placeholder="Add study background, a decision you need help with, or limitations to discuss…" /></label>
+        <p className="tiny hint">Notes you enter are included in the inspected context, including in public-knowledge mode. Review them for sensitive information before sending.</p>
       </fieldset>
       <div className="row wrap"><button className="btn" disabled={!!busy || !query.trim() || engineDown} onClick={() => void prepare()}>{busy === 'context' ? 'Preparing context…' : 'Prepare and inspect context'}</button>{busy && <button className="btn ghost" onClick={cancel}>Cancel request</button>}{engineDown && <span className="hint">Reconnect the local engine to use the assistant. The research tree remains available offline.</span>}</div>
       {notice && <p role="status" className="tiny hint">{notice}</p>}
@@ -151,6 +192,7 @@ function AssistantDialog() {
         <p className="tiny hint">This is the server-held context associated with this request. Redacting a group above creates a new context and hash.</p>
         <pre className="research-json" tabIndex={0} role="region" aria-label="Exact assistant context">{JSON.stringify(context, null, 2)}</pre>
       </section>}
+      <AssistantCli key={`cli:${validContext ? words(context?.context_id) : 'unprepared'}`} context={validContext ? context : null} />
       <AssistantHandoff key={`${validContext ? words(context?.context_id) : 'unprepared'}:${signature}`} context={validContext ? context : null} />
       <fieldset className="research-provider"><legend>Optional model</legend>
         <label>Answer mode<select value={provider} onChange={(event) => changeProvider(event.target.value as AssistantProvider)} disabled={!!busy}>
