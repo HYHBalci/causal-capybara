@@ -107,7 +107,7 @@ async function prepare() {
   return prepared
 }
 async function send(client = 'codex') {
-  if (await cli().getByLabel('Run through', { exact: true }).inputValue() !== client) await cli().getByLabel('Run through', { exact: true }).selectOption(client)
+  if (await cli().getByRole('combobox', { name: 'Run through', exact: true }).inputValue() !== client) await cli().getByRole('combobox', { name: 'Run through', exact: true }).selectOption(client)
   await cli().getByLabel(`Send the inspected context through ${labels[client]} to its provider.`, { exact: true }).check()
   await cli().getByLabel(`Allow ${labels[client]} to use its native configuration and managed policies, including configured hooks. These may run local commands or add context beyond the preview.`, { exact: true }).check()
   const count = starts.length
@@ -172,11 +172,11 @@ try {
   await context.grantPermissions(['clipboard-read', 'clipboard-write'], { origin: new URL(url).origin })
   for (const client of ['codex', 'claude', 'grok']) {
     scenario = 'completed'
-    await cli().getByLabel('Run through', { exact: true }).selectOption(client)
+    await cli().getByRole('combobox', { name: 'Run through', exact: true }).selectOption(client)
     assert(await cli().getByRole('button', { name: `Ask ${labels[client]}`, exact: true }).isDisabled())
     await cli().getByLabel('CLI model (optional)', { exact: true }).fill('fixture-model')
     const effort = client === 'claude' ? 'high' : 'xhigh'
-    await cli().getByLabel('CLI reasoning effort', { exact: true }).selectOption(effort)
+    await cli().getByRole('combobox', { name: 'CLI reasoning effort', exact: true }).selectOption(effort)
     const request = await send(client)
     assert.equal(request.model, 'fixture-model')
     assert.equal(request.effort, effort)
