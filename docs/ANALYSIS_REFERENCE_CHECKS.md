@@ -113,7 +113,8 @@ The hosted workflow also exposed selected methods disappearing when the
 recommendation list kept only its first four candidates. Overflow recommendations
 now remain in the visible alternatives, and two-period studies prioritize the
 canonical 2×2 comparison. The diagnostic-review button wraps inside its panel
-at narrower widths.
+at narrower widths. Horizontally scrolling results and comparison tables expose
+named keyboard-focusable regions so arrow keys can reach columns off screen.
 
 Data-level regressions check all 410 stores and 51 states, cohort ordering,
 mixed treatment, missing panel cells and detail selection. Six actual chart

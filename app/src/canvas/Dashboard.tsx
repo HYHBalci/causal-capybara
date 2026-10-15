@@ -354,7 +354,7 @@ function EstimatesTab({ results }: { results: RunResult[] }) {
       <p className="tiny hint" style={{ margin: '0 0 6px' }}>
         Click a row to see the secondary estimates behind it.
       </p>
-      <div className="table-scroll">
+      <div className="table-scroll" tabIndex={0} role="region" aria-label="Estimate comparison table">
       <table className="grid">
         <thead>
           <tr>
@@ -571,7 +571,7 @@ function AssumptionsTab({ results }: { results: RunResult[] }) {
           ))}
         </dl>
       </div>
-      <div className="table-scroll">
+      <div className="table-scroll" tabIndex={0} role="region" aria-label="Assumptions by method">
       <table className="grid ledger">
         <thead>
           <tr>

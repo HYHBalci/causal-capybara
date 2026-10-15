@@ -49,7 +49,8 @@ async function audit(name) {
   const result = await new AxeBuilder({ page }).withTags(['wcag2a', 'wcag2aa', 'wcag21aa']).analyze()
   accessibility.push({ screen: name, violations: result.violations })
   await page.screenshot({ path: path.join(output, `${name}.png`) })
-  assert.deepEqual(result.violations, [], `Accessibility: ${name}`)
+  // Collect every screen's findings before failing the suite so an earlier
+  // accessibility defect does not hide the second example's evidence.
 }
 const escapeRegex = (value) => value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
 const figure = (title) => page.locator('.sketch figure.artifact').filter({ has: page.locator('figcaption').filter({ hasText: new RegExp(`^${escapeRegex(title)}$`) }) })
@@ -231,14 +232,32 @@ try {
     assert(saved.diagnostics_viewed.includes(sketch.id))
     for (const width of [1440, 900]) {
       await page.setViewportSize({ width, height: 1000 })
+      if (width === 900) {
+        const tableRegion = page.getByRole('region', { name: 'Estimate comparison table', exact: true })
+        await tableRegion.focus()
+        assert(await tableRegion.evaluate((element) => element === document.activeElement), 'Estimate table must receive keyboard focus')
+        const scroll = await tableRegion.evaluate((element) => ({ left: element.scrollLeft, width: element.clientWidth, extent: element.scrollWidth }))
+        if (scroll.extent > scroll.width + 1) {
+          await page.keyboard.press('ArrowRight')
+          await page.waitForFunction((initial) => {
+            const element = document.querySelector('.dashboard [role="region"][aria-label="Estimate comparison table"]')
+            return element && element.scrollLeft > initial
+          }, scroll.left)
+          const after = await tableRegion.evaluate((element) => element.scrollLeft)
+          controls.push({ name: `${scenario.id}-table-keyboard-${width}`, initial_scroll_left: scroll.left, final_scroll_left: after, ...scroll })
+          await tableRegion.evaluate((element) => { element.scrollLeft = 0 })
+        }
+      }
       await audit(`${scenario.id}-results-${width}`)
     }
-    checks.push({ example: scenario.id, project_id: project.id, spec_id: specId, passed: true,
+    const accessible = accessibility.filter((screen) => screen.screen.startsWith(`${scenario.id}-`)).every((screen) => !screen.violations.length)
+    checks.push({ example: scenario.id, project_id: project.id, spec_id: specId, passed: accessible,
       elapsedMs: Date.now() - started, sketch_summary: sketch.summary, cohort_labels: cohortLabels,
       methods: saved.methods, results: results.map((result) => ({ method: result.method, estimate: result.estimate,
         se: result.se, ci_low: result.ci_low, ci_high: result.ci_high, n: result.n, run_id: result.run_id })) })
-    console.log(`PASS ${scenario.id}: rendered legends, responsive charts, cohort detail, defaults and ${results.length} actual estimates`)
+    console.log(`${accessible ? 'PASS' : 'ACCESSIBILITY FINDINGS'} ${scenario.id}: rendered legends, responsive charts, cohort detail, defaults and ${results.length} actual estimates`)
   }
+  assert.deepEqual(accessibility.filter((screen) => screen.violations.length), [], 'Accessibility violations across policy workflows')
   assert.deepEqual(pageErrors, [], 'Unexpected browser runtime errors')
 } catch (error) {
   failure = { message: String(error?.stack || error) }
