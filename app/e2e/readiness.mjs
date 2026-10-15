@@ -302,8 +302,13 @@ try {
   await step('Missing R arrow installs with one click and refreshes package health', async () => {
     const engines = await json('/engines')
     const stacks = await json('/engines/stacks')
-    let installed = false, requests = 0, finishInstall
-    const installing = new Promise((resolve) => { finishInstall = resolve })
+    let installed = false, requests = 0, requestId = null
+    const installRecord = () => ({ id: 'install_e2e_arrow', request_id: requestId, stack: 'r.core',
+      status: installed ? 'installed' : 'running', plan: { title: 'R essentials' },
+      created: new Date().toISOString(), elapsed_s: installed ? 180 : 140,
+      installed: installed ? ['arrow'] : [], still_missing: installed ? [] : ['arrow'],
+      log: installed ? 'DONE (arrow)' : 'Building arrow',
+      message: installed ? 'arrow is installed.' : 'Installing arrow; this can take a few minutes.' })
     const engineRoute = /\/engines(?:\?.*)?$/
     await page.route(engineRoute, (route) => route.fulfill({ json: {
       ...engines, r: { ...engines.r, found: true, ok: true, status: installed ? 'healthy' : 'degraded',
@@ -317,11 +322,15 @@ try {
     }) }))
     await page.route('**/engines/install', async (route) => {
       requests++
-      assert.deepEqual(route.request().postDataJSON(), { stack: 'r.core', approved: true })
-      await installing
-      installed = true
-      await route.fulfill({ json: { status: 'installed', plan: {}, installed: ['arrow'], still_missing: [], message: 'arrow is installed.' } })
+      const body = route.request().postDataJSON()
+      assert.equal(body.stack, 'r.core')
+      assert.equal(body.approved, true)
+      assert.match(body.request_id, /^[A-Za-z0-9_-]{8,128}$/)
+      requestId = body.request_id
+      await route.fulfill({ json: installRecord() })
     })
+    await page.route('**/engines/installs', (route) => route.fulfill({ json: requestId ? [installRecord()] : [] }))
+    await page.route('**/engines/installs/install_e2e_arrow', (route) => route.fulfill({ json: installRecord() }))
     try {
       await page.getByRole('button', { name: 'Check again', exact: true }).first().click()
       const repair = page.getByRole('button', { name: 'Install missing R packages', exact: true })
@@ -332,15 +341,19 @@ try {
       assert(await busy.isDisabled(), 'Repair must prevent duplicate installs')
       assert.equal(await page.locator('.install-plan').count(), 0, 'Repair should take one click')
       assert.equal(await page.locator('.stack-card button:enabled').count(), 0)
-      finishInstall()
+      await page.getByText('Live installation output', { exact: true }).click()
+      await page.getByLabel('Live installation output', { exact: true }).waitFor()
+      assert.match(await page.getByLabel('Live installation output', { exact: true }).innerText(), /Building arrow/)
+      installed = true
       await page.getByText('arrow is installed.', { exact: true }).first().waitFor()
       await repair.waitFor({ state: 'detached' })
       assert.equal(requests, 1)
     } finally {
-      finishInstall()
       await page.unroute(engineRoute)
       await page.unroute('**/engines/stacks')
       await page.unroute('**/engines/install')
+      await page.unroute('**/engines/installs')
+      await page.unroute('**/engines/installs/install_e2e_arrow')
     }
   })
   await step('Catalogue search, literature, themes and minimum window size', async () => {

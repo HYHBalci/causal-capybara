@@ -84,7 +84,7 @@ jobs:
             python "tests/python/test_$t.py"
           done
       - name: Application regressions and offline studies
-        run: python -m pytest tests/python/test_learn.py tests/python/test_literature.py tests/python/test_recents.py tests/python/test_realdata.py tests/python/test_robustness.py tests/python/test_readiness.py tests/python/test_scripts.py tests/python/test_catalogue_concurrency.py tests/python/test_engine_install.py tests/python/test_assistant_ontology.py tests/python/test_ontology_adversarial.py tests/python/test_store_lifecycle.py tests/python/test_survival.py tests/python/test_survival_heterogeneity.py tests/python/test_heterogeneity.py tests/python/test_heterogeneity_review.py tests/python/test_cli_result_output.py tests/python/test_ontology_http_audits.py -q
+        run: python -m pytest tests/python/test_learn.py tests/python/test_literature.py tests/python/test_recents.py tests/python/test_realdata.py tests/python/test_robustness.py tests/python/test_readiness.py tests/python/test_scripts.py tests/python/test_catalogue_concurrency.py tests/python/test_engine_install.py tests/python/test_engine_install_jobs.py tests/python/test_assistant_ontology.py tests/python/test_ontology_adversarial.py tests/python/test_store_lifecycle.py tests/python/test_survival.py tests/python/test_survival_heterogeneity.py tests/python/test_heterogeneity.py tests/python/test_heterogeneity_review.py tests/python/test_cli_result_output.py tests/python/test_ontology_http_audits.py tests/python/test_did_reference_regressions.py tests/python/test_adoption_sketch.py -q
       - name: A run validates against capy.result.v1, end to end
         shell: bash
         run: |
@@ -182,6 +182,7 @@ jobs:
                       time.sleep(0.5)
           PY
           npm --prefix app run test:ui
+          npm --prefix app run test:policy
           npm --prefix app run test:heterogeneity
           CAPY_ONTOLOGY_TEST_URL=http://127.0.0.1:4173 CAPY_ONTOLOGY_LIVE_ENGINE=http://127.0.0.1:8760 npm --prefix app run test:ontology
           # The synthetic suite imports the live store module to create exact
@@ -196,6 +197,7 @@ jobs:
             ${{ runner.temp }}/causal-capybara-ui/*.log
             .audit/browser-results/
             .audit/heterogeneity-browser/
+            .audit/policy-browser/
           include-hidden-files: true
           if-no-files-found: ignore
           retention-days: 14
@@ -220,7 +222,7 @@ jobs:
           use-public-rspm: true
       - name: Install the R engine's dependencies
         run: |
-          Rscript -e 'install.packages(c("jsonlite", "grf"), repos = "https://cloud.r-project.org")'
+          Rscript -e 'install.packages(c("jsonlite", "grf", "survival"), repos = "https://cloud.r-project.org")'
       - name: Install the Python engine
         run: |
           python -m pip install --upgrade pip
@@ -230,6 +232,10 @@ jobs:
       - name: Both engines agree, or the run fails
         run: |
           python tests/python/test_cross_engine.py
+      - name: Independent R and Python references on policy and survival examples
+        env:
+          CAPY_SURVIVAL_R_REPORT: ${{ runner.temp }}/survival-r-reference.json
+        run: python -m pytest tests/python/test_did_reference_regressions.py tests/python/test_survival_r_reference.py tests/python/test_scripts.py -q
       - name: Refresh the R lockfile so it stops being a guess
         run: |
           Rscript -e 'p <- installed.packages(); writeLines(paste0(rownames(p), "==", p[,"Version"]))' \
@@ -239,7 +245,9 @@ jobs:
       - uses: actions/upload-artifact@v4
         with:
           name: r-installed-versions
-          path: /tmp/r-installed.txt
+          path: |
+            /tmp/r-installed.txt
+            ${{ runner.temp }}/survival-r-reference.json
 
   desktop:
     name: Windows desktop and preview installer

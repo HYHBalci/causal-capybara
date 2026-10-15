@@ -6,7 +6,7 @@
 
 import type {
   Comparison, DataHealth, DatasetProvenance, DesignCard, EngineStatus, EstimandCard,
-  ExampleTile, ExplainEntry,
+  ExampleTile, ExplainEntry, InstallationRecord, InstallationResponse,
   Guardrails, Job, LearnArticle, LearnRow, MethodCard, ProjectFull, ProjectSummary,
   Recommendation, Report, RunResult,
   RunSummary, SearchHit, Sketch, Spec, Stack,
@@ -101,8 +101,10 @@ export const api = {
   engines: (refresh = false) => get<EngineStatus>(`/engines${q({ refresh })}`),
   stacks: () => get<Stack[]>('/engines/stacks'),
   healthMatrix: () => get<Record<string, unknown>[]>('/engines/health-matrix'),
-  installStack: (stack: string, approved: boolean) =>
-    post<{ status: string; plan: Record<string, unknown>; log?: string }>('/engines/install', { stack, approved }),
+  installStack: (stack: string, approved: boolean, requestId?: string) =>
+    post<InstallationResponse | InstallationRecord>('/engines/install', { stack, approved, request_id: requestId }),
+  installations: () => request<InstallationRecord[]>('/engines/installs', { signal: AbortSignal.timeout(15000) }),
+  installation: (id: string) => request<InstallationRecord>(`/engines/installs/${encodeURIComponent(id)}`, { signal: AbortSignal.timeout(15000) }),
   lock: (engine: string) => get<string>(`/engines/lock/${engine}`),
 
   /* registry */

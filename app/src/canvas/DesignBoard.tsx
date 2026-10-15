@@ -12,7 +12,7 @@
 
 import { useState } from 'react'
 import { useStore } from '../store'
-import type { ColumnMeta, DesignZone } from '../types'
+import type { Artifact, ColumnMeta, DesignZone } from '../types'
 import { ArtifactView } from '../components/VegaChart'
 import { MarkReviewedButton } from '../components/Provisional'
 import { useSplitPane } from '../components/SplitPane'
@@ -251,11 +251,9 @@ function StaggeredNotice() {
     <div className="banner warning board-notice">
       <strong>{design.staggered_copy}</strong>
       <span>
-        {' '}Your units did not all start at the same time, and that quietly changes the arithmetic.
-        The ordinary before-and-after regression ends up comparing units that were treated earlier
-        against units that were already treated — a comparison that answers no question you asked, and
-        that can pull the average in the wrong direction. Two of the recommended methods are built to
-        avoid it, and the app will put them at the top of the list.
+        {' '}A cohort is a group of units first treated in the same period. The rollout groups them
+        by that date; the outcome chart shows their observed levels over calendar time. Choose a
+        cohort-aware estimator to compare them with untreated or not-yet-treated units.
       </span>
       <button className="linky" onClick={() => setExplain('concept.staggered_adoption')}>
         Why different start dates matter
@@ -427,7 +425,7 @@ export function LiveSketch({ full = false, showReview = true }: { full?: boolean
       ))}
 
       {sketch.artifacts?.map((a) => (
-        <ArtifactView key={a.id} artifact={a} onExplain={setExplain} height={full ? 260 : 190} />
+        <SketchArtifact key={a.id} artifact={a} onExplain={setExplain} full={full} />
       ))}
 
       {sketch.ready && sketch.id && showReview && (
@@ -454,6 +452,20 @@ export function LiveSketch({ full = false, showReview = true }: { full?: boolean
       </p>
     </section>
   )
+}
+
+/** Detail plots keep their row-based height and are mounted only on demand.
+ *  A 51-state rollout should not be squeezed into the same 190px as a line plot. */
+export function SketchArtifact({ artifact, onExplain, full = false }: {
+  artifact: Artifact; onExplain?: (key: string) => void; full?: boolean
+}) {
+  const [open, setOpen] = useState(false)
+  const height = typeof artifact.spec?.height === 'number' ? undefined : full ? 260 : 190
+  if (!artifact.collapsed) return <ArtifactView artifact={artifact} onExplain={onExplain} height={height} />
+  return <details className="sketch-values" onToggle={(event) => setOpen(event.currentTarget.open)}>
+    <summary>{artifact.title ?? 'Inspect chart details'}</summary>
+    {open && <ArtifactView artifact={artifact} onExplain={onExplain} height={height} compact />}
+  </details>
 }
 
 /** The keys the sketches emit are storage names. Swapping the underscores for

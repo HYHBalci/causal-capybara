@@ -23,7 +23,7 @@ from .store import STORE, Project, StoreError, new_id, now_iso
 if str(PY_ENGINE_DIR) not in sys.path:
     sys.path.insert(0, str(PY_ENGINE_DIR))
 
-from . import dataio, engines, learn, registry  # noqa: E402
+from . import dataio, engines, engine_install_jobs, learn, registry  # noqa: E402
 from .jobs import QUEUE  # noqa: E402
 
 app = FastAPI(title=f"{APP_NAME} sidecar", version=__version__)
@@ -158,9 +158,26 @@ def post_install(body: dict[str, Any] = Body(...)) -> dict[str, Any]:
     if not stack:
         raise HTTPException(400, "Name the stack to install.")
     try:
-        return engines.install_stack(str(stack), approved=bool(body.get("approved")))
+        if body.get("approved") is not True:
+            return engines.install_stack(str(stack), approved=False)
+        return engine_install_jobs.operations().start(str(stack), body.get("request_id"))
     except KeyError as exc:
         raise _fail(exc, 404) from None
+    except ValueError as exc:
+        raise _fail(exc, 400) from None
+
+
+@app.get("/engines/installs")
+def get_installs() -> list[dict[str, Any]]:
+    return engine_install_jobs.operations().list()
+
+
+@app.get("/engines/installs/{installation_id}")
+def get_install(installation_id: str) -> dict[str, Any]:
+    record = engine_install_jobs.operations().get(installation_id)
+    if record is None:
+        raise HTTPException(404, "No installation with that id.")
+    return record
 
 
 @app.get("/engines/lock/{engine}", response_class=PlainTextResponse)

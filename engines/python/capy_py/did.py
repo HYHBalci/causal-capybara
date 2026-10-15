@@ -108,6 +108,63 @@ def _coef_block(fit: stats.OLSFit, names: Sequence[str] | None = None, level: fl
     return "\n".join(lines)
 
 
+def _regression_script(ctx: RunContext, panel: "Panel", *, two_by_two: bool, level: float) -> str:
+    """Executable statsmodels reference with the saved sample and role coding.
+
+    Capybara supplies only sample/column preparation here; statsmodels fits the
+    regression and its cluster sandwich independently of the adapter's solver.
+    """
+    lines = [
+        "# df is the original project dataframe. Saved sample filters are applied below.",
+        "import numpy as np, pandas as pd, statsmodels.api as sm",
+        "from scipy.linalg import qr",
+        "from capy_py import roles, stats",
+        "from capy_py.contracts import RunContext",
+        "from capy_py.did import _numeric_time",
+        f"spec = {dict(ctx.spec)!r}",
+        "sample = roles.build_sample(RunContext(spec=spec, data=df),",
+        "    needed=['outcome', 'unit', 'time', 'treatment', 'cluster', 'confounders'])",
+        "d = sample.df.copy()",
+        f"period, _, _ = _numeric_time(d, {panel.time!r})",
+        "d = d.loc[np.isfinite(period)].copy()",
+        "period = period[np.isfinite(period)]",
+        f"treatment = stats.to01(d[{panel.treat!r}])",
+    ]
+    if two_by_two:
+        lines += [
+            f"u = d[{panel.unit!r}].to_numpy()",
+            "already = set(u[(period == np.min(period)) & (treatment > 0.5)])",
+            "keep = np.array([v not in already for v in u])",
+            "d = d.loc[keep].copy(); period = period[keep]; treatment = treatment[keep]",
+            f"group = pd.Series(treatment, index=d.index).groupby(d[{panel.unit!r}]).transform('max').to_numpy()",
+            "post = (period == np.max(period)).astype(float)",
+            "X = np.column_stack([np.ones(len(d)), group, post, group * post])",
+            "effect_column = 3",
+        ]
+    else:
+        lines += [
+            "X = np.column_stack([np.ones(len(d)), treatment])",
+            f"unit_fe = pd.get_dummies(d[{panel.unit!r}], drop_first=True, dtype=float).to_numpy()",
+            "period_fe = pd.get_dummies(period, drop_first=True, dtype=float).to_numpy()",
+            "X = np.column_stack([X, unit_fe, period_fe])",
+            "effect_column = 1",
+        ]
+    lines += [
+        f"covariates = stats.design_matrix(d, {panel.covariates!r}, intercept=False).X",
+        "X = np.column_stack([X, covariates])",
+        "# Drop dependent columns before the cluster correction counts parameters.",
+        "_, _, pivot = qr(X, mode='economic', pivoting=True)",
+        "keep = sorted(pivot[:np.linalg.matrix_rank(X)].tolist())",
+        "effect_column = keep.index(effect_column)",
+        "X = X[:, keep]",
+        f"m = sm.OLS(pd.to_numeric(d[{panel.outcome!r}]).to_numpy(), X).fit(",
+        f"    cov_type='cluster', cov_kwds={{'groups': d[{panel.cluster_col!r}].to_numpy()}}, use_t=True)",
+        f"print(m.params[effect_column], m.bse[effect_column], m.conf_int(alpha={1-level!r})[effect_column])",
+        "# Full fixed-effect parameter count enters the finite-sample cluster correction.",
+    ]
+    return "\n".join(lines)
+
+
 # ---------------------------------------------------------------------------
 # Time: everything downstream wants a numeric, orderable period
 # ---------------------------------------------------------------------------
@@ -1565,7 +1622,8 @@ def _staggered_warning(rb: ResultBuilder, panel: Panel, what: str) -> bool:
         f"{' ...' if len(cohorts) > 6 else ''}). "
         f"{what} does not estimate an average treatment effect on the treated when effects vary "
         "across cohorts or over time: it is a variance-weighted average of two-by-two comparisons, "
-        "some of which use already-treated units as controls and can carry negative weights "
+        "some of which use already-treated units as controls. Those comparisons can induce "
+        "negative weights on underlying treatment effects "
         "(Goodman-Bacon 2021; de Chaisemartin and D'Haultfoeuille 2020). "
         f"Use {CS_ALTERNATIVES} for the ATT, run did.goodman_bacon to see the weights, and keep "
         "this row only as a comparison.",
@@ -1816,16 +1874,7 @@ def twoway_2x2(ctx: RunContext) -> dict[str, Any]:
             "This is a simplification -- no covariate x period interactions are fitted."
         )
     rb.set_classic("\n".join(classic))
-    rb.set_scripts(
-        python=(
-            "import pandas as pd, statsmodels.formula.api as smf\n"
-            f"df['post'] = (df['{panel.time}'] == {panel.label(t_post)!r}).astype(float)\n"
-            f"df['grp']  = df.groupby('{panel.unit}')['{panel.treat}'].transform('max')\n"
-            f"m = smf.ols('{panel.outcome} ~ grp * post', data=df).fit(\n"
-            f"        cov_type='cluster', cov_kwds={{'groups': df['{panel.cluster_col}']}})\n"
-            "print(m.summary())"
-        )
-    )
+    rb.set_scripts(python=_regression_script(ctx, panel, two_by_two=True, level=level))
     ctx.tick(1.0, "done")
     return rb.finish()
 
@@ -1986,14 +2035,7 @@ def twfe(ctx: RunContext) -> dict[str, Any]:
             "that respond to treatment are bad controls."
         )
     rb.set_classic("\n".join(classic))
-    rb.set_scripts(
-        python=(
-            "import pandas as pd\nfrom linearmodels.panel import PanelOLS\n"
-            f"p = df.set_index(['{panel.unit}', '{panel.time}'])\n"
-            f"m = PanelOLS.from_formula('{panel.outcome} ~ {panel.treat} + EntityEffects + TimeEffects', p)\n"
-            f"print(m.fit(cov_type='clustered', clusters=p['{panel.cluster_col}']))"
-        )
-    )
+    rb.set_scripts(python=_regression_script(ctx, panel, two_by_two=False, level=level))
     ctx.tick(1.0, "done")
     return rb.finish()
 

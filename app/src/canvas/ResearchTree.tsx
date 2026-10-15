@@ -74,12 +74,12 @@ export function ResearchTree() {
     <header className="research-header">
       <span className="eyebrow">ASSUMPTIONS, METHODS AND EVIDENCE</span>
       <h1>Ontological research tree</h1>
-      <p>Follow qualified relationships and inspect the sources behind a claim. These relationships describe research knowledge; a study’s causal DAG records separate assumptions.</p>
+      <p>Explore causal concepts, compare methods and follow the sources behind each claim.</p>
       <div className="row wrap tiny hint" role="status">
         {result && <span>{offline ? 'Installed offline copy' : 'Local knowledge service'} · release {result.release}</span>}
         {result && <span title={result.snapshot_id}>Snapshot {result.snapshot_id.slice(0, 22)}…</span>}
       </div>
-      {releaseInfo && <details className="research-release"><summary>Knowledge release coverage and provenance</summary><pre className="research-json">{JSON.stringify(releaseInfo, null, 2)}</pre><p className="tiny hint">Corpus coverage and citation resolution do not establish scientific support. Review and rights decisions remain separate.</p></details>}
+      {releaseInfo && <details className="research-release"><summary>Knowledge release coverage and provenance</summary><pre className="research-json">{JSON.stringify(releaseInfo, null, 2)}</pre></details>}
     </header>
     <div className="research-layout grow">
       <aside className="research-browser scroll" aria-label="Browse research knowledge">
@@ -107,9 +107,8 @@ export function ResearchTree() {
         {history.length > 0 && <button className="btn ghost sm" onClick={() => { useResearch.getState().selectTree(history[history.length - 1]); setHistory((items) => items.slice(0, -1)) }}>← Previous record</button>}
         {selected ? <KnowledgeArticle key={`${selected}:${offline}`} id={selected} offline={offline || engineDown} onPick={pick} /> : <div className="research-intro">
           <h2>Read a method in context</h2>
-          <p>Choose a record to see its assumptions, related diagnostics, qualified evidence, review state and publication rights.</p>
+          <p>Choose a record to explore its assumptions, diagnostics, supporting evidence and references.</p>
           <button className="btn" onClick={() => { setQuery('AIPW'); setKind(''); setDesign(''); setEstimand('') }}>Explore doubly robust estimation</button>
-          <p className="hint">A resolved citation is a source link. It does not by itself verify a claim.</p>
         </div>}
       </div>
     </div>
@@ -147,7 +146,7 @@ function KnowledgeArticle({ id, offline, onPick }: { id: string; offline: boolea
         setRelated(pack.nodes)
         if (node.kind === 'claim') {
           const proof = pack.nodes.filter((item) => (node.evidence_ids as string[] ?? []).includes(item.id) && !item.withheld)
-          setEvidence({ ...data, groups: proof.length ? [{ claim: node, evidence: proof }] : [], gaps: proof.length ? [] : ['No reviewed evidence group is present in this installed copy.'] })
+          setEvidence({ ...data, groups: proof.length ? [{ claim: node, evidence: proof }] : [], gaps: proof.length ? [] : ['No evidence note is included for this claim in the installed copy.'] })
         }
         const registry = record(node.declared_registry ?? node.registry)
         if (node.kind === 'method' && Object.keys(registry).length) setRequirements({ ...data, requirements: { designs: registry.designs, estimands: registry.estimands, roles_required: registry.roles_required, caveats: registry.what_can_go_wrong, engine_support: registry.engines } })
@@ -187,7 +186,6 @@ function KnowledgeArticle({ id, offline, onPick }: { id: string; offline: boolea
       {node.summary && <p className="knowledge-summary">{node.summary}</p>}
       <dl className="knowledge-metadata">
         <dt>Stable record ID</dt><dd className="mono">{node.id}</dd>
-        <dt>Scientific review</dt><dd>{statusOf(node.review)}</dd>
         <dt>Record rights</dt><dd>{statusOf(node.rights)}</dd>
         {!!node.publication_rights && <><dt>External publication body</dt><dd>{statusOf(node.publication_rights)} · {record(record(node.publication_rights).permissions).display === false ? 'Publication text is withheld; only this metadata/link record is distributed.' : 'Inspect the separate publication rights decision below.'}</dd></>}
         <dt>Version</dt><dd>{words(node.version ?? node.source_version) || detail?.release}</dd>
@@ -203,7 +201,7 @@ function KnowledgeArticle({ id, offline, onPick }: { id: string; offline: boolea
           const target = relationTarget(relation, node.id)
           const targetNode = related.find((item) => item.id === target)
           return <li key={relation.id}><span className="relation-type">{relationLabel(relation)}</span>{target && <button className="linky" onClick={() => onPick(target)}>{targetNode?.title ?? target}</button>}
-            <p className="tiny hint">{[words(relation.scope), words(relation.conditions), `Review: ${statusOf(relation.review)}`].filter(Boolean).join(' · ')}</p>
+            <p className="tiny hint">{[words(relation.scope), words(relation.conditions)].filter(Boolean).join(' · ')}</p>
             {!!words(relation.counterevidence) && <p className="tiny hint">Counterevidence: {words(relation.counterevidence)}</p>}
             {!!words(relation.gaps) && <p className="tiny hint">Gaps: {words(relation.gaps)}</p>}
             <details><summary>Relation provenance and rights</summary><pre className="research-json">{JSON.stringify({ id: relation.id, subject: relation.subject_id ?? relation.subject, predicate: relation.predicate, object: relation.object_id ?? relation.object, assertion_mode: relation.assertion_mode, review: relation.review, rights: relation.rights, provenance: relation.provenance }, null, 2)}</pre></details>
@@ -211,7 +209,7 @@ function KnowledgeArticle({ id, offline, onPick }: { id: string; offline: boolea
         })}</ul>
         <KnowledgeOmissions envelope={relationsEnvelope} />
       </section>
-      {evidence && <section className="knowledge-section"><h3>Claim support</h3>{evidence.groups.map((group, index) => <div className="knowledge-evidence card" key={index}><p>{words(record(group.claim).text ?? record(group.claim).summary ?? record(group.claim).title)}</p><p className="hint">{words(record(group.claim).conditions ?? record(group.claim).scope)}</p>{(group.evidence as unknown[] ?? []).map((item, evidenceIndex) => <div key={evidenceIndex}><p>{words(record(record(item).locator).exact_text ?? record(item).summary)}</p><p className="tiny hint">Source version: {words(record(item).source_version)} · Review: {statusOf(record(item).review)}</p></div>)}</div>)}{evidence.gaps.length > 0 && <p className="banner caution">{words(evidence.gaps)}</p>}<KnowledgeOmissions envelope={evidence} /></section>}
+      {evidence && <section className="knowledge-section"><h3>Claim support</h3>{evidence.groups.map((group, index) => <div className="knowledge-evidence card" key={index}><p>{words(record(group.claim).text ?? record(group.claim).summary ?? record(group.claim).title)}</p><p className="hint">{words(record(group.claim).conditions ?? record(group.claim).scope)}</p>{(group.evidence as unknown[] ?? []).map((item, evidenceIndex) => <div key={evidenceIndex}><p>{words(record(record(item).locator).exact_text ?? record(item).summary)}</p>{!!record(item).source_version && <p className="tiny hint">Source version: {words(record(item).source_version)}</p>}{!!record(item).review && <details><summary>Evidence provenance</summary><pre className="research-json">{JSON.stringify({ source_id: record(item).source_id, review: record(item).review, rights: record(item).rights }, null, 2)}</pre></details>}</div>)}</div>)}{evidence.gaps.length > 0 && <p className="banner caution">{words(evidence.gaps)}</p>}<KnowledgeOmissions envelope={evidence} /></section>}
       <section className="knowledge-section"><h3>Sources and evidence locators</h3><KnowledgeCitations citations={node.citations?.length ? node.citations : detail?.citations ?? []} /></section>
       <details className="knowledge-section"><summary>Review and rights details</summary><pre className="research-json">{JSON.stringify({ review: node.review, record_rights: node.rights, external_publication_rights: node.publication_rights, provenance: node.provenance }, null, 2)}</pre></details>
     </>}
@@ -232,22 +230,19 @@ function MethodAudit({ id, offline, snapshot, onPick }: { id: string; offline: b
   }, [id, offline, snapshot, retry])
   return <section className="knowledge-section" aria-label="Causal practice and implementation audit">
     <h3>Causal practice and implementation audit</h3>
-    <p className="hint">Use these sourced questions to review an implementation and its causal framing. An audit needs code locations, study evidence and verification results; these questions do not assess your study.</p>
+    <p className="hint">Review the implementation and its causal framing with these sourced questions. Record code locations, study evidence and verification results for each finding.</p>
     {error && <div role="alert"><p>{error}</p><button className="btn sm" onClick={() => setRetry((value) => value + 1)}>Retry audit guidance</button></div>}
     {!data && !error && <p role="status">Loading audit guidance…</p>}
     {data && <>
-      {data.coverage.coverage_rows.map((row) => <div key={words(row.method_id)}><p><strong>Coverage:</strong> {label(words(row.coverage_level))}</p><p>{words(row.scope)}</p><p className="tiny hint">Review: {statusOf(row.review)} · Gaps: {words(row.gaps) || 'No gaps declared'}</p></div>)}
+      {data.coverage.coverage_rows.map((row) => <div key={words(row.method_id)}><p><strong>Coverage:</strong> {label(words(row.coverage_level))}</p><p>{words(row.scope)}</p><details><summary>Coverage details</summary>{!!words(row.gaps) && <p>{words(row.gaps)}</p>}<pre className="research-json">{JSON.stringify({ review: row.review, rights: row.rights, source_ids: row.source_ids }, null, 2)}</pre></details></div>)}
       {!data.coverage.coverage_rows.length && <p className="hint">No complete coverage row is available in this snapshot.</p>}
-      <p className="tiny hint">Sourced navigation and scoped evidence do not establish whole-method correctness or causal identification.</p>
       {data.audit.checks.map((check) => <details key={words(check.id)} className="knowledge-section"><summary>{words(check.title)}</summary>
         <p>{words(check.question)}</p><p className="tiny hint">Required evidence: {words(check.required_evidence)}</p>
         <p className="tiny hint">Scope: {words(check.scope)} · Conditions: {words(check.conditions)}</p>
-        <p className="tiny hint">Gaps: {words(check.gaps)} · Assessment: not assessed</p>
-        <p className="tiny hint">Review: {statusOf(check.review)}</p>
         <div className="row wrap">{(check.concept_ids as string[] ?? []).map((concept) => <button className="linky" key={concept} onClick={() => onPick(concept)}>{concept}</button>)}</div>
-        <details><summary>Audit provenance and rights</summary><pre className="research-json">{JSON.stringify({ id: check.id, source_ids: check.source_ids, review: check.review, rights: check.rights }, null, 2)}</pre></details>
+        <details><summary>Audit provenance and rights</summary>{!!words(check.gaps) && <p>{words(check.gaps)}</p>}<pre className="research-json">{JSON.stringify({ id: check.id, assessment: check.assessment, source_ids: check.source_ids, review: check.review, rights: check.rights }, null, 2)}</pre></details>
       </details>)}
-      {!data.audit.checks.length && <p className="hint">No complete audit questions are available for this record. This does not establish that an implementation is correct.</p>}
+      {!data.audit.checks.length && <p className="hint">No audit questions are included for this record.</p>}
       <KnowledgeCitations citations={data.audit.citations} />
       <KnowledgeOmissions envelope={data.coverage} /><KnowledgeOmissions envelope={data.audit} />
     </>}

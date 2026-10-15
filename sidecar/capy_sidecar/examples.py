@@ -68,10 +68,10 @@ EXAMPLES: list[dict[str, Any]] = [
     },
     {
         "id": "minimum_wage",
-        "title": "A minimum wage rise in one state",
+        "title": "Minimum wage: New Jersey and Pennsylvania",
         "design": "did",
-        "blurb": "Two states, two periods, one policy change. The cleanest difference-in-differences there "
-                 "is, and the place to learn what parallel trends actually asks of you.",
+        "blurb": "Simulated restaurants in New Jersey and Pennsylvania, before and after one wage rise. "
+                 "A two-period difference-in-differences example; treatment starts together in New Jersey.",
         "teaches": "the 2x2 difference-in-differences",
         "n": 820,
         "difficulty": "start here",
@@ -80,10 +80,10 @@ EXAMPLES: list[dict[str, Any]] = [
     },
     {
         "id": "medicaid",
-        "title": "A policy states adopted at different times",
+        "title": "Medicaid expansion: states adopt at different times",
         "design": "did",
-        "blurb": "Staggered adoption with effects that grow after treatment. Two-way fixed effects gets the "
-                 "wrong answer here, and the app will keep saying so until you look.",
+        "blurb": "51 simulated states, three adoption years and 17 never-treated states. Compare "
+                 "cohort-aware estimates of the uninsured rate with two-way fixed effects.",
         "teaches": "why TWFE misleads under staggered adoption",
         "n": 1020,
         "difficulty": "the important one",
@@ -316,6 +316,8 @@ def _minimum_wage() -> tuple[pd.DataFrame, dict[str, Any], dict[str, Any], list[
     truth = {"estimand": "ATT", "value": tau,
              "note": f"The rise adds {tau} full-time equivalents per store in the treated state's second period."}
     notes = [SIMULATED,
+             "NJ labels the treated-state stores and PA the comparison-state stores. Period 0 is before "
+             "the wage rise; period 1 is after. These are simulated restaurant records, not state-level observations.",
              "Two states, two periods: the canonical 2x2. Parallel trends is untestable with two periods, "
              "which is exactly why the design deserves an argument rather than a test."]
     return df, roles, truth, notes
@@ -359,8 +361,11 @@ def _medicaid() -> tuple[pd.DataFrame, dict[str, Any], dict[str, Any], list[str]
                      "effect grows over three years. The average effect on treated state-years is the "
                      "number above. Two-way fixed effects will not return it."}
     notes = [SIMULATED,
-             "This is the dataset the product exists for. Run TWFE and Callaway-Sant'Anna side by side and "
-             "read the forest."]
+             "The state_00 through state_50 labels are synthetic identifiers. Twelve states adopt in 2014, "
+             "twelve in 2016, ten in 2019, and seventeen are never treated. The outcome is the uninsured rate; "
+             "this is a Medicaid expansion scenario, distinct from the two-period minimum-wage example.",
+             "Compare cohort-aware methods with TWFE against the known simulation effect. Sampling variation "
+             "and the method's aggregation weights matter when reading their differences."]
     return df, roles, truth, notes
 
 
@@ -1037,18 +1042,21 @@ TOURS: dict[str, list[dict[str, str]]] = {
                  "estimate away?"},
     ],
     "medicaid": [
-        {"step": "1", "title": "The card changes its own copy", "focus": "board",
-         "body": "Drop the unit, period and treatment indicator and the design card notices that states "
-                 "adopted at different times. It says so on the board, before any menu of estimators."},
+        {"step": "1", "title": "Identify the states, years and outcome", "focus": "board",
+         "body": "This Medicaid expansion simulation measures the uninsured rate in 51 synthetic states. "
+                 "The state labels are identifiers, not real jurisdictions. Each row is a state-year; "
+                 "expanded switches from zero to one when that state's policy begins."},
         {"step": "2", "title": "Look at the rollout", "focus": "diagnose",
-         "body": "The adoption heatmap is sorted by adoption date. Three cohorts, seventeen never-treated "
-                 "states, and effects that grow for three years after adoption."},
+         "body": "The rollout groups states by first treatment: 12 start in 2014, 12 in 2016, 10 in 2019 "
+                 "and 17 are never treated. The outcome lines show observed means over calendar years. "
+                 "Open individual units to inspect the underlying state histories."},
         {"step": "3", "title": "Run the wrong method on purpose", "focus": "recommend",
          "body": "Two-way fixed effects is in the catalogue, greyed, with the reason attached. Include it "
                  "anyway: seeing the wrong number next to the right one teaches more than hiding it."},
         {"step": "4", "title": "Compare", "focus": "dashboard",
-         "body": "Callaway-Sant'Anna and Sun-Abraham recover the built-in effect. TWFE does not, because it "
-                 "averages 2x2 comparisons that include already-treated states used as controls."},
+         "body": "Compare the cohort-aware estimates with the built-in average effect on treated state-years. "
+                 "Sampling variation and aggregation weights can make the estimates differ. TWFE also uses "
+                 "already-treated states as controls and can target a different weighted contrast."},
         {"step": "5", "title": "Decompose the damage", "focus": "dashboard",
          "body": "The Goodman-Bacon decomposition shows exactly which comparisons TWFE leaned on and what "
                  "weight it gave them. That plot is the argument."},

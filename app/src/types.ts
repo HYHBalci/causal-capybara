@@ -95,6 +95,7 @@ export interface Artifact {
   data?: unknown
   path?: string | null
   columns?: string[] | null
+  collapsed?: boolean
 }
 
 export interface Diagnostic {
@@ -455,6 +456,50 @@ export interface Stack {
   missing: string[]
   available: boolean
   status: 'healthy' | 'incomplete' | 'unavailable'
+}
+
+export interface ManualPackage {
+  package: string
+  source: string
+  command: string
+  note?: string
+}
+
+export interface InstallationPlan {
+  stack?: string
+  engine?: string
+  title?: string
+  packages?: string[]
+  already_installed?: string[]
+  library?: string | null
+  library_will_be_created?: boolean
+  can_run?: boolean
+  blocked_reason?: string | null
+  size_guide?: string
+  command?: string | null
+  note?: string
+  needs_manual_install?: ManualPackage[]
+}
+
+export interface InstallationResponse {
+  status: string
+  plan: InstallationPlan
+  message?: string
+  installed?: string[]
+  still_missing?: string[]
+  needs_manual_install?: ManualPackage[]
+  log?: string
+  elapsed_s?: number
+}
+
+export interface InstallationRecord extends InstallationResponse {
+  id: string
+  request_id: string
+  stack: string
+  created: string
+  started?: string | null
+  finished?: string | null
+  phase?: string
 }
 
 /* -- jobs ---------------------------------------------------------------- */

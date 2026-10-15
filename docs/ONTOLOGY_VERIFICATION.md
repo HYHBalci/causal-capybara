@@ -1,6 +1,36 @@
 # Ontology, survival and outcome heterogeneity verification
 
-Checked on 14 October 2026 against public `main` at `2f8fd3e` on the `ontology` branch.
+## 15 October: reference analyses, policy charts and package recovery
+
+The updated public knowledge snapshot is
+`sha256:d807bc1c0cfd7a9be235f2ec89351648d62c691c98e1e04c765129ea8741be57`.
+The compiler verified a byte-exact rebuild and all 21 imported/runtime hashes
+matched staged Git bytes. Registry coverage and bibliographic counts are unchanged.
+
+Local checks passed: 237 focused application/method tests, the complete adapter
+contract, 475 knowledge/protocol/client tests, all 55 frozen benchmark tasks,
+70 frontend tests, TypeScript and the production build. Seven knowledge tests
+require Windows symlink privileges and were explicitly skipped. After the final
+chart and installer changes, all 64 relevant backend regressions passed again.
+The matching bundled skill also passed its compiler check.
+
+The [reference-analysis report](ANALYSIS_REFERENCE_CHECKS.md) records actual R
+survival comparisons, corrected DiD calculations and nine persisted backend
+analyses whose exported Python replay matched all 44 chart/table payloads.
+The [package-installation report](PACKAGE_INSTALLATION.md) records issue #3's
+timeout cause, persistent operation lifecycle and recovery tests. Research-tree
+reading views now keep provenance and review records in expandable details.
+
+Manual Windows computer control stopped before an in-app analysis because the
+helper could not verify the URL or capture usable window geometry. Hosted policy
+browser regressions exercise the revised charts and real default analyses; the
+readiness suite exercises installer controls. Consult the exact commit's PR
+checks for hosted results. The wheel hash below belongs to the earlier snapshot;
+fresh standalone packaging is checked by the updated branch's CI.
+
+## 14 October: original outcome-heterogeneity verification
+
+Historical checks against public `main` at `2f8fd3e` on the `ontology` branch.
 This record distinguishes software checks from the [remaining release gates](ONTOLOGY_READINESS.md).
 
 | Check | Observed result |
@@ -19,7 +49,7 @@ This record distinguishes software checks from the [remaining release gates](ONT
 | Hosted browser | At `824d613`, all eight heterogeneity cases and twelve general workflows passed; 32 Axe screens had zero violations or page errors. Screenshot review identified a stale automatic question label; the correction and stronger outcome-label assertions are included in the subsequent commit. Consult the PR for its final hosted result |
 | Installed MCP | Final 0.3.0 wheel served eight tools, three static resources and five prompts over official SDK stdio; all seven sourced, unassessed method audits and six requested claim groups passed against the final snapshot |
 
-Final public knowledge snapshot:
+Public knowledge snapshot verified on 14 October:
 
 ```text
 sha256:7768553369cb3d0d207b2125e5d7e870cd0fc0f7f73b52ff677619a9de957701

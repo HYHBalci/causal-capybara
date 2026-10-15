@@ -109,13 +109,15 @@ def _subsample(df: pd.DataFrame, spec: dict[str, Any]) -> tuple[pd.DataFrame, bo
 
 
 def _art(out: dict[str, Any], kind: str, title: str, spec_or_rows: Any, *, caption: str | None = None,
-         explain_key: str | None = None) -> None:
+         explain_key: str | None = None, collapsed: bool = False) -> None:
     item: dict[str, Any] = {"id": f"sketch_{len(out['artifacts'])}", "kind": kind, "title": title,
                             "caption": caption, "explain_key": explain_key}
     if kind == "vega":
         item["spec"] = spec_or_rows
     else:
         item["data"] = spec_or_rows
+    if collapsed:
+        item["collapsed"] = True
     out["artifacts"].append(item)
 
 
@@ -311,39 +313,120 @@ def _sketch_adoption(df: pd.DataFrame, spec: dict[str, Any], out: dict[str, Any]
         "cohorts": treated_cohorts[:40],
     })
 
-    # adoption heatmap
+    # Summarise every cohort before offering a unit-level detail. Taking the
+    # first 120 sorted units used to hide the treated group entirely in the
+    # 410-store minimum-wage example, because never-treated units sorted first.
     t01 = pd.Series(stats.to01(work[treat]), index=work.index)
     grid = work.assign(_t=t01.to_numpy(), _time=pd.to_numeric(work[time_col], errors="coerce").to_numpy())
-    order = cohorts.sort_values(kind="mergesort")
-    order_index = {str(u): i for i, u in enumerate(order.index)}
-    units = [u for u in order.index][:120]
-    cells = grid.loc[grid[unit].isin(units), [unit, "_time", "_t"]]
-    rows = [{"unit": str(r[0]), "time": float(r[1]), "value": float(r[2])}
-            for r in cells.itertuples(index=False, name=None)]
-    rows.sort(key=lambda r: order_index.get(r["unit"], 0))
-    _art(out, "vega", "Adoption pattern",
-         vega.heatmap(rows, x="time", y="unit", value="value", x_title="Period", y_title="Unit",
-                      height=min(max(len(units) * 6, 120), 320)),
-         caption="Rows are units sorted by when they adopt; lit cells are treated periods.",
-         explain_key="diagnostic.adoption")
-
-    # raw means by cohort x time -- the event-study sketch before any estimator
     never_value = float(cohorts.attrs.get("never_value", 0.0))
     grid["_cohort"] = grid[unit].map(cohorts).astype(float)
+    cohort_order = treated_cohorts + ([never_value] if n_never else [])
+    cohort_sizes = cohorts.value_counts().to_dict()
+    cohort_labels = {
+        g: f"{'Never treated' if g <= never_value else f'First treated {g:g}'} ({int(cohort_sizes[g])})"
+        for g in cohort_order
+    }
+    time_label = str(time_col).replace("_", " ").capitalize()
+    unit_label = str(unit).replace("_", " ").capitalize()
+    periods = sorted(grid["_time"].dropna().unique())
+    two_period = (len(periods) == 2 and len(treated_cohorts) == 1
+                  and treated_cohorts[0] == periods[1])
+    period_labels = {float(t): (f"{'Before' if i == 0 else 'After'} ({t:g})" if two_period else f"{t:g}")
+                     for i, t in enumerate(periods)}
+    rollout = grid.groupby(["_cohort", "_time"], observed=True).agg(
+        share=("_t", "mean"), observed_units=(unit, "nunique")).reset_index()
+    # itertuples renames leading-underscore columns; records retain their keys.
+    rollout_rows = [{
+        "cohort": cohort_labels[float(r["_cohort"])], "time": period_labels[float(r["_time"])],
+        "status": "Untreated" if r["share"] == 0 else "Treated" if r["share"] == 1 else "Mixed",
+        "share": float(r["share"]), "units": int(r["observed_units"]),
+    } for r in rollout.to_dict("records")]
+    mixed_cohorts = any(r["status"] == "Mixed" for r in rollout_rows)
+    rollout_plot = vega.heatmap(rollout_rows, x="time", y="cohort", value="share",
+                              x_title=time_label, y_title=f"Adoption cohort · {unit}",
+                              height=max(80, len(cohort_order) * 30))
+    # Reserve the stated height for the cells. A fit-in-both-directions chart
+    # spends it on legends/axes first, collapsing a two-row rollout to a sliver.
+    rollout_plot["autosize"] = {"type": "fit-x", "contains": "padding", "resize": True}
+    rollout_plot["encoding"]["x"]["sort"] = [period_labels[float(t)] for t in periods]
+    rollout_plot["encoding"]["y"].update({"sort": list(cohort_labels.values()),
+        "axis": {"labelLimit": 0, "labelOverlap": False}})
+    rollout_plot["encoding"]["color"] = {"field": "status", "type": "nominal", "title": "Treatment status",
+        "scale": {"domain": ["Untreated", "Treated"] + (["Mixed"] if mixed_cohorts else []),
+                  "range": [vega.RULE, vega.TEAL] + ([vega.OCHRE] if mixed_cohorts else [])},
+        "legend": {"columns": 3}}
+    rollout_plot["encoding"]["tooltip"] = [
+        {"field": "cohort", "type": "nominal", "title": "Cohort (total units)"},
+        {"field": "time", "type": "nominal", "title": time_label},
+        {"field": "status", "type": "nominal", "title": "Treatment status"},
+        {"field": "share", "type": "quantitative", "title": "Share treated", "format": ".0%"},
+        {"field": "units", "type": "quantitative", "title": "Observed units", "format": "d"},
+    ]
+    _art(out, "vega", "Policy rollout by adoption cohort", rollout_plot,
+         caption=f"Each row groups {unit} units by their first treated period; parentheses give the total number of units. "
+                 "All cohorts in this sketch are included. "
+                 + ("Mixed means some observed units in that cohort are treated and others are not." if mixed_cohorts else ""),
+         explain_key="diagnostic.adoption")
+
+    # These are observed outcome levels on a calendar axis, not event-study
+    # estimates. Show first-treatment markers without implying a causal effect.
     grid["_y"] = pd.to_numeric(grid[outcome], errors="coerce")
-    means = grid.groupby(["_cohort", "_time"], observed=True)["_y"].mean().reset_index()
+    means = grid.groupby(["_cohort", "_time"], observed=True).agg(
+        mean=("_y", "mean"), observed_units=(unit, "nunique")).reset_index()
     series_rows = [
         {"time": float(r["_time"]),
-         "value": float(r["_y"]),
-         "series": ("Never treated" if float(r["_cohort"]) <= never_value
-                    else f"Adopted {float(r['_cohort']):g}")}
-        for _, r in means.iterrows() if pd.notna(r["_y"])
+         "value": float(r["mean"]), "units": int(r["observed_units"]),
+         "first_treated": float(r["_cohort"]) > never_value and float(r["_time"]) == float(r["_cohort"]),
+         "series": cohort_labels[float(r["_cohort"])]}
+        for r in means.to_dict("records") if pd.notna(r["mean"])
     ]
     if series_rows:
-        _art(out, "vega", "Raw means by cohort",
-             vega.line_overlay(series_rows, x_title="Period", y_title=outcome, strokes=False),
-             caption="Before any estimator: do the groups move together before adoption?",
+        mean_plot = vega.line_overlay(series_rows, x_title=time_label,
+             y_title=f"Mean {str(outcome).replace('_', ' ')}", strokes=True,
+             color_domain=list(cohort_labels.values()),
+             color_range=[vega.CATEGORICAL[i % 6] for i in range(len(treated_cohorts))] + ([vega.STONE] if n_never else []))
+        mean_plot["config"]["legend"]["columns"] = 1
+        mean_plot["autosize"] = {"type": "fit-x", "contains": "padding", "resize": True}
+        # Both encodings describe the same cohort. A null strokeDash legend
+        # suppresses the merged colour legend as well in Vega-Lite.
+        mean_plot["layer"][0]["encoding"]["strokeDash"]["legend"] = {}
+        mean_plot["layer"][0]["encoding"]["tooltip"].append(
+            {"field": "units", "type": "quantitative", "title": "Observed units", "format": "d"})
+        if two_period:
+            mean_plot["layer"][0]["encoding"]["x"]["axis"]["values"] = [float(t) for t in periods]
+        marker = {"transform": [{"filter": "datum.first_treated === true"}],
+                  "mark": {"type": "point", "filled": True, "size": 90},
+                  "encoding": {k: v for k, v in mean_plot["layer"][0]["encoding"].items() if k != "strokeDash"}}
+        mean_plot["layer"].append(marker)
+        _art(out, "vega", "Observed outcome trends · calendar time", mean_plot,
+             caption="Lines show observed cohort means; circles mark first treatment. These are outcome levels, not estimated effects. "
+                     + ("There is only one pre-treatment period, so pre-trends cannot be checked here." if two_period else
+                        "Compare movement before each cohort starts treatment; an event study of estimated effects comes after estimation."),
              explain_key="assumption.parallel_trends")
+
+    # Keep a readable unit view on demand. Round-robin selection represents
+    # every cohort before taking additional units from any one cohort.
+    buckets = [list(cohorts.index[cohorts == g]) for g in cohort_order]
+    units = [bucket[i] for i in range(max((len(b) for b in buckets), default=0))
+             for bucket in buckets if i < len(bucket)][:120]
+    units = sorted(units, key=lambda u: (cohort_order.index(float(cohorts[u])), str(u)))
+    cells = grid.loc[grid[unit].isin(units), [unit, "_time", "_t"]]
+    unit_rows = [{"unit": str(r[0]), "time": period_labels[float(r[1])],
+                  "status": "Treated" if r[2] else "Untreated"}
+                 for r in cells.itertuples(index=False, name=None)]
+    unit_plot = vega.heatmap(unit_rows, value="status", x_title=time_label, y_title=unit_label,
+                             height=max(len(units) * 16, 140))
+    unit_plot["autosize"] = {"type": "fit-x", "contains": "padding", "resize": True}
+    unit_plot["encoding"]["x"]["sort"] = [period_labels[float(t)] for t in periods]
+    unit_plot["encoding"]["y"]["sort"] = [str(u) for u in units]
+    unit_plot["encoding"]["color"] = {"field": "status", "type": "nominal", "title": "Treatment status",
+        "scale": {"domain": ["Untreated", "Treated"], "range": [vega.RULE, vega.TEAL]}}
+    unit_plot["encoding"]["tooltip"] = [{"field": key, "type": "nominal", "title": title}
+        for key, title in (("unit", unit_label), ("time", time_label), ("status", "Treatment status"))]
+    _art(out, "vega", "Inspect individual units", unit_plot, collapsed=True,
+         caption=f"Showing {len(units)} of {shape['n_units']} units, sorted by first treatment. "
+                 + ("Units are selected across adoption cohorts; the overview above uses every unit." if len(units) < shape["n_units"]
+                    else "Every unit in the sketch is shown."), explain_key="diagnostic.adoption")
 
     parts = [f"{shape['n_units']} units over {shape['n_periods']} periods"]
     if staggered:
@@ -357,10 +440,9 @@ def _sketch_adoption(df: pd.DataFrame, spec: dict[str, Any], out: dict[str, Any]
         out["warnings"].append({
             "level": "warning",
             "code": "staggered_twfe",
-            "message": f"{len(treated_cohorts)} adoption dates, so two-way fixed effects would average "
-                       f"2x2 comparisons across them with weights that can go negative -- already-treated "
-                       f"units end up serving as controls. Callaway-Sant'Anna and Sun-Abraham do not do "
-                       f"that. Run them alongside it and read the forest."})
+            "message": f"{len(treated_cohorts)} adoption dates. Use a cohort-aware method such as "
+                       "Callaway-Sant'Anna or Sun-Abraham. TWFE can mix comparisons against already-treated "
+                       "units when effects differ across cohorts or time."})
     if not n_never and treated_cohorts:
         out["warnings"].append({
             "level": "caution",

@@ -77,7 +77,7 @@ export async function loadMethodAudit(id: string, offline: boolean, snapshot: st
 
 function envelope(pack: KnowledgePack): KnowledgeEnvelope {
   return { snapshot_id: pack.snapshot_id, release: pack.release, status: 'partial', citations: [],
-    omissions: pack.catalogueFallback ? [{ id: 'reviewed-evidence', reason: 'Reading the installed catalogue. Citation resolution does not verify scientific support.' }] : [], pagination: { next_cursor: null, truncated: false } }
+    omissions: pack.catalogueFallback ? [{ id: 'reviewed-evidence', reason: 'Reading the installed catalogue. Claim evidence and audit guidance require the full knowledge pack.' }] : [], pagination: { next_cursor: null, truncated: false } }
 }
 
 export async function loadKnowledgeSearch(params: { q?: string; kind?: string; design?: string; estimand?: string; limit?: number; cursor?: string }, engineDown: boolean, signal?: AbortSignal): Promise<{ data: KnowledgeSearch; offline: boolean }> {

@@ -950,6 +950,7 @@ def _run_streamed(
     env: dict[str, str] | None = None,
     on_line: Callable[[str], None] | None = None,
     is_cancelled: Callable[[], bool] | None = None,
+    on_process: Callable[[subprocess.Popen], None] | None = None,
 ) -> tuple[int | None, str, str]:
     """Run a child process, handing out each line of its output as it arrives.
 
@@ -960,9 +961,17 @@ def _run_streamed(
     run finished, was stopped, or ran out of time.
     """
     proc = subprocess.Popen(
-        cmd, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True, bufsize=1, env=env,
+        cmd, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True, errors="replace", bufsize=1, env=env,
         creationflags=getattr(subprocess, "CREATE_NO_WINDOW", 0) if os.name == "nt" else 0,
     )
+    if on_process is not None:
+        try:
+            on_process(proc)
+        except Exception:
+            # If a durable caller cannot record the child, do not leave an
+            # untracked installer writing into the package library.
+            _kill_tree(proc)
+            raise
     lines: list[str] = []
     pipe: queue.Queue[str | None] = queue.Queue()
 
@@ -978,13 +987,14 @@ def _run_streamed(
     reader.start()
     deadline = time.time() + timeout
     outcome = "done"
+    output_finished = False
     while True:
         try:
             item: str | None = pipe.get(timeout=0.25)
         except queue.Empty:
             item = ""
         if item is None:
-            break
+            output_finished = True
         if item:
             lines.append(item)
             if on_line is not None:
@@ -999,6 +1009,8 @@ def _run_streamed(
             break
         if time.time() > deadline:
             outcome = "timeout"
+            break
+        if output_finished and proc.poll() is not None:
             break
     if outcome != "done":
         _kill_tree(proc)
@@ -1137,6 +1149,8 @@ def install_stack(
     timeout: float = 900.0,
     on_line: Callable[[str], None] | None = None,
     is_cancelled: Callable[[], bool] | None = None,
+    on_plan: Callable[[dict[str, Any]], None] | None = None,
+    on_process: Callable[[subprocess.Popen], None] | None = None,
 ) -> dict[str, Any]:
     """Run an install the user has explicitly approved.
 
@@ -1146,8 +1160,10 @@ def install_stack(
     so calling this with nothing but a stack id blocks exactly as it always did.
     """
     plan = install_plan(stack_id)
-    if not approved:
+    if approved is not True:
         return {"status": "needs_approval", "plan": plan}
+    if on_plan is not None:
+        on_plan(plan)
     if not plan["packages"]:
         if plan.get("needs_manual_install"):
             return {
@@ -1197,7 +1213,8 @@ def install_stack(
         cmd = [exe, "--vanilla", str(_write_r_install_script(plan))]
     try:
         code, log, outcome = _run_streamed(
-            cmd, timeout=timeout, env=env, on_line=on_line, is_cancelled=is_cancelled
+            cmd, timeout=timeout, env=env, on_line=on_line, is_cancelled=is_cancelled,
+            on_process=on_process,
         )
     except Exception as exc:
         code, log, outcome = None, f"The installer could not be started: {exc}", "failed"
