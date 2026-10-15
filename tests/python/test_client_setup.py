@@ -57,7 +57,7 @@ def test_setup_creates_project_pair_and_is_idempotent(host, tmp_path, monkeypatc
     assert setup._skill_bytes(skill) == setup._skill_bytes(setup.bundled_skill())
     key = "mcp_servers" if host in setup.TOML_HOSTS else "mcpServers"
     server = parse(host, config)[key][setup.SERVER_NAME]
-    assert server["command"] == str(Path(sys.executable).resolve())
+    assert server["command"] == str(Path(sys.executable).absolute())
     assert server["args"] == ["-m", "capy_knowledge.mcp"] and "env" not in server
     before = {p.relative_to(tmp_path): p.read_bytes() for p in tmp_path.rglob("*") if p.is_file()}
     again = setup.setup_client(host, tmp_path)
@@ -115,7 +115,7 @@ def test_all_conflicts_fail_before_either_artifact_changes(conflict, tmp_path):
 def test_grok_uses_official_project_fields_and_skill_location(tmp_path):
     result = setup.setup_client("grok", tmp_path)
     server = parse("grok", Path(result["configuration"]["path"]))["mcp_servers"][setup.SERVER_NAME]
-    assert server == {"command": str(Path(sys.executable).resolve()), "args": ["-m", "capy_knowledge.mcp"],
+    assert server == {"command": str(Path(sys.executable).absolute()), "args": ["-m", "capy_knowledge.mcp"],
                       "enabled": True, "startup_timeout_sec": 20, "tool_timeout_sec": 60}
     assert Path(result["skill"]["path"]).relative_to(tmp_path).as_posix() == ".grok/skills/causal-capybara-research"
 
@@ -208,9 +208,32 @@ def test_runtime_probe_is_isolated_fixed_bounded_and_silent(monkeypatch):
     monkeypatch.setattr(subprocess, "run", run)
     REAL_PROBE(sys.executable)
     command, options = calls[0]
-    assert command == [str(Path(sys.executable).resolve()), "-I", "-B", "-c", "import capy_knowledge.mcp"]
+    assert command == [str(Path(sys.executable).absolute()), "-I", "-B", "-c", "import capy_knowledge.mcp"]
     assert options["shell"] is False and options["timeout"] == 10
     assert options["stdout"] == options["stderr"] == options["stdin"] == subprocess.DEVNULL
+
+
+def test_configuration_and_probe_preserve_selected_python_symlink(tmp_path, monkeypatch):
+    selected = tmp_path / "venv python alias"
+    try:
+        selected.symlink_to(sys.executable)
+    except OSError:
+        pytest.skip("This host does not permit executable symlinks")
+    assert selected.resolve() != selected
+    calls = []
+    def run(command, **options):
+        calls.append(command)
+        return SimpleNamespace(returncode=0)
+    monkeypatch.setattr(subprocess, "run", run)
+    # Normalization may remove lexical dot components, but must not dereference
+    # the executable link which identifies the selected virtual environment.
+    chosen = str(tmp_path / "unused" / ".." / selected.name)
+    for host in setup.HOSTS:
+        value = setup.validate_config(host, setup.render_config(host, chosen))
+        key = "mcp_servers" if host in setup.TOML_HOSTS else "mcpServers"
+        assert value[key][setup.SERVER_NAME]["command"] == str(selected)
+    REAL_PROBE(chosen)
+    assert calls[0][0] == str(selected)
 
 
 @pytest.mark.parametrize("failure", ["missing", "timeout", "not_executable"])

@@ -8,6 +8,7 @@ from pathlib import Path
 import subprocess
 import sys
 import tempfile
+import tomllib
 
 
 def run_cli(arguments, project):
@@ -41,6 +42,10 @@ def smoke():
             configuration = run_cli(["configure-client", host], project)
             if "capy_knowledge" not in configuration:
                 raise AssertionError("Standalone MCP configuration omitted its server.")
+            parsed = tomllib.loads(configuration) if host in {"codex", "grok"} else json.loads(configuration)
+            key = "mcp_servers" if host in {"codex", "grok"} else "mcpServers"
+            if parsed[key]["capy_knowledge"]["command"] != str(Path(sys.executable).absolute()):
+                raise AssertionError("Client configuration lost the selected interpreter's virtual environment path.")
             setup = json.loads(run_cli(["setup-client", host, "--project", str(project)], project))
             if not Path(setup["configuration"]["path"]).is_relative_to(project):
                 raise AssertionError("Client setup escaped its selected project.")
@@ -49,6 +54,7 @@ def smoke():
                 raise AssertionError("Repeated client setup changed existing artifacts.")
             installations[host] = "passed"
         return {"status": "passed", "source_checkout_required": False, "isolated_python": True,
+                "virtual_environment": sys.prefix != sys.base_prefix, "interpreter_path_preserved": True,
                 "snapshot_id": release["snapshot_id"], "release": release["release"],
                 "coverage_rows": len(coverage["coverage_rows"]), "survival_audit_checks": len(checklist["checks"]),
                 "project_skill_and_config": installations,

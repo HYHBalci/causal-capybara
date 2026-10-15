@@ -21,10 +21,18 @@ CONFIG_PATHS = {"codex": ".codex/config.toml", "claude": ".mcp.json",
                 "grok": ".grok/config.toml", "antigravity": ".agents/mcp_config.json"}
 
 
-def server_definition(python: str, pack: str | None = None) -> dict:
-    executable = Path(python).expanduser().resolve(strict=True)
+def _python_executable(python: str) -> Path:
+    # Unix virtual environments intentionally symlink their Python executable.
+    # Resolving that final link would launch the base interpreter and lose the
+    # environment containing the installed knowledge package and MCP extras.
+    executable = Path(os.path.abspath(Path(python).expanduser()))
     if not executable.is_file():
         raise ValueError("Python must name an existing executable file.")
+    return executable
+
+
+def server_definition(python: str, pack: str | None = None) -> dict:
+    executable = _python_executable(python)
     args = ["-m", "capy_knowledge.mcp"]
     if pack is not None:
         pack_path = Path(pack).expanduser().resolve(strict=True)
@@ -269,7 +277,7 @@ def _probe_runtime(python: str) -> None:
     package. Discard both streams so imports cannot disclose paths or credentials
     or accumulate unbounded output. No bytecode is written during a dry run.
     """
-    executable = str(Path(python).expanduser().resolve(strict=True))
+    executable = str(_python_executable(python))
     try:
         result = subprocess.run([executable, "-I", "-B", "-c", "import capy_knowledge.mcp"],
                                 stdin=subprocess.DEVNULL, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL,

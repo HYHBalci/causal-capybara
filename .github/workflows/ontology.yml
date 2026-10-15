@@ -10,6 +10,7 @@ on:
       - 'docs/adr/*ontology*'
       - 'tests/python/test_knowledge*'
       - 'tests/python/test_ontology*'
+      - 'tests/python/test_client_setup.py'
       - 'tests/python/test_heterogeneity_ontology.py'
       - 'tools/build_knowledge_skill.py'
       - '.github/workflows/ontology.yml'
@@ -47,6 +48,11 @@ jobs:
           python-version: ${{ matrix.python }}
           cache: pip
           cache-dependency-path: knowledge/pyproject.toml
+      - name: Use a real virtual environment for client setup and wheel checks
+        shell: bash
+        run: |
+          python -m venv .ontology-venv
+          python -c "import os; from pathlib import Path; print(Path('.ontology-venv', 'Scripts' if os.name == 'nt' else 'bin').absolute())" >> "$GITHUB_PATH"
       - name: Install the companion package and build checks
         run: python -m pip install -c knowledge/constraints-mcp.txt './knowledge[mcp,test]' PyYAML==6.0.3
       - name: Validate public pack and frozen retrieval benchmark

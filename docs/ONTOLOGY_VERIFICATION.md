@@ -7,16 +7,21 @@ Codex, Claude Code, Grok Build and Antigravity, plus app context handoffs for th
 first three. It uses native MCP/skill interfaces and leaves sign-in to each
 client. No subscription tokens are read or proxied by Capybara.
 
-Local validation passed: 65 setup/client/installation tests (two Windows
+Local validation passed: 65 setup/client/installation tests (three Windows
 symlink-privilege skips), 40 assistant/HTTP tests, 71 frontend tests, TypeScript,
 production build, published request-schema checks and byte-exact knowledge/skill
 checks. Independent review found no concrete privacy, freshness or authentication
 boundary blocker. The public knowledge snapshot remains unchanged below.
 
+Client configuration and its import probe preserve the chosen virtual environment
+interpreter, including Unix executable symlinks. The standalone workflow now
+installs and checks the wheel inside a real virtual environment on both platforms;
+the smoke check verifies that the configured interpreter is retained.
+
 A fresh virtual environment installed the independent wheel with its MCP extra.
 Isolated Python queries and repeated setup succeeded for all four clients from
 a fresh directory, without source imports. The wheel SHA-256 was
-`e9e5a818d5b429a55318b8bde331eba2ff47d96fbff0ac349e4e252ca8dad76b`;
+`6bb3c7f78ff0a2a29f614328339b9b87ab680cc34469521158b2283cc27ca0a5`;
 wheel archive timestamps may differ between builds.
 
 Installed Grok CLI `1.0.13 (5e9a58528b76)` detected the generated project server.
@@ -24,7 +29,8 @@ Its doctor first refused the untrusted fixture folder, as expected. After
 explicitly trusting that inspected fixture with the CLI's own `--trust` option,
 the server started, completed MCP protocol `2025-11-25` initialization and
 discovered all eight tools. This used a separate fixture configuration and made
-no provider request. It verifies local connection and discovery, not model
+no provider request. Grok's `inspect --json` also found the installed project
+skill. These checks verify local connection and discovery, not model
 consumption of the skill or an authenticated research conversation.
 
 The earlier analysis/UI checkpoint `c4da4f6` passed all nine hosted jobs:
