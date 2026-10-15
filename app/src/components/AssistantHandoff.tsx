@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useId, useRef, useState } from 'react'
 import { saveFile } from '../desktop'
 import { researchApi } from '../research/api'
 import { words } from '../research/helpers'
@@ -9,6 +9,8 @@ const CLIENTS: Record<AssistantHandoffClient, string> = { codex: 'Codex', claude
 
 /** The parent keys this panel by context identity/signature, including invalidation. */
 export function AssistantHandoff({ context }: { context: ResearchRecord | null }) {
+  const clientId = useId()
+  const promptId = useId()
   const [client, setClient] = useState<AssistantHandoffClient>('codex')
   const [handoff, setHandoff] = useState<Handoff | null>(null)
   const [busy, setBusy] = useState(false)
@@ -73,9 +75,9 @@ export function AssistantHandoff({ context }: { context: ResearchRecord | null }
   return <details className="knowledge-section">
     <summary>Continue in Codex, Claude Code or Grok CLI</summary>
     <p className="tiny hint">Sign in through your own CLI, then paste the inspected prompt there. The CLI provider may send this context to its cloud service, and its tools may read project files within the permissions you grant.</p>
-    <label className="research-query">CLI client<select value={client} onChange={(event) => changeClient(event.target.value as AssistantHandoffClient)}>
+    <div className="research-query"><label htmlFor={clientId}>CLI client</label><select id={clientId} value={client} onChange={(event) => changeClient(event.target.value as AssistantHandoffClient)}>
       {Object.entries(CLIENTS).map(([value, label]) => <option value={value} key={value}>{label}</option>)}
-    </select></label>
+    </select></div>
     <p className="tiny hint">One-time project setup, run in your terminal:</p>
     <p><code>capy-knowledge setup-client {client} --project .</code></p>
     <p className="tiny"><ExternalLink href="https://github.com/HYHBalci/causal-capybara/blob/ontology/docs/AI_INTEGRATIONS.md">CLI installation and setup guide</ExternalLink></p>
@@ -84,7 +86,7 @@ export function AssistantHandoff({ context }: { context: ResearchRecord | null }
     {notice && <p className="tiny hint" role="status">{notice}</p>}
     {error && <p className="banner error" role="alert">{error}</p>}
     {handoff && <div className="knowledge-section">
-      <label className="research-query">Exact CLI handoff prompt<textarea readOnly rows={12} value={handoff.prompt} spellCheck={false} /></label>
+      <div className="research-query"><label htmlFor={promptId}>Exact CLI handoff prompt</label><textarea id={promptId} readOnly rows={12} value={handoff.prompt} spellCheck={false} /></div>
       <div className="row wrap"><button className="btn" onClick={() => void exportPrompt('copy')}>Copy CLI handoff</button><button className="btn" onClick={() => void exportPrompt('save')}>Save CLI handoff</button></div>
     </div>}
   </details>
