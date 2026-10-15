@@ -79,7 +79,7 @@ export function ResearchTree() {
         {result && <span>{offline ? 'Installed offline copy' : 'Local knowledge service'} · release {result.release}</span>}
         {result && <span title={result.snapshot_id}>Snapshot {result.snapshot_id.slice(0, 22)}…</span>}
       </div>
-      {releaseInfo && <details className="research-release"><summary>Knowledge release coverage and provenance</summary><pre className="research-json">{JSON.stringify(releaseInfo, null, 2)}</pre></details>}
+      {releaseInfo && <details className="research-release"><summary>Knowledge release coverage and provenance</summary><pre className="research-json" tabIndex={0} role="region" aria-label="Knowledge release metadata">{JSON.stringify(releaseInfo, null, 2)}</pre></details>}
     </header>
     <div className="research-layout grow">
       <aside className="research-browser scroll" aria-label="Browse research knowledge">
@@ -204,14 +204,14 @@ function KnowledgeArticle({ id, offline, onPick }: { id: string; offline: boolea
             <p className="tiny hint">{[words(relation.scope), words(relation.conditions)].filter(Boolean).join(' · ')}</p>
             {!!words(relation.counterevidence) && <p className="tiny hint">Counterevidence: {words(relation.counterevidence)}</p>}
             {!!words(relation.gaps) && <p className="tiny hint">Gaps: {words(relation.gaps)}</p>}
-            <details><summary>Relation provenance and rights</summary><pre className="research-json">{JSON.stringify({ id: relation.id, subject: relation.subject_id ?? relation.subject, predicate: relation.predicate, object: relation.object_id ?? relation.object, assertion_mode: relation.assertion_mode, review: relation.review, rights: relation.rights, provenance: relation.provenance }, null, 2)}</pre></details>
+            <details><summary>Relation provenance and rights</summary><pre className="research-json" tabIndex={0} role="region" aria-label="Relation provenance and rights">{JSON.stringify({ id: relation.id, subject: relation.subject_id ?? relation.subject, predicate: relation.predicate, object: relation.object_id ?? relation.object, assertion_mode: relation.assertion_mode, review: relation.review, rights: relation.rights, provenance: relation.provenance }, null, 2)}</pre></details>
           </li>
         })}</ul>
         <KnowledgeOmissions envelope={relationsEnvelope} />
       </section>
-      {evidence && <section className="knowledge-section"><h3>Claim support</h3>{evidence.groups.map((group, index) => <div className="knowledge-evidence card" key={index}><p>{words(record(group.claim).text ?? record(group.claim).summary ?? record(group.claim).title)}</p><p className="hint">{words(record(group.claim).conditions ?? record(group.claim).scope)}</p>{(group.evidence as unknown[] ?? []).map((item, evidenceIndex) => <div key={evidenceIndex}><p>{words(record(record(item).locator).exact_text ?? record(item).summary)}</p>{!!record(item).source_version && <p className="tiny hint">Source version: {words(record(item).source_version)}</p>}{!!record(item).review && <details><summary>Evidence provenance</summary><pre className="research-json">{JSON.stringify({ source_id: record(item).source_id, review: record(item).review, rights: record(item).rights }, null, 2)}</pre></details>}</div>)}</div>)}{evidence.gaps.length > 0 && <p className="banner caution">{words(evidence.gaps)}</p>}<KnowledgeOmissions envelope={evidence} /></section>}
+      {evidence && <section className="knowledge-section"><h3>Claim support</h3>{evidence.groups.map((group, index) => <div className="knowledge-evidence card" key={index}><p>{words(record(group.claim).text ?? record(group.claim).summary ?? record(group.claim).title)}</p><p className="hint">{words(record(group.claim).conditions ?? record(group.claim).scope)}</p>{(group.evidence as unknown[] ?? []).map((item, evidenceIndex) => <div key={evidenceIndex}><p>{words(record(record(item).locator).exact_text ?? record(item).summary)}</p>{!!record(item).source_version && <p className="tiny hint">Source version: {words(record(item).source_version)}</p>}{!!record(item).review && <details><summary>Evidence provenance</summary><pre className="research-json" tabIndex={0} role="region" aria-label="Evidence provenance">{JSON.stringify({ source_id: record(item).source_id, review: record(item).review, rights: record(item).rights }, null, 2)}</pre></details>}</div>)}</div>)}{evidence.gaps.length > 0 && <p className="banner caution">{words(evidence.gaps)}</p>}<KnowledgeOmissions envelope={evidence} /></section>}
       <section className="knowledge-section"><h3>Sources and evidence locators</h3><KnowledgeCitations citations={node.citations?.length ? node.citations : detail?.citations ?? []} /></section>
-      <details className="knowledge-section"><summary>Review and rights details</summary><pre className="research-json">{JSON.stringify({ review: node.review, record_rights: node.rights, external_publication_rights: node.publication_rights, provenance: node.provenance }, null, 2)}</pre></details>
+      <details className="knowledge-section"><summary>Review and rights details</summary><pre className="research-json" tabIndex={0} role="region" aria-label="Record review and rights">{JSON.stringify({ review: node.review, record_rights: node.rights, external_publication_rights: node.publication_rights, provenance: node.provenance }, null, 2)}</pre></details>
     </>}
     <KnowledgeOmissions envelope={detail} />
   </article>
@@ -234,13 +234,13 @@ function MethodAudit({ id, offline, snapshot, onPick }: { id: string; offline: b
     {error && <div role="alert"><p>{error}</p><button className="btn sm" onClick={() => setRetry((value) => value + 1)}>Retry audit guidance</button></div>}
     {!data && !error && <p role="status">Loading audit guidance…</p>}
     {data && <>
-      {data.coverage.coverage_rows.map((row) => <div key={words(row.method_id)}><p><strong>Coverage:</strong> {label(words(row.coverage_level))}</p><p>{words(row.scope)}</p><details><summary>Coverage details</summary>{!!words(row.gaps) && <p>{words(row.gaps)}</p>}<pre className="research-json">{JSON.stringify({ review: row.review, rights: row.rights, source_ids: row.source_ids }, null, 2)}</pre></details></div>)}
+      {data.coverage.coverage_rows.map((row) => <div key={words(row.method_id)}><p><strong>Coverage:</strong> {label(words(row.coverage_level))}</p><p>{words(row.scope)}</p><details><summary>Coverage details</summary>{!!words(row.gaps) && <p>{words(row.gaps)}</p>}<pre className="research-json" tabIndex={0} role="region" aria-label="Coverage metadata">{JSON.stringify({ review: row.review, rights: row.rights, source_ids: row.source_ids }, null, 2)}</pre></details></div>)}
       {!data.coverage.coverage_rows.length && <p className="hint">No complete coverage row is available in this snapshot.</p>}
       {data.audit.checks.map((check) => <details key={words(check.id)} className="knowledge-section"><summary>{words(check.title)}</summary>
         <p>{words(check.question)}</p><p className="tiny hint">Required evidence: {words(check.required_evidence)}</p>
         <p className="tiny hint">Scope: {words(check.scope)} · Conditions: {words(check.conditions)}</p>
         <div className="row wrap">{(check.concept_ids as string[] ?? []).map((concept) => <button className="linky" key={concept} onClick={() => onPick(concept)}>{concept}</button>)}</div>
-        <details><summary>Audit provenance and rights</summary>{!!words(check.gaps) && <p>{words(check.gaps)}</p>}<pre className="research-json">{JSON.stringify({ id: check.id, assessment: check.assessment, source_ids: check.source_ids, review: check.review, rights: check.rights }, null, 2)}</pre></details>
+        <details><summary>Audit provenance and rights</summary>{!!words(check.gaps) && <p>{words(check.gaps)}</p>}<pre className="research-json" tabIndex={0} role="region" aria-label="Audit provenance and rights">{JSON.stringify({ id: check.id, assessment: check.assessment, source_ids: check.source_ids, review: check.review, rights: check.rights }, null, 2)}</pre></details>
       </details>)}
       {!data.audit.checks.length && <p className="hint">No audit questions are included for this record.</p>}
       <KnowledgeCitations citations={data.audit.citations} />

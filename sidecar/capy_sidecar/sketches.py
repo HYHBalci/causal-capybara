@@ -349,6 +349,7 @@ def _sketch_adoption(df: pd.DataFrame, spec: dict[str, Any], out: dict[str, Any]
     # spends it on legends/axes first, collapsing a two-row rollout to a sliver.
     rollout_plot["autosize"] = {"type": "fit-x", "contains": "padding", "resize": True}
     rollout_plot["encoding"]["x"]["sort"] = [period_labels[float(t)] for t in periods]
+    rollout_plot["encoding"]["x"]["axis"]["labelSeparation"] = 10
     rollout_plot["encoding"]["y"].update({"sort": list(cohort_labels.values()),
         "axis": {"labelLimit": 0, "labelOverlap": False}})
     rollout_plot["encoding"]["color"] = {"field": "status", "type": "nominal", "title": "Treatment status",
@@ -390,6 +391,10 @@ def _sketch_adoption(df: pd.DataFrame, spec: dict[str, Any], out: dict[str, Any]
         # Both encodings describe the same cohort. A null strokeDash legend
         # suppresses the merged colour legend as well in Vega-Lite.
         mean_plot["layer"][0]["encoding"]["strokeDash"]["legend"] = {}
+        mean_plot["layer"][0]["encoding"]["x"]["axis"].update({
+            "labelOverlap": "greedy", "labelSeparation": 10, "labelFlush": False,
+            "tickCount": {"expr": "max(2, floor(width / 70))"},
+        })
         mean_plot["layer"][0]["encoding"]["tooltip"].append(
             {"field": "units", "type": "quantitative", "title": "Observed units", "format": "d"})
         if two_period:
@@ -418,6 +423,7 @@ def _sketch_adoption(df: pd.DataFrame, spec: dict[str, Any], out: dict[str, Any]
                              height=max(len(units) * 16, 140))
     unit_plot["autosize"] = {"type": "fit-x", "contains": "padding", "resize": True}
     unit_plot["encoding"]["x"]["sort"] = [period_labels[float(t)] for t in periods]
+    unit_plot["encoding"]["x"]["axis"]["labelSeparation"] = 10
     unit_plot["encoding"]["y"]["sort"] = [str(u) for u in units]
     unit_plot["encoding"]["color"] = {"field": "status", "type": "nominal", "title": "Treatment status",
         "scale": {"domain": ["Untreated", "Treated"], "range": [vega.RULE, vega.TEAL]}}

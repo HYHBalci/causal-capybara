@@ -1,15 +1,37 @@
 /** Browser interaction/authorization tests with synthetic API responses.
  * Run against `npm run dev`; no papers, models or private projects are contacted. */
 import assert from 'node:assert/strict'
+import { mkdir, writeFile } from 'node:fs/promises'
+import path from 'node:path'
 import { chromium } from 'playwright'
 import AxeBuilder from '@axe-core/playwright'
 
 const url = process.env.CAPY_ONTOLOGY_TEST_URL || 'http://127.0.0.1:5173'
+const mode = process.env.CAPY_ONTOLOGY_LIVE_ENGINE ? 'live' : 'synthetic'
+const output = path.resolve(process.env.CAPY_ONTOLOGY_AUDIT_DIR || `../.audit/ontology-browser/${mode}`)
+await mkdir(output, { recursive: true })
 const browser = await chromium.launch({ headless: true, ...(process.env.CAPY_BROWSER_CHANNEL ? { channel: process.env.CAPY_BROWSER_CHANNEL } : {}) })
 const context = await browser.newContext({ viewport: { width: 1440, height: 980 } })
 const page = await context.newPage()
-const errors = []
+const errors = [], accessibility = [], keyboard = []
+let failure = null
 page.on('pageerror', (error) => errors.push(error.message))
+async function checkKeyboardRegion(region, name) {
+  await region.focus()
+  assert(await region.evaluate((element) => element === document.activeElement), `${name} must receive keyboard focus`)
+  await region.evaluate((element) => { element.scrollTop = 0 })
+  const scroll = await region.evaluate((element) => ({ initial: element.scrollTop, height: element.clientHeight, extent: element.scrollHeight }))
+  if (scroll.extent > scroll.height + 1) {
+    await page.keyboard.press('ArrowDown')
+    await page.waitForFunction((initial) => document.activeElement?.scrollTop > initial, scroll.initial)
+  }
+  keyboard.push({ name, ...scroll, final: await region.evaluate((element) => element.scrollTop) })
+}
+async function saveEvidence() {
+  await writeFile(path.join(output, 'results.json'), JSON.stringify({ mode,
+    passed: !failure && !errors.length && accessibility.every((screen) => !screen.violations.length),
+    accessibility, keyboard, page_errors: errors, failure }, null, 2))
+}
 if (process.env.CAPY_ONTOLOGY_LIVE_ENGINE) {
   const engine = process.env.CAPY_ONTOLOGY_LIVE_ENGINE.replace(/\/$/, '')
   try {
@@ -31,8 +53,8 @@ if (process.env.CAPY_ONTOLOGY_LIVE_ENGINE) {
     assert.doesNotMatch(await auditRegion.innerText(), /Assessment: not assessed|human review not performed/)
     await firstAudit.getByText('Audit provenance and rights', { exact: true }).click()
     assert.match(await firstAudit.locator('pre').innerText(), /"assessment": "not_assessed"/)
-    const survivalAudit = await new AxeBuilder({ page }).include('.research-page').withTags(['wcag2a', 'wcag2aa', 'wcag21aa']).analyze()
-    assert.deepEqual(survivalAudit.violations, [], 'Survival audit guidance accessibility')
+    await checkKeyboardRegion(firstAudit.getByRole('region', { name: 'Audit provenance and rights', exact: true }), 'AFT audit provenance')
+    await audit('expanded-survival-audit', '.research-page')
     await page.getByRole('searchbox', { name: 'Search knowledge', exact: true }).fill('AIPW')
     await page.getByRole('button', { name: /^Method Doubly robust \(AIPW\)/ }).click()
     await page.getByRole('heading', { name: 'Method requirements' }).waitFor()
@@ -68,6 +90,8 @@ if (process.env.CAPY_ONTOLOGY_LIVE_ENGINE) {
     await dialog.getByText('Include the current study and selected results', { exact: true }).click()
     await dialog.getByRole('button', { name: 'Prepare and inspect context' }).click()
     await dialog.getByLabel('Exact assistant context').waitFor()
+    await checkKeyboardRegion(dialog.getByRole('region', { name: 'Exact assistant context', exact: true }), 'Live assistant context')
+    await audit('live-assistant-context')
     await dialog.getByRole('button', { name: /Inspect a study proposal/ }).click()
     await dialog.getByLabel('Proposed study fields (JSON)').fill('{"title":"Live ontology test proposal"}')
     const proposalResponse = page.waitForResponse((response) => response.url().endsWith('/assistant/proposals') && response.request().method() === 'POST')
@@ -109,15 +133,17 @@ if (process.env.CAPY_ONTOLOGY_LIVE_ENGINE) {
     assert(survivalResults.some((result) => /causal standardization/.test(result.interpretation)))
     await page.locator('.dashboard').waitFor()
     await page.getByText(/Raw Kaplan–Meier\/RMST compares observed groups/).waitFor()
-    const survivalResultsAudit = await new AxeBuilder({ page }).withTags(['wcag2a', 'wcag2aa', 'wcag21aa']).analyze()
-    assert.deepEqual(survivalResultsAudit.violations, [], 'Computed survival result accessibility')
+    await audit('computed-survival-results', null)
+    assert.deepEqual(accessibility.filter((screen) => screen.violations.length), [], 'Live ontology accessibility violations')
     assert.deepEqual(errors, [])
     console.log('PASS real sidecar sourced AFT audit, context redaction, cited answer, read-only proposal staging and computed survival example with explicit units/framing')
   } catch (error) {
+    failure = { message: String(error?.stack || error) }
+    await page.screenshot({ path: path.join(output, 'failure.png') }).catch(() => {})
     console.error('Live research record:', (await page.locator('main').innerText({ timeout: 1500 }).catch(() => page.locator('body').innerText({ timeout: 1500 }))).slice(0, 1800))
     console.error('Browser errors:', errors)
     throw error
-  } finally { await page.unrouteAll({ behavior: 'ignoreErrors' }); await browser.close() }
+  } finally { await saveEvidence(); await page.unrouteAll({ behavior: 'ignoreErrors' }); await browser.close() }
   process.exit(0)
 }
 const citation = { id: 'source:fixture', source_id: 'source:fixture', title: 'Original test evidence note', url: 'https://example.org/evidence', locator: 'Original note §1', source_version: 'sha256:fixture', review: { semantic: 'agent_context_review', human_review: false }, rights: { license_id: 'Apache-2.0' } }
@@ -198,15 +224,18 @@ await page.route('**/*', async (route) => {
   await route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify(result) })
 })
 
-async function audit() {
+async function audit(name = `research-screen-${accessibility.length + 1}`, scope = '.research-page, .research-assistant') {
   await page.evaluate(async () => {
     await document.fonts.ready
     await Promise.allSettled(document.getAnimations()
       .filter((animation) => animation.playState === 'running' && Number.isFinite(animation.effect?.getComputedTiming().endTime))
       .map((animation) => animation.finished))
   })
-  const result = await new AxeBuilder({ page }).include('.research-page, .research-assistant').withTags(['wcag2a', 'wcag2aa', 'wcag21aa']).analyze()
-  assert.deepEqual(result.violations.map((item) => ({ id: item.id, nodes: item.nodes.map((node) => ({ target: node.target, failure: node.failureSummary })) })), [], 'Research UI accessibility')
+  let builder = new AxeBuilder({ page }).withTags(['wcag2a', 'wcag2aa', 'wcag21aa'])
+  if (scope) builder = builder.include(scope)
+  const result = await builder.analyze()
+  accessibility.push({ screen: name, violations: result.violations })
+  await page.screenshot({ path: path.join(output, `${name}.png`) })
 }
 try {
   await page.goto(url)
@@ -218,12 +247,16 @@ try {
   const recordDetails = page.locator('.knowledge-article > details').filter({ has: page.getByText('Review and rights details', { exact: true }) })
   await recordDetails.locator('summary').click()
   assert.match(await recordDetails.locator('pre').innerText(), /"semantic": "not_assessed"/)
+  await checkKeyboardRegion(recordDetails.getByRole('region', { name: 'Record review and rights', exact: true }), 'Record review and rights')
+  await audit('expanded-record-metadata')
   await recordDetails.locator('summary').click()
   const sourceCitation = page.locator('.knowledge-article > section').filter({ has: page.getByRole('heading', { name: 'Sources and evidence locators', exact: true }) }).locator('.knowledge-citations > li').first()
   assert(await sourceCitation.getByText('Original note §1', { exact: true }).isVisible())
   assert.equal(await sourceCitation.locator('pre').isVisible(), false)
   await sourceCitation.getByText('Citation details', { exact: true }).click()
   assert.match(await sourceCitation.locator('pre').innerText(), /"human_review": false/)
+  await checkKeyboardRegion(sourceCitation.getByRole('region', { name: /^Citation review and rights:/ }), 'Citation review and rights')
+  await audit('expanded-citation-metadata')
   await sourceCitation.getByText('Citation details', { exact: true }).click()
   await page.getByRole('button', { name: 'Target-specific overlap', exact: true }).click()
   await page.getByRole('heading', { name: 'Claim support' }).waitFor()
@@ -288,6 +321,8 @@ try {
   await dialog.getByRole('heading', { name: 'Methods to run on the current study' }).waitFor()
   assert.deepEqual(proposalBodies.at(-1).changes, {}, 'Approved execution must stage the current study without applying the proposed patch')
   assert((await dialog.getByText('Methods to run on the current study').locator('..').innerText()).includes('"folds": 5'), 'Published method defaults must be visible in run approval')
+  await checkKeyboardRegion(dialog.getByRole('region', { name: 'Selected methods for this run', exact: true }), 'Run proposal methods')
+  await audit('run-proposal-metadata')
   assert(await dialog.getByRole('button', { name: 'Approve and run this study' }).isDisabled())
   assert(revokedContextIds.includes('ctx:1'), 'Closing the dialog must revoke its cached context')
   staleProposal = true
@@ -384,11 +419,14 @@ try {
   await page.getByRole('button', { name: 'Read installed copy of this record' }).click()
   await page.getByText('This record is from the installed offline snapshot.', { exact: true }).waitFor()
   await audit()
+  assert.deepEqual(accessibility.filter((screen) => screen.violations.length), [], 'Research UI accessibility violations')
   assert.deepEqual(errors, [])
   if (process.env.CAPY_ONTOLOGY_SCREENSHOT) await page.screenshot({ path: process.env.CAPY_ONTOLOGY_SCREENSHOT })
   console.log('PASS ontology tree and compiled offline evidence, citations, keyboard/accessibility, context redaction, cloud consent, cancellation, provider failure, trusted approval, stale proposals and direct reproduction comparison')
 } catch (error) {
+  failure = { message: String(error?.stack || error) }
+  await page.screenshot({ path: path.join(output, 'failure.png') }).catch(() => {})
   console.error('Research interaction:', (await page.locator('.research-assistant').innerText({ timeout: 1500 }).catch(() => page.locator('body').innerText({ timeout: 1500 }))).slice(-3500))
   console.error('Browser errors:', errors)
   throw error
-} finally { await browser.close() }
+} finally { await saveEvidence(); await browser.close() }

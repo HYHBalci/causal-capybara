@@ -115,6 +115,8 @@ now remain in the visible alternatives, and two-period studies prioritize the
 canonical 2×2 comparison. The diagnostic-review button wraps inside its panel
 at narrower widths. Horizontally scrolling results and comparison tables expose
 named keyboard-focusable regions so arrow keys can reach columns off screen.
+Calendar-year tick spacing adapts to the available chart width, and expanded
+research metadata and proposal details support keyboard scrolling as well.
 
 Data-level regressions check all 410 stores and 51 states, cohort ordering,
 mixed treatment, missing panel cells and detail selection. Six actual chart

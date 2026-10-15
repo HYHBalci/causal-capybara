@@ -198,6 +198,7 @@ jobs:
             .audit/browser-results/
             .audit/heterogeneity-browser/
             .audit/policy-browser/
+            .audit/ontology-browser/
           include-hidden-files: true
           if-no-files-found: ignore
           retention-days: 14

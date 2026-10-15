@@ -17,7 +17,7 @@ export function KnowledgeCitations({ citations }: { citations: KnowledgeCitation
             {!!citation.source_version && <><dt>Source version</dt><dd>{words(citation.source_version)}</dd></>}
             {!!citation.rights && <><dt>Citation record rights</dt><dd>{statusOf(citation.rights)}</dd></>}
           </dl>
-          <pre className="research-json">{JSON.stringify({ review: citation.review, rights: citation.rights }, null, 2)}</pre>
+          <pre className="research-json" tabIndex={0} role="region" aria-label={`Citation review and rights: ${label}`}>{JSON.stringify({ review: citation.review, rights: citation.rights }, null, 2)}</pre>
         </details>}
       </li>
     })}
