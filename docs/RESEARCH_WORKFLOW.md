@@ -25,6 +25,8 @@ Install the client separately from its official source and sign in through that 
 
 Presets are starting points. Adjust the individual checkboxes, and choose up to five saved results from the current question. Generated-code excerpts are bounded; the preview records omitted or shortened content. Clear the notes field to omit your notes.
 
+**Public knowledge detail** controls how much complete evidence and citation material is included: Compact, Standard (the default), or Expanded. The preview shows the number of source references and lists omitted evidence. Use Expanded or a more focused question if no references fit. The overall context limit still applies, so large code excerpts or many study results may require fewer groups or a smaller evidence selection.
+
 Choose **Prepare and inspect context** and review the preview. Under **Ask through your CLI**, select the client and optionally a model or reasoning effort. Refresh availability after installing a client. Detection confirms the installed command supports the required interface; the client still needs a valid sign-in and access to the chosen model.
 
 Confirm the provider transmission and the native client configuration before asking. The app supplies your inspected context, while the client's own configuration or managed policies can add instructions or run configured hooks. These can run local commands or add context beyond the preview. Capybara uses supported native controls to restrict model tools; it does not collect subscription credentials or turn them into an API credential service.

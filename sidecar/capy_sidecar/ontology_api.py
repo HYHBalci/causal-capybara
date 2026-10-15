@@ -5,7 +5,7 @@ import asyncio
 from typing import Any, Literal
 
 from fastapi import APIRouter, Header, HTTPException, Request
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import BaseModel, ConfigDict, Field, field_validator
 
 from . import assistant, assistant_cli
 from .store import StoreError
@@ -19,6 +19,7 @@ class Contract(BaseModel):
 
 class ContextRequest(Contract):
     query: str = Field(default="", max_length=4000)
+    knowledge_max_bytes: Literal[16384, 32768, 49152] = 32768
     project_id: str | None = None
     spec_id: str | None = None
     selection: dict[str, str | None] | None = None
@@ -30,6 +31,14 @@ class ContextRequest(Contract):
     selected_run_ids: list[str] = Field(default_factory=list, max_length=5)
     redactions: list[str] = Field(default_factory=list, max_length=12)
     previous_context_id: str | None = None
+
+    @field_validator("knowledge_max_bytes", mode="before")
+    @classmethod
+    def strict_knowledge_budget(cls, value):
+        # Literal's equality matching alone accepts an equal floating value.
+        if type(value) is not int:
+            raise ValueError("knowledge_max_bytes must be an integer budget.")
+        return value
 
 
 class ChatRequest(Contract):

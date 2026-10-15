@@ -71,7 +71,13 @@ claim. The host may namespace MCP tool names.
 2. Open **Research assistant** and write your question. Choose the study summary,
    column profiles, selected result summaries, diagnostics, generated R/Python
    code and research notes to include. These optional groups start off; raw data
-   rows are not included. Inspect the prepared context and its omissions.
+   rows are not included. The knowledge budget defaults to **32 KiB**; choose
+   **16, 32 or 48 KiB** to reserve more room for study details or include more
+   complete evidence groups. The entire context remains capped at **64 KiB**.
+   A request over that cap fails with guidance to reduce its size; it never
+   silently drops selected study groups. Inspect the prepared context and its
+   omissions. Study sharing includes the question's linked saved DAG unless
+   **Saved DAG** is excluded; an explicitly selected DAG takes precedence.
 3. Choose a CLI, optionally enter its model identifier and reasoning effort,
    and acknowledge both sending context to its provider and use of its native
    configuration and managed policies. The latter may run configured hooks or
@@ -194,6 +200,11 @@ environment variables or credentials. `cli_invoked` records local invocation;
 launch alone cannot prove whether provider inference occurred. Supplied source
 references are recorded separately from the generated answer; unknown `source:`
 identifiers are flagged, and cited claims still need normal research review.
+The context request accepts `knowledge_max_bytes` as the strict integer enum
+`16384`, `32768` or `49152`, defaulting to `32768`. The inspected
+`context_limits.knowledge_max_bytes` records the chosen budget. Public evidence
+groups remain intact and omitted groups are listed explicitly. Saved DAG content
+is tied to its revision, so editing it invalidates an earlier inspected context.
 
 ## Verification and release gates
 

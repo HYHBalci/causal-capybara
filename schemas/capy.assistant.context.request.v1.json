@@ -23,6 +23,16 @@
       "title": "Include Study",
       "type": "boolean"
     },
+    "knowledge_max_bytes": {
+      "default": 32768,
+      "enum": [
+        16384,
+        32768,
+        49152
+      ],
+      "title": "Knowledge Max Bytes",
+      "type": "integer"
+    },
     "notes": {
       "anyOf": [
         {

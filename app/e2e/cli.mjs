@@ -102,6 +102,7 @@ async function prepare() {
   const response = await pending
   assert.equal(response.status(), 200, await response.text())
   const prepared = await response.json()
+  assert.equal(response.request().postDataJSON().knowledge_max_bytes, prepared.context_limits.knowledge_max_bytes)
   await dialog().getByRole('region', { name: 'Exact assistant context', exact: true }).waitFor()
   assert.deepEqual(JSON.parse(await dialog().getByRole('region', { name: 'Exact assistant context', exact: true }).innerText()), prepared)
   return prepared
@@ -141,23 +142,28 @@ try {
   // The normal app poller loads both results; their choices are awaited below.
   while (await page.getByRole('button', { name: 'Dismiss', exact: true }).count()) await page.getByRole('button', { name: 'Dismiss', exact: true }).first().click()
   await page.getByRole('button', { name: 'Research assistant', exact: true }).click()
-  await dialog().getByLabel('Your research question', { exact: true }).fill('Review the ATT, parallel trends and inference for the minimum wage study')
+  await dialog().getByRole('textbox', { name: 'Your research question', exact: true }).fill('Review the ATT, parallel trends and inference for the minimum wage study')
   assert(await cli().getByRole('button', { name: 'Ask Codex', exact: true }).isDisabled())
-  await dialog().getByLabel('Research notes (optional)', { exact: true }).fill('Target restaurants in both states. token="do-not-send-this-credential"')
+  await dialog().getByRole('textbox', { name: 'Research notes (optional)', exact: true }).fill('Target restaurants in both states. token="do-not-send-this-credential"')
   const publicContext = await prepare()
   assert.equal(publicContext.study, null)
+  assert.equal(publicContext.context_limits.knowledge_max_bytes, 32768)
+  assert(publicContext.knowledge.citations.length > 0, 'The default broad policy question must retain complete cited evidence')
   assert.match(publicContext.research_notes, /Target restaurants/)
   assert(!JSON.stringify(publicContext).includes('do-not-send-this-credential'))
   assert(await cli().getByRole('button', { name: 'Ask Codex', exact: true }).isDisabled(), 'Prepared context still needs explicit CLI consent')
   await cli().getByLabel('Send the inspected context through Codex to its provider.', { exact: true }).check()
   assert(await cli().getByRole('button', { name: 'Ask Codex', exact: true }).isDisabled(), 'Provider consent alone must not authorize native configuration and hooks')
   assert.equal(starts.length, 0)
+  await dialog().getByRole('combobox', { name: 'Public knowledge detail', exact: true }).selectOption('49152')
   await dialog().getByRole('button', { name: 'Implementation review', exact: true }).click()
   const resultChoices = dialog().locator('.assistant-result-choices input[type="checkbox"]')
   await resultChoices.nth(1).waitFor()
   for (const choice of await resultChoices.all()) await choice.uncheck()
   await resultChoices.first().check()
   const prepared = await prepare()
+  assert.equal(prepared.context_limits.knowledge_max_bytes, 49152)
+  assert(prepared.knowledge.citations.length >= publicContext.knowledge.citations.length)
   assert.equal(prepared.privacy.include_study, true)
   assert.equal(prepared.privacy.raw_rows, false)
   assert.equal(prepared.selected_runs.length, 1)
@@ -174,7 +180,7 @@ try {
     scenario = 'completed'
     await cli().getByRole('combobox', { name: 'Run through', exact: true }).selectOption(client)
     assert(await cli().getByRole('button', { name: `Ask ${labels[client]}`, exact: true }).isDisabled())
-    await cli().getByLabel('CLI model (optional)', { exact: true }).fill('fixture-model')
+    await cli().getByRole('textbox', { name: 'CLI model (optional)', exact: true }).fill('fixture-model')
     const effort = client === 'claude' ? 'high' : 'xhigh'
     await cli().getByRole('combobox', { name: 'CLI reasoning effort', exact: true }).selectOption(effort)
     const request = await send(client)
@@ -234,7 +240,7 @@ try {
     scenario = mode
     const stale = await send()
     await until(() => mode === 'late-start' ? !!releaseStart : !!releasePoll, `${mode} fixture must be pending`)
-    await dialog().getByLabel('Your research question', { exact: true }).fill(`Changed causal question during ${mode}`)
+    await dialog().getByRole('textbox', { name: 'Your research question', exact: true }).fill(`Changed causal question during ${mode}`)
     await until(() => cancellations.includes(stale.request_id), 'Context invalidation must cancel the owned native request')
     if (mode === 'late-start') { releaseStart(); releaseStart = null }
     else { releasePoll(); releasePoll = null }

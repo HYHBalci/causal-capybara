@@ -232,3 +232,94 @@ def test_existing_provider_path_receives_exact_inspected_extras(study, monkeypat
     for group in ("column_profiles", "selected_run_diagnostics", "selected_run_code", "research_notes"):
         assert received[0][group] == context[group]
     assert "project_scope_hash" not in received[0]
+
+
+@pytest.mark.parametrize("budget", [16384, 32768, 49152])
+def test_explicit_knowledge_budget_reaches_builder_and_export(study, monkeypatch, budget):
+    received = []
+    knowledge = assistant.knowledge()
+    original = knowledge.build_context
+    def build(query, *, max_bytes):
+        received.append(max_bytes)
+        return original(query, max_bytes=max_bytes)
+    monkeypatch.setattr(knowledge, "build_context", build)
+    monkeypatch.setattr(assistant, "knowledge", lambda: knowledge)
+    context = _context(study, knowledge_max_bytes=budget)
+    assert received == [budget]
+    assert context["context_limits"]["knowledge_max_bytes"] == budget
+    assert context["context_limits"]["max_bytes"] == 65536
+    assert _handoff(study, context)["context_limits"] == context["context_limits"]
+
+
+@pytest.mark.parametrize("invalid", [True, False, 32768.0, "32768", 0, 16385, 65536, None])
+def test_knowledge_budget_is_a_strict_integer_enum_in_http_and_service(study, invalid):
+    project, spec, _run, service = study
+    body = {"project_id": project.id, "spec_id": spec["id"], "knowledge_max_bytes": invalid}
+    with TestClient(api.app, base_url="http://127.0.0.1:8760") as client:
+        assert client.post("/assistant/context", json=body).status_code == 422
+    with pytest.raises(assistant.AssistantError, match="knowledge budget"):
+        service.context({"knowledge_max_bytes": invalid})
+
+
+def test_default_real_knowledge_context_contains_complete_evidence_for_broad_question():
+    service = assistant.AssistantService()
+    query = "Review the ATT, parallel trends and inference for the minimum wage study"
+    default = service.context({"query": query})
+    assert default["context_limits"]["knowledge_max_bytes"] == 32768
+    assert default["knowledge"]["groups"] and len(default["knowledge"]["citations"]) >= 5
+    assert any(group["claim"]["id"] == "claim:did-parallel-trends" for group in default["knowledge"]["groups"])
+    small = service.context({"query": query, "knowledge_max_bytes": 16384})
+    large = service.context({"query": query, "knowledge_max_bytes": 49152})
+    for context in (small, default, large):
+        assert len(assistant.canonical(context["knowledge"]).encode()) <= context["context_limits"]["knowledge_max_bytes"]
+        assert len(assistant.canonical(context).encode()) <= 65536
+    assert len(large["knowledge"]["groups"]) >= len(default["knowledge"]["groups"])
+    assert len(large["knowledge"]["citations"]) >= len(default["knowledge"]["citations"])
+    # Smaller budgets disclose omitted complete groups instead of chopping evidence.
+    assert small["knowledge"]["omissions"]
+    assert all(item["reason"] == "context_budget_omitted_complete_evidence_group"
+               for item in small["knowledge"]["omissions"])
+
+
+def test_larger_knowledge_budget_keeps_total_cap_without_truncating_groups(study, monkeypatch):
+    project, _spec, run, service = study
+    context_before = _context(study)
+    payload = {"snapshot_id": "context-options-fixture", "groups": [{"claim": {"summary": "x" * 47000}}], "citations": []}
+    monkeypatch.setattr(assistant, "knowledge", lambda: SimpleNamespace(build_context=lambda *_a, **_k: copy.deepcopy(payload)))
+    project.save_run({**run, "scripts": {"python": "x" * 16000, "r": "x" * 16000}})
+    with pytest.raises(assistant.AssistantError, match="64 KiB") as raised:
+        _context(study, include_code=True, knowledge_max_bytes=49152, previous_context_id=context_before["context_id"])
+    assert raised.value.code == "context_budget"
+    assert context_before["context_id"] in service.contexts.items, "A failed assembly must not revoke the previous context"
+    assert len(service.contexts.items) == 1, "No partial context may be registered"
+
+
+def test_linked_saved_dag_is_included_and_revision_bound(study):
+    project, spec, run, service = study
+    dag = project.save_json_object("dag", {"id": "linked_dag", "nodes": [{"id": "treatment"}, {"id": "outcome"}],
+                                           "edges": [{"from": "treatment", "to": "outcome"}]})
+    spec = project.save_spec({**spec, "dag_id": dag["id"]})
+    linked = (project, spec, run, service)
+    context = _context(linked)
+    assert context["study"]["dag"]["edges"] == dag["edges"]
+    assert context["dag_revision"] == {"id": dag["id"], "hash": assistant.digest(dag)}
+    exported = _handoff(linked, context)
+    assert "id" not in exported["study"]["dag"]
+    project.save_json_object("dag", {**dag, "edges": []})
+    with pytest.raises(assistant.AssistantError, match="DAG changed"):
+        _handoff(linked, context)
+
+
+def test_explicit_dag_selection_overrides_linked_dag_and_redaction_skips_reads(study, monkeypatch):
+    project, spec, run, service = study
+    linked = project.save_json_object("dag", {"id": "linked", "nodes": [], "edges": []})
+    selected = project.save_json_object("dag", {"id": "selected", "nodes": [{"id": "selected_node"}], "edges": []})
+    spec = project.save_spec({**spec, "dag_id": linked["id"]})
+    fixture = (project, spec, run, service)
+    context = _context(fixture, selection={"kind": "dag", "id": selected["id"]})
+    assert context["study"]["dag"]["id"] == selected["id"]
+    monkeypatch.setattr(project, "json_object", lambda *_: pytest.fail("Redacted DAG must not be read"))
+    removed = _context(fixture, redactions=["study.dag"])
+    assert "dag" not in removed["study"] and removed["dag_revision"] is None
+    public = _context(fixture, include_study=False)
+    assert public["study"] is None and public["dag_revision"] is None

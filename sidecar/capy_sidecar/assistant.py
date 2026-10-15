@@ -105,6 +105,8 @@ def redact(value: Any, *, max_text: int | None = 4000) -> Any:
 
 
 CONTEXT_MAX_BYTES = 65536
+KNOWLEDGE_BUDGETS = (16384, 32768, 49152)
+DEFAULT_KNOWLEDGE_BUDGET = 32768
 CONTEXT_LIMITS = {"max_bytes": CONTEXT_MAX_BYTES, "column_profiles": 200,
                   "diagnostics_per_run": 50, "code_chars_per_language": 16000,
                   "research_notes_chars": 8000}
@@ -267,8 +269,11 @@ class AssistantService:
 
     def _context(self, body: dict, project=None, spec=None, guardrails=None):
         query = redact(bounded_text(body.get("query", "")))
+        knowledge_max_bytes = body.get("knowledge_max_bytes", DEFAULT_KNOWLEDGE_BUDGET)
+        if type(knowledge_max_bytes) is not int or knowledge_max_bytes not in KNOWLEDGE_BUDGETS:
+            raise AssistantError("Choose a knowledge budget of 16, 32 or 48 KiB.")
         kb = knowledge()
-        kb_context = kb.build_context(query, max_bytes=16384)
+        kb_context = kb.build_context(query, max_bytes=knowledge_max_bytes)
         include = body.get("include_study", False)
         if not isinstance(include, bool):
             raise AssistantError("include_study must be boolean.")
@@ -323,10 +328,11 @@ class AssistantService:
                     selected_run_diagnostics.append(_diagnostic_context(run, index, omissions))
                 if options["include_code"] and "selected_run_code" not in remove:
                     selected_run_code.append(_code_context(run, index, omissions))
-            if selection.get("kind") == "dag" and selection.get("id"):
-                dag = project.json_object("dag", selection["id"])
+            dag_id = selection.get("id") if selection.get("kind") == "dag" and selection.get("id") else spec.get("dag_id")
+            if dag_id and "study.dag" not in remove:
+                dag = project.json_object("dag", dag_id)
                 study["dag"] = redact({k: dag.get(k) for k in ("id", "nodes", "edges", "treatment", "outcome")})
-                dag_revision = {"id": selection["id"], "hash": digest(dag)}
+                dag_revision = {"id": dag_id, "hash": digest(dag)}
         elif body.get("selected_run_ids"):
             omissions.append({"id": "selected_runs", "reason": "Study sharing is disabled."})
         if not include:
@@ -347,7 +353,8 @@ class AssistantService:
                     "selected_run_code": selected_run_code, "research_notes": research_notes,
                     "guardrails": redact(guardrails) if include else None, "selection": redact(selection),
                     "privacy": {"include_study": include, "raw_rows": False, "cloud_disclosed": False},
-                    "context_limits": dict(CONTEXT_LIMITS), "context_groups": sorted(self.REDACTIONS),
+                    "context_limits": {**CONTEXT_LIMITS, "knowledge_max_bytes": knowledge_max_bytes},
+                    "context_groups": sorted(self.REDACTIONS),
                     "omissions": omissions}
         for path in remove:
             if path.startswith("study."):
@@ -362,7 +369,7 @@ class AssistantService:
             envelope["run_revisions"] = {}
         envelope["context_hash"] = digest(envelope)
         if len(canonical(envelope).encode()) > CONTEXT_MAX_BYTES:
-            raise AssistantError("Study context exceeds 64 KiB. Select fewer runs, shorten notes, or remove context groups.", "context_budget")
+            raise AssistantError("Study context exceeds 64 KiB. Choose a smaller knowledge budget, select fewer runs, shorten notes, or remove context groups.", "context_budget")
         with self.lock:
             previous = body.get("previous_context_id")
             if previous:

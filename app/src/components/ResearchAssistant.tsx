@@ -36,6 +36,7 @@ function AssistantDialog() {
   const [includeDiagnostics, setIncludeDiagnostics] = useState(false)
   const [includeCode, setIncludeCode] = useState(false)
   const [notes, setNotes] = useState('')
+  const [knowledgeMaxBytes, setKnowledgeMaxBytes] = useState(32768)
   const [chosenRunIds, setChosenRunIds] = useState<string[]>(selectedRunIds.slice(0, 5))
   const [provider, setProvider] = useState<AssistantProvider>('offline')
   const [model, setModel] = useState('')
@@ -57,10 +58,13 @@ function AssistantDialog() {
   const contextRunIds = chosenRunIds.filter((id) => availableRuns.some((run) => run.run_id === id)).slice(0, 5)
   const specContext = spec ? { ...spec, modified: undefined, created: undefined, provenance: undefined } : null
   const signature = JSON.stringify([query, includeStudy, redactions, selection, project?.id, record(project?.meta?.data).revision, specContext, contextRunIds,
-    includeColumns, includeDiagnostics, includeCode, notes])
+    includeColumns, includeDiagnostics, includeCode, notes, knowledgeMaxBytes])
   const signatureRef = useRef(signature)
   signatureRef.current = signature
   const validContext = !!context && contextSignature === signature
+  const publicKnowledge = record(context?.knowledge)
+  const referenceCount = Array.isArray(publicKnowledge.citations) ? publicKnowledge.citations.length : 0
+  const evidenceOmissions = Array.isArray(publicKnowledge.omissions) ? publicKnowledge.omissions.length : 0
   const studySelection = selection?.kind === 'dag' || selection?.kind === 'results'
   const close = useCallback(() => { controller.current?.abort(); useResearch.getState().close() }, [])
   useDialogFocus(dialog, true, close)
@@ -105,7 +109,7 @@ function AssistantDialog() {
         project_id: includeStudy ? current.project?.id : undefined, spec_id: includeStudy ? current.spec?.id : undefined,
         selected_run_ids: includeStudy ? contextRunIds : [], redactions,
         include_columns: includeStudy && includeColumns, include_diagnostics: includeStudy && includeDiagnostics,
-        include_code: includeStudy && includeCode, notes,
+        include_code: includeStudy && includeCode, notes, knowledge_max_bytes: knowledgeMaxBytes,
         previous_context_id: words(context?.context_id) || undefined }, request.signal)
       if (request.signal.aborted || signatureRef.current !== requestSignature) {
         if (words(prepared.context_id)) void researchApi.revokeContext(words(prepared.context_id)).catch(() => {})
@@ -162,6 +166,10 @@ function AssistantDialog() {
           <button className="btn sm" disabled={!project || !spec} onClick={() => contextPreset('results')}>Results and diagnostics</button>
           <button className="btn sm" disabled={!project || !spec} onClick={() => contextPreset('code')}>Implementation review</button>
         </div>
+        <label>Public knowledge detail<select value={knowledgeMaxBytes} onChange={(event) => setKnowledgeMaxBytes(Number(event.target.value))}>
+          <option value={16384}>Compact</option><option value={32768}>Standard</option><option value={49152}>Expanded</option>
+        </select></label>
+        <p className="tiny hint">More detail can include more complete evidence and references. Large studies or code excerpts may need a smaller selection.</p>
         <label className="row"><input type="checkbox" checked={includeStudy} disabled={!project || !spec} onChange={(event) => { setIncludeStudy(event.target.checked); setContext(null) }} /> Include the current study and selected results</label>
         <p className="tiny hint">Public knowledge is the default. Study context excludes raw rows, sample values, private reports, full logs, paths and credentials. Column labels, questions and result summaries may still be sensitive.</p>
         {includeStudy && <p className="tiny hint">Choose up to five results from this question: {contextRunIds.length} selected.</p>}
@@ -190,6 +198,8 @@ function AssistantDialog() {
       {context && <section className="knowledge-section"><h3>Context preview</h3>
         {!validContext && <p className="banner caution" role="status">This context is out of date. Prepare it again before asking.</p>}
         <p className="tiny hint">This is the server-held context associated with this request. Redacting a group above creates a new context and hash.</p>
+        <p className="tiny hint">{referenceCount} source {referenceCount === 1 ? 'reference' : 'references'} included{evidenceOmissions ? '; omitted evidence is listed in the preview.' : '.'}</p>
+        {!referenceCount && <p className="banner caution">No public source references are included. Try Expanded or a more specific question to find supporting evidence.</p>}
         <pre className="research-json" tabIndex={0} role="region" aria-label="Exact assistant context">{JSON.stringify(context, null, 2)}</pre>
       </section>}
       <AssistantCli key={`cli:${validContext ? words(context?.context_id) : 'unprepared'}`} context={validContext ? context : null} />
