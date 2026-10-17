@@ -134,7 +134,14 @@ try {
           assert.equal(await chart.getByRole('alert').count(), 0)
         } else {
           assert.deepEqual(calls[1].bytes, [137, 80, 78, 71, 13, 10, 26, 10])
-          if (mode === 'fail') await chart.getByRole('alert').filter({ hasText: 'Disk is full' }).waitFor()
+          if (mode === 'fail') {
+            const failure = chart.getByRole('alert').filter({ hasText: 'Disk is full' })
+            await failure.waitFor()
+            // Unrelated workspace rerenders must not erase a failed export.
+            await page.getByRole('button', { name: 'Research assistant', exact: true }).click()
+            await page.getByRole('button', { name: 'Close research assistant', exact: true }).click()
+            await failure.waitFor()
+          }
           else await chart.getByRole('status').filter({ hasText: 'Saved C:/Results/chart.png' }).waitFor()
         }
       } finally {

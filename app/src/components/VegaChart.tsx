@@ -131,8 +131,11 @@ export function VegaChart({
     }
   }, [])
 
+  // Parents may reconstruct an identical spec when other workspace state changes.
+  // Keep the existing view and its export feedback until chart content changes.
+  const specJson = JSON.stringify(spec)
   const themed = useMemo(() => {
-    let base = JSON.parse(JSON.stringify(spec)) as Record<string, unknown>
+    let base = JSON.parse(specJson) as Record<string, unknown>
     if (dark) {
       // Remap the ink first, then merge the axis and legend settings on top --
       // the remap must not be applied to DARK's own colours, which are already
@@ -143,7 +146,7 @@ export function VegaChart({
     }
     if (height) base.height = height
     return base as VisualizationSpec
-  }, [spec, dark, height])
+  }, [specJson, dark, height])
 
   useEffect(() => {
     let cancelled = false

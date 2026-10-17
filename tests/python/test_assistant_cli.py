@@ -340,6 +340,36 @@ def test_incomplete_or_error_protocols_never_become_answers(client, output):
         cli.answer_text(client, output)
 
 
+def test_codex_recovered_transport_errors_preserve_completed_answer():
+    # Shape observed in the authenticated 0.159.0 Windows CLI, without private
+    # identifiers, error messages or provider output from that invocation.
+    events = [
+        {"type": "thread.started", "thread_id": "fixture"},
+        {"type": "item.completed", "item": {"type": "error", "message": "private warning"}},
+        {"type": "turn.started"},
+        {"type": "error", "message": "private transport retry"},
+        {"type": "error", "message": "another private transport retry"},
+        {"type": "item.completed", "item": {"type": "agent_message", "text": "## Study setup\nTarget the ATT."}},
+        {"type": "turn.completed", "usage": {}},
+    ]
+    assert cli.answer_text("codex", "\n".join(map(json.dumps, events))) == "## Study setup\nTarget the ATT."
+
+
+@pytest.mark.parametrize("ending", [
+    [{"type": "error", "message": "unrecovered"}],
+    [{"type": "turn.failed"}, {"type": "turn.completed"}],
+    [{"type": "turn.completed"}, {"type": "turn.started"}],
+    [{"type": "turn.completed"}, {"type": "error"}],
+    [{"type": "turn.completed"}, {"type": "turn.completed"}],
+    [{"type": "turn.completed"}, []],
+])
+def test_codex_retries_do_not_make_incomplete_or_ambiguous_streams_successful(ending):
+    events = [{"type": "error", "message": "retry"},
+              {"type": "item.completed", "item": {"type": "agent_message", "text": "Partial answer"}}, *ending]
+    with pytest.raises(assistant.AssistantError, match="complete supported answer"):
+        cli.answer_text("codex", "\n".join(map(json.dumps, events)))
+
+
 def test_native_commands_have_fixed_tools_disabled_and_no_shell_escape():
     codex = cli.command("codex", "native-codex", "/generated", {"model": "gpt-5", "effort": "high"})
     assert codex[0:3] == ["native-codex", "exec", "--json"] and codex[-1] == "-"

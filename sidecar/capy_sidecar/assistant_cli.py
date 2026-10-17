@@ -405,7 +405,14 @@ def answer_text(client, output):
     try:
         if client == "codex":
             events = [json.loads(line) for line in output.splitlines() if line.strip()]
-            if any(event.get("type") in {"error", "turn.failed"} for event in events) or not any(event.get("type") == "turn.completed" for event in events):
+            # Codex emits `error` for recoverable transport retries too. A real
+            # 0.159.0 run can recover, emit the answer and finish successfully.
+            # Require the terminal completion; never accept a failed, truncated
+            # or subsequently restarted turn, and never expose raw error text.
+            if (not events or any(not isinstance(event, dict) for event in events)
+                    or any(event.get("type") == "turn.failed" for event in events)
+                    or events[-1].get("type") != "turn.completed"
+                    or sum(event.get("type") == "turn.completed" for event in events) != 1):
                 raise ValueError("Incomplete turn")
             messages = [event["item"]["text"] for event in events if event.get("type") == "item.completed" and event.get("item", {}).get("type") == "agent_message"]
             text = messages[-1] if messages else None
