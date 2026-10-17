@@ -1,0 +1,94 @@
+name: offline ontology
+
+on:
+  pull_request:
+    paths:
+      - 'knowledge/**'
+      - 'skills/**'
+      - 'clients/**'
+      - 'docs/ONTOLOGY*'
+      - 'docs/adr/*ontology*'
+      - 'tests/python/test_knowledge*'
+      - 'tests/python/test_ontology*'
+      - 'tests/python/test_client_setup.py'
+      - 'tests/python/test_heterogeneity_ontology.py'
+      - 'tools/build_knowledge_skill.py'
+      - '.github/workflows/ontology.yml'
+  push:
+    branches: [main]
+    paths:
+      - 'knowledge/**'
+      - 'skills/**'
+      - 'clients/**'
+      - '.github/workflows/ontology.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ontology-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  knowledge:
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+        python: ['3.12']
+    runs-on: ${{ matrix.os }}
+    env:
+      PYTHONDONTWRITEBYTECODE: '1'
+      PYTHONUTF8: '1'
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python }}
+          cache: pip
+          cache-dependency-path: knowledge/pyproject.toml
+      - name: Use a real virtual environment for client setup and wheel checks
+        shell: bash
+        run: |
+          python -m venv .ontology-venv
+          python -c "import os; from pathlib import Path; print(Path('.ontology-venv', 'Scripts' if os.name == 'nt' else 'bin').absolute())" >> "$GITHUB_PATH"
+      - name: Install the companion package and build checks
+        run: python -m pip install -c knowledge/constraints-mcp.txt './knowledge[mcp,test]' PyYAML==6.0.3
+      - name: Validate public pack and frozen retrieval benchmark
+        run: |
+          python tools/build_knowledge.py --check
+          python tools/build_knowledge_skill.py --check
+          capy-knowledge validate
+          capy-knowledge benchmark
+      - name: Protocol, rights, core and client adapter tests
+        run: python -m pytest tests/python/test_knowledge.py tests/python/test_knowledge_publishing.py tests/python/test_knowledge_benchmark.py tests/python/test_knowledge_mcp.py tests/python/test_knowledge_mcp_budget.py tests/python/test_knowledge_installation.py tests/python/test_ontology_coverage.py tests/python/test_heterogeneity_ontology.py tests/python/test_ontology_clients.py tests/python/test_client_setup.py -q
+      - name: Offline cited seed smoke and host inventory
+        run: python clients/smoke.py --output ontology-smoke.json
+      - name: Build independent distribution wheel
+        run: python -m pip wheel --no-deps ./knowledge --wheel-dir dist
+      - name: Reinstall the wheel and verify bundled knowledge
+        shell: bash
+        run: |
+          python -m pip install --force-reinstall --no-deps dist/capy_knowledge-*.whl
+          capy-knowledge validate
+          python clients/smoke.py --output ontology-wheel-smoke.json
+          python clients/standalone_smoke.py --output ontology-standalone-smoke.json
+      - name: Preserve reviewable distribution and offline reports
+        uses: actions/upload-artifact@v4
+        with:
+          name: ontology-${{ matrix.os }}
+          path: |
+            dist/*.whl
+            knowledge/constraints-mcp.txt
+            skills/causal-capybara-research/**
+            clients/*.py
+            docs/ONTOLOGY*.md
+            docs/adr/*ontology*.md
+            ontology-smoke.json
+            ontology-wheel-smoke.json
+            ontology-standalone-smoke.json
+          if-no-files-found: error
+
+# No provider credentials or cloud/client query is used in CI. Live host checks
+# remain explicit release gates; template parsing cannot satisfy those gates.

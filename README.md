@@ -15,6 +15,41 @@ This preview installer is unsigned. [Release notes](https://github.com/HYHBalci/
 
 ## See the app
 
+The `ontology` development branch adds an open, offline [ontological research tree](docs/ONTOLOGY.md),
+local MCP tools and a portable agent skill. Browse method requirements, qualified claims, source
+versions, evidence gaps and rights decisions alongside the existing literature catalogue.
+The expanded tree covers all registered methods and probes, with causal practice
+and implementation audit questions. The app also supports [right-censored
+survival analysis](docs/SURVIVAL.md): Kaplan–Meier, RMST and log-normal/Weibull AFT,
+with explicit causal assumptions and association versus standardization labels.
+The [heterogeneity workspace](docs/HETEROGENEITY.md) adds direct tests for continuous,
+binary, count/rate, nominal/ordinal and survival outcomes, with explicit effect
+scales, prespecified baseline modifiers, joint inference and multiplicity guidance.
+“Ask about this” assembles context you can inspect and redact before using offline help, Ollama,
+or an explicitly selected cloud provider. Study proposals require the desktop's approval of the
+exact diff; estimation still uses the existing R/Python job pipeline.
+You can also [ask through Codex, Claude Code or Grok CLI](docs/AI_INTEGRATIONS.md)
+and receive a formatted answer inside the app, with a Markdown download.
+Choose study fields, results, diagnostics, code excerpts and notes before sending.
+Each CLI keeps its own sign-in; native configuration and policy require explicit acknowledgement.
+The local MCP, audit skill and copied context handoff remain available independently.
+The imported-data screen now lets you include or restore columns while preserving the full import.
+See the [data selection and research workflow](docs/RESEARCH_WORKFLOW.md).
+
+Install only the lightweight knowledge service, without the statistical engines:
+
+```powershell
+python -m pip install './knowledge[mcp]'
+capy-knowledge validate
+capy-knowledge coverage --method survival.aft
+capy-knowledge setup-client codex --project /absolute/project
+```
+
+The independent wheel bundles the graph and audit skill; it can be used without
+the desktop app or statistical engines. See [client and skill setup](docs/ONTOLOGY_CLIENTS.md),
+[verification](docs/ONTOLOGY_VERIFICATION.md) and [rights and provenance](docs/ONTOLOGY_RIGHTS.md).
+
+
 ![Causal Capybara results dashboard comparing computed Python ATT estimates and uncertainty for a synthetic child-development example](docs/promotion/linkedin/05-results.png)
 
 These images follow the built-in IHDP-inspired child-development example using generated synthetic data, with no original study records. The values are computed Python demonstration results, not published study findings.

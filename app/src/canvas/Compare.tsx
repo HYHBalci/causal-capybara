@@ -142,8 +142,9 @@ export function Compare() {
 function CompareTable({ rows }: { rows: Record<string, unknown>[] }) {
   const cols = ['method_label', 'engine', 'package_version', 'estimand', 'estimate', 'se',
                 'ci_low', 'ci_high', 'n', 'n_effective', 'inference', 'elapsed_ms']
+  if (rows.some((r) => r.interpretation || r.time_unit)) cols.push('ci_level', 'interpretation', 'horizon', 'time_unit', 'target_population')
   return (
-    <div className="table-scroll">
+    <div className="table-scroll" tabIndex={0} role="region" aria-label="Saved analysis comparison">
     <table className="grid">
       <thead>
         <tr>{cols.map((c) => <th key={c}>{humanise(c)}</th>)}</tr>

@@ -104,6 +104,7 @@ def cmd_spec(args: argparse.Namespace) -> int:
                      "population": args.population, "comparison": args.comparison},
         "roles": {
             "treatment": args.treatment, "outcome": args.outcome,
+            "duration": args.duration, "event": args.event,
             "unit": args.unit, "time": args.time,
             "confounders": _split(args.confounders),
             "instruments": _split(args.instruments),
@@ -167,9 +168,22 @@ def cmd_run(args: argparse.Namespace) -> int:
             est, se = saved.get("estimate"), saved.get("se")
             lo, hi = saved.get("ci_low"), saved.get("ci_high")
             flag = "  [PROVISIONAL]" if saved.get("provisional") else ""
-            ci = f"  95% CI [{lo:.6g}, {hi:.6g}]" if lo is not None else ""
-            print(f"{method_id:26s} {saved.get('estimand', ''):5s} {est:12.6g}"
-                  f"  SE {se if se else float('nan'):.6g}{ci}{flag}")
+            target = str(saved.get("estimand") or "")
+            if est is None:
+                category_vector = (saved.get("heterogeneity_target") or {}).get("outcome_family") == "categorical"
+                summary = "category-specific contrasts (no scalar estimate)" if category_vector else "no scalar estimate"
+                print(f"{method_id:26s} {target:5s} {summary}{flag}")
+                print(f"    Inspect saved result {saved.get('run_id') or run_id} for estimates, subgroup tables and diagnostics.")
+            else:
+                ci = ""
+                if lo is not None and hi is not None:
+                    level = saved.get("ci_level")
+                    ci_label = (f"{100 * level:g}% CI" if isinstance(level, (int, float))
+                                and not isinstance(level, bool) and 0 < level < 1
+                                else "CI (confidence level not recorded)")
+                    ci = f"  {ci_label} [{lo:.6g}, {hi:.6g}]"
+                se_text = f"{se:.6g}" if se is not None else "not reported"
+                print(f"{method_id:26s} {target:5s} {est:12.6g}  SE {se_text}{ci}{flag}")
             for w in saved.get("warnings") or []:
                 if w.get("level") in ("warning", "error"):
                     print(f"    ! {w['message']}")
@@ -444,6 +458,8 @@ def build_parser() -> argparse.ArgumentParser:
     s.add_argument("--estimand")
     s.add_argument("--treatment")
     s.add_argument("--outcome")
+    s.add_argument("--duration", help="elapsed positive follow-up from a common time zero")
+    s.add_argument("--event", help="single event column: 1 event, 0 right censored")
     s.add_argument("--unit")
     s.add_argument("--time")
     s.add_argument("--confounders")

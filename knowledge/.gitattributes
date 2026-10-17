@@ -1,0 +1,2 @@
+# Exact evidence selectors and release hashes must survive Windows checkouts.
+* -text

@@ -1,0 +1,92 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Budgeted complete evidence response",
+  "type": "object",
+  "required": [
+    "schema_version",
+    "snapshot_id",
+    "release",
+    "status",
+    "groups",
+    "citations",
+    "omissions",
+    "pagination",
+    "max_bytes",
+    "used_bytes",
+    "gaps"
+  ],
+  "properties": {
+    "schema_version": {
+      "const": "capy.knowledge.response.v1"
+    },
+    "snapshot_id": {
+      "type": "string",
+      "pattern": "^sha256:[0-9a-f]{64}$"
+    },
+    "release": {
+      "type": "string"
+    },
+    "status": {
+      "enum": [
+        "ok",
+        "partial",
+        "abstained"
+      ]
+    },
+    "groups": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "claim",
+          "relations",
+          "evidence",
+          "citations"
+        ],
+        "properties": {
+          "claim": {
+            "$ref": "claim.schema.json"
+          },
+          "relations": {
+            "type": "array",
+            "items": {
+              "$ref": "relation.schema.json"
+            }
+          },
+          "evidence": {
+            "type": "array",
+            "minItems": 1
+          },
+          "citations": {
+            "type": "array"
+          }
+        }
+      }
+    },
+    "citations": {
+      "type": "array"
+    },
+    "omissions": {
+      "type": "array"
+    },
+    "pagination": {
+      "type": "object"
+    },
+    "max_bytes": {
+      "type": "integer",
+      "minimum": 1024,
+      "maximum": 131072
+    },
+    "used_bytes": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "gaps": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    }
+  },
+  "additionalProperties": true
+}

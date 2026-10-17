@@ -30,7 +30,7 @@ from capy_py.contracts import ADAPTERS, _ensure_loaded, run_method  # noqa: E402
 _ensure_loaded()
 
 FAMILIES = ["observational", "rct", "did", "did_modern", "rd", "iv", "synth", "its",
-            "causalml", "longitudinal", "probes", "sensitivity"]
+            "causalml", "longitudinal", "probes", "sensitivity", "survival", "heterogeneity"]
 
 BANNED = ("passed the test", "proves that", "establishes causality", "confirms causation")
 
@@ -316,7 +316,7 @@ def test_every_adapter_has_a_card():
         assert card["status"] in ("recommended", "reasonable", "disrecommended"), mid
         for opt in card["options"]:
             assert {"name", "type", "label", "profile"} <= set(opt), (mid, opt)
-            assert opt["profile"] in ("standard", "advanced"), (mid, opt)
+            assert opt["profile"] in ("beginner", "standard", "advanced"), (mid, opt)
     print(f"  {len(ADAPTERS)} adapters, {len(declared)} cards, one-to-one")
     print("cards OK")
 

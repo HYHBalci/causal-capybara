@@ -1,0 +1,56 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Unadmitted ontology curation proposal",
+  "type": "object",
+  "required": [
+    "schema_version",
+    "snapshot_id",
+    "run_id",
+    "task",
+    "nodes",
+    "relations",
+    "source_ids",
+    "review"
+  ],
+  "properties": {
+    "schema_version": {
+      "const": "capy.knowledge.proposal.v1"
+    },
+    "snapshot_id": {
+      "type": "string",
+      "pattern": "^sha256:[0-9a-f]{64}$"
+    },
+    "run_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "task": {
+      "enum": [
+        "linking",
+        "curation"
+      ]
+    },
+    "nodes": {
+      "type": "array",
+      "items": {
+        "$ref": "node.schema.json"
+      }
+    },
+    "relations": {
+      "type": "array",
+      "items": {
+        "$ref": "relation.schema.json"
+      }
+    },
+    "source_ids": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "review": {
+      "$ref": "review.schema.json"
+    }
+  },
+  "additionalProperties": false
+}

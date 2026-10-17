@@ -69,6 +69,10 @@ jobs:
           missing = sorted(k for k in wanted if k and k not in cat)
           assert not missing, f"unresolved Explain keys: {missing}"
           PY
+      - name: Assistant request contracts match their published schemas
+        run: python tools/build_assistant_schemas.py --check
+      - name: Inspected assistant context and native CLI boundaries
+        run: python -m pytest tests/python/test_assistant_context_options.py tests/python/test_assistant_cli.py tests/python/test_assistant_models.py -q
       - name: Adapter contract, across every registered adapter
         shell: bash
         run: |
@@ -82,7 +86,9 @@ jobs:
             python "tests/python/test_$t.py"
           done
       - name: Application regressions and offline studies
-        run: python -m pytest tests/python/test_learn.py tests/python/test_literature.py tests/python/test_recents.py tests/python/test_realdata.py tests/python/test_robustness.py tests/python/test_readiness.py tests/python/test_scripts.py tests/python/test_catalogue_concurrency.py tests/python/test_engine_install.py -q
+        run: python -m pytest tests/python/test_learn.py tests/python/test_literature.py tests/python/test_recents.py tests/python/test_realdata.py tests/python/test_robustness.py tests/python/test_readiness.py tests/python/test_scripts.py tests/python/test_catalogue_concurrency.py tests/python/test_engine_install.py tests/python/test_engine_install_jobs.py tests/python/test_assistant_ontology.py tests/python/test_ontology_adversarial.py tests/python/test_store_lifecycle.py tests/python/test_survival.py tests/python/test_survival_heterogeneity.py tests/python/test_heterogeneity.py tests/python/test_heterogeneity_review.py tests/python/test_cli_result_output.py tests/python/test_ontology_http_audits.py tests/python/test_did_reference_regressions.py tests/python/test_adoption_sketch.py tests/python/test_recommendations.py tests/python/test_client_setup.py -q
+      - name: Imported data, browser uploads and new question regressions
+        run: python -m pytest tests/python/test_import_question.py tests/python/test_browser_upload.py tests/python/test_data_selection.py tests/python/test_column_references.py -q
       - name: A run validates against capy.result.v1, end to end
         shell: bash
         run: |
@@ -158,10 +164,12 @@ jobs:
           SIDECAR_PID=$!
           npm --prefix app run preview -- --host 127.0.0.1 --port 4173 --strictPort > "$CAPY_HOME/preview.log" 2>&1 &
           PREVIEW_PID=$!
-          trap 'kill "$SIDECAR_PID" "$PREVIEW_PID" 2>/dev/null || true' EXIT
+          npm --prefix app run dev -- --host 127.0.0.1 --port 5173 --strictPort > "$CAPY_HOME/dev.log" 2>&1 &
+          DEV_PID=$!
+          trap 'kill "$SIDECAR_PID" "$PREVIEW_PID" "$DEV_PID" 2>/dev/null || true' EXIT
           python - <<'PY'
           import json, time, urllib.request
-          endpoints = ['http://127.0.0.1:8760/health', 'http://127.0.0.1:4173']
+          endpoints = ['http://127.0.0.1:8760/health', 'http://127.0.0.1:4173', 'http://127.0.0.1:5173']
           for endpoint in endpoints:
               deadline = time.monotonic() + 60
               while True:
@@ -178,6 +186,14 @@ jobs:
                       time.sleep(0.5)
           PY
           npm --prefix app run test:ui
+          npm --prefix app run test:import
+          npm --prefix app run test:policy
+          npm --prefix app run test:heterogeneity
+          npm --prefix app run test:cli
+          CAPY_ONTOLOGY_TEST_URL=http://127.0.0.1:4173 CAPY_ONTOLOGY_LIVE_ENGINE=http://127.0.0.1:8760 npm --prefix app run test:ontology
+          # The synthetic suite imports the live store module to create exact
+          # revision races. Exercise that suite against Vite's module server.
+          CAPY_ONTOLOGY_TEST_URL=http://127.0.0.1:5173 npm --prefix app run test:ontology
       - name: Keep browser evidence and test-service logs
         if: always()
         uses: actions/upload-artifact@v4
@@ -186,6 +202,11 @@ jobs:
           path: |
             ${{ runner.temp }}/causal-capybara-ui/*.log
             .audit/browser-results/
+            .audit/import-browser/
+            .audit/heterogeneity-browser/
+            .audit/policy-browser/
+            .audit/ontology-browser/
+            .audit/cli-browser/
           include-hidden-files: true
           if-no-files-found: ignore
           retention-days: 14
@@ -195,6 +216,7 @@ jobs:
     runs-on: ubuntu-latest
     env:
       PYTHONPATH: engines/python:sidecar
+      CAPY_REQUIRE_R_REFERENCE: "1"
     steps:
       - uses: actions/checkout@v4
       - name: Configure isolated test workspace
@@ -210,7 +232,7 @@ jobs:
           use-public-rspm: true
       - name: Install the R engine's dependencies
         run: |
-          Rscript -e 'install.packages(c("jsonlite", "grf"), repos = "https://cloud.r-project.org")'
+          Rscript -e 'install.packages(c("jsonlite", "grf", "survival"), repos = "https://cloud.r-project.org")'
       - name: Install the Python engine
         run: |
           python -m pip install --upgrade pip
@@ -220,6 +242,10 @@ jobs:
       - name: Both engines agree, or the run fails
         run: |
           python tests/python/test_cross_engine.py
+      - name: Independent R and Python references on policy and survival examples
+        env:
+          CAPY_SURVIVAL_R_REPORT: ${{ runner.temp }}/survival-r-reference.json
+        run: python -m pytest tests/python/test_did_reference_regressions.py tests/python/test_survival_r_reference.py tests/python/test_scripts.py -q
       - name: Refresh the R lockfile so it stops being a guess
         run: |
           Rscript -e 'p <- installed.packages(); writeLines(paste0(rownames(p), "==", p[,"Version"]))' \
@@ -229,7 +255,9 @@ jobs:
       - uses: actions/upload-artifact@v4
         with:
           name: r-installed-versions
-          path: /tmp/r-installed.txt
+          path: |
+            /tmp/r-installed.txt
+            ${{ runner.temp }}/survival-r-reference.json
 
   desktop:
     name: Windows desktop and preview installer

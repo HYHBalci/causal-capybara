@@ -47,6 +47,8 @@ foreach ($required in @(
     'sidecar/capy_sidecar/__main__.py',
     'engines/python/capy_py/__init__.py',
     'schemas/capy.result.v1.json',
+    'knowledge/capy_knowledge/data/manifest.json',
+    'knowledge/capy_knowledge/data/index.sqlite',
     'LICENSE',
     'NOTICE',
     'licenses/PYTHON_LICENSES.txt',
@@ -76,6 +78,8 @@ if (Test-Path -LiteralPath $launchHome) {
     Assert-BuildTreeSafe -BuildRoot $buildRoot -Path $launchHome
 }
 New-Item -ItemType Directory -Path $launchHome -Force | Out-Null
+$launchSettings = @{ workspace = (Join-Path $launchHome 'workspace'); allow_downloads = $false } | ConvertTo-Json
+[IO.File]::WriteAllText((Join-Path $launchHome 'settings.json'), $launchSettings, [Text.UTF8Encoding]::new($false))
 $oldCapyPython = $env:CAPY_PYTHON
 $oldCapyHome = $env:CAPY_HOME
 $oldPath = $env:PATH

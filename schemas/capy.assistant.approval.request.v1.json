@@ -1,0 +1,29 @@
+{
+  "$id": "https://causalcapybara.dev/schemas/capy.assistant.approval.request.v1.json",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "properties": {
+    "action": {
+      "enum": [
+        "apply",
+        "run"
+      ],
+      "title": "Action",
+      "type": "string"
+    },
+    "methods": {
+      "items": {
+        "additionalProperties": true,
+        "type": "object"
+      },
+      "maxItems": 10,
+      "title": "Methods",
+      "type": "array"
+    }
+  },
+  "required": [
+    "action"
+  ],
+  "title": "ApprovalRequest",
+  "type": "object"
+}

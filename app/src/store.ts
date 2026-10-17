@@ -12,14 +12,14 @@ import { engineStatus, restartEngine } from './desktop'
 import { count } from './format'
 import { SaveQueue } from './saveQueue'
 import type {
-  AssumptionCatalogEntry, ColumnMeta, Comparison, DataHealth, DesignCard, EngineStatus, EstimandCard,
+  AssumptionCatalogEntry, ColumnMeta, Comparison, DataColumnSelection, DataHealth, DesignCard, EngineStatus, EstimandCard,
   ExplainEntry, Guardrails, Job, MethodCard, MethodHealth, Profile, ProjectFull, ProjectSummary,
   Recommendation, RunResult, RunSummary, Sketch, Spec,
 } from './types'
 
 export type CanvasView =
   | 'welcome' | 'data' | 'design' | 'board' | 'diagnose' | 'recommend' | 'dashboard'
-  | 'compare' | 'sim' | 'dag' | 'report' | 'code' | 'engines' | 'settings' | 'learn' | 'literature'
+  | 'compare' | 'sim' | 'dag' | 'report' | 'code' | 'engines' | 'settings' | 'learn' | 'literature' | 'research'
 
 export type DashboardTab = 'estimates' | 'diagnostics' | 'assumptions' | 'sample' | 'probe' | 'code' | 'classic'
 
@@ -32,10 +32,9 @@ export interface Toast {
 
 let toastSeq = 1
 
-const EMPTY_SPEC = (seed?: number | null): Spec => ({
+const EMPTY_SPEC = (seed?: number | null): Omit<Spec, 'id'> => ({
   schema: 'capy.spec',
   version: 1,
-  id: '',
   title: 'Question 1',
   question: { treatment: null, outcome: null, population: null, comparison: null, text: null },
   design: 'undecided',
@@ -90,6 +89,8 @@ interface State {
 
   /* spec */
   spec: Spec | null
+  creatingSpec: boolean
+  createSpecError: string | null
   savingSpec: boolean
   saveError: string | null
   guardrails: Guardrails | null
@@ -153,7 +154,8 @@ interface State {
   fetchDataset: (datasetId: string) => Promise<boolean>
   openDataset: (datasetId: string) => Promise<void>
   refreshProject: () => Promise<void>
-  importData: (path: string) => Promise<void>
+  importData: (source: string | File) => Promise<void>
+  applyColumnSelection: (included: string[], revision: string) => Promise<DataColumnSelection | null>
 
   newSpec: () => Promise<void>
   loadSpec: (specId: string) => Promise<void>
@@ -187,6 +189,7 @@ const specSaves = new SaveQueue((error) => {
 let projectOpenSeq = 0
 let questionOpenSeq = 0
 const importingProjects = new Set<string>()
+const creatingQuestions = new Set<string>()
 let pollTimer: ReturnType<typeof setInterval> | null = null
 let watchTimer: ReturnType<typeof setInterval> | null = null
 
@@ -294,6 +297,8 @@ export const useStore = create<State>((set, get) => ({
   health: null,
 
   spec: null,
+  creatingSpec: false,
+  createSpecError: null,
   savingSpec: false,
   saveError: null,
   guardrails: null,
@@ -530,7 +535,7 @@ export const useStore = create<State>((set, get) => ({
     } catch (err) { /* keep what we have */ }
   },
 
-  async importData(path) {
+  async importData(source) {
     const { project } = get()
     if (!project) return
     if (importingProjects.has(project.id)) {
@@ -544,7 +549,7 @@ export const useStore = create<State>((set, get) => ({
     try {
       await get().flushSpec()
       if (!current()) return
-      const res = await api.importData(project.id, path)
+      const res = typeof source === 'string' ? await api.importData(project.id, source) : await api.uploadData(project.id, source)
       if (!current()) return
       ++questionOpenSeq;
       ++specRevision; ++sketchSeq; ++guardrailSeq; ++recommendSeq
@@ -564,6 +569,7 @@ export const useStore = create<State>((set, get) => ({
       for (const note of res.notes ?? []) get().toast('info', note)
       get().toast('success', `Imported ${count(res.project.n)} rows and ${res.project.p} variables`)
       if (!get().spec) await get().newSpec()
+      if (current()) set({ view: 'data' })
     } catch (err) {
       if (current()) get().toast('error', 'Import failed', msg(err))
     } finally {
@@ -574,9 +580,49 @@ export const useStore = create<State>((set, get) => ({
 
   /* ------------------------------------------------------------------ */
 
+  async applyColumnSelection(included, revision) {
+    const { project } = get()
+    if (!project) return null
+    if (importingProjects.has(project.id)) throw new Error('Wait for the current data change to finish.')
+    const projectSeq = projectOpenSeq
+    const current = () => projectSeq === projectOpenSeq && get().project?.id === project.id
+    importingProjects.add(project.id)
+    set({ busy: 'Applying column selection' })
+    try {
+      await get().flushSpec()
+      if (!current()) return null
+      const selection = await api.selectColumns(project.id, included, revision)
+      if (!current()) return null
+      ++specRevision; ++sketchSeq; ++guardrailSeq; ++recommendSeq
+      const columns = selection.columns.filter((column) => selection.included_columns.includes(column.name))
+      set((state) => ({ columns, project: state.project ? { ...state.project, ...selection.project,
+          meta: { ...state.project.meta, data: { ...(state.project.meta?.data as Record<string, unknown>), revision: selection.revision } } } : null,
+        spec: state.spec ? { ...state.spec, diagnostics_viewed: [] } : null,
+        sketch: null, sketchLoading: false, guardrails: null, health: null,
+        recommendation: null, recommendationError: null, recommendationLoading: false,
+        selectedRunIds: [], comparison: null }))
+      const specId = get().spec?.id
+      const [full, spec, health] = await Promise.all([
+        api.project(project.id).catch(() => null),
+        specId ? api.spec(project.id, specId).catch(() => null) : Promise.resolve(null),
+        api.dataHealth(project.id, specId).catch(() => null),
+      ])
+      if (!current()) return null
+      set({ ...(full ? { project: full } : {}), selectedObjectId: null,
+        ...(get().spec?.id === specId ? { ...(spec ? { spec } : {}), health } : {}) })
+      get().toast('success', `${columns.length} of ${selection.p_total} columns included`, 'The full imported data is kept so you can restore columns later.')
+      return selection
+    } finally {
+      importingProjects.delete(project.id)
+      if (current()) set({ busy: null })
+    }
+  },
+
   async newSpec() {
     const { project } = get()
-    if (!project) return
+    if (!project || creatingQuestions.has(project.id)) return
+    creatingQuestions.add(project.id)
+    set({ creatingSpec: true, createSpecError: null })
     const seq = ++questionOpenSeq
     const projectSeq = projectOpenSeq
     const current = () => seq === questionOpenSeq && projectSeq === projectOpenSeq && get().project?.id === project.id
@@ -592,7 +638,15 @@ export const useStore = create<State>((set, get) => ({
         runs: [], selectedRunIds: [], selectedObjectId: null, comparison: null, view: 'design' })
       await get().refreshProject()
     } catch (err) {
-      if (current()) get().toast('error', 'Could not create the question', msg(err))
+      if (current()) {
+        set({ createSpecError: msg(err) })
+        get().toast('error', 'Could not create the question', msg(err))
+      }
+    } finally {
+      creatingQuestions.delete(project.id)
+      // A project-open attempt can fail and leave this project on screen even
+      // after its navigation sequence changed. Its completed start must unlock.
+      if (get().project?.id === project.id) set({ creatingSpec: false })
     }
   },
 
@@ -664,7 +718,14 @@ export const useStore = create<State>((set, get) => ({
 
   setRole(role, value, event) {
     get().updateSpec(
-      (s) => ({ ...s, roles: { ...s.roles, [role]: value as never } }),
+      (s) => {
+        const question = { ...s.question }
+        if ((role === 'treatment' || role === 'outcome')
+          && (!question[role] || question[role] === s.roles[role])) {
+          question[role] = typeof value === 'string' && value ? value : null
+        }
+        return { ...s, question, roles: { ...s.roles, [role]: value as never } }
+      },
       event ?? `Set ${role}`,
       { role, value },
     )
@@ -1011,6 +1072,8 @@ async function loadProject(
     jobs: [],
     comparison: null,
     spec: specs[0] ?? null,
+    creatingSpec: false,
+    createSpecError: null,
     sketch: null,
     recommendation: null,
     recommendationError: null,
@@ -1040,7 +1103,9 @@ async function loadProject(
 export function questionText(spec: Spec): string {
   const t = spec.question.treatment ?? spec.roles.treatment ?? 'a treatment'
   const y = spec.question.outcome ?? spec.roles.outcome ?? 'an outcome'
-  let text = `Effect of ${t} on ${y}`
+  let text = spec.design === 'survival'
+    ? `Compare baseline ${t} for event ${spec.roles.event ?? 'an event'} over ${spec.roles.duration ?? 'elapsed follow-up'}`
+    : `Effect of ${t} on ${y}`
   if (spec.question.population) text += ` for ${spec.question.population}`
   if (spec.question.comparison) text += `, compared to ${spec.question.comparison}`
   return text

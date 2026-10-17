@@ -1,0 +1,132 @@
+{
+  "$id": "https://causalcapybara.dev/schemas/capy.assistant.context.request.v1.json",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "properties": {
+    "include_code": {
+      "default": false,
+      "title": "Include Code",
+      "type": "boolean"
+    },
+    "include_columns": {
+      "default": false,
+      "title": "Include Columns",
+      "type": "boolean"
+    },
+    "include_diagnostics": {
+      "default": false,
+      "title": "Include Diagnostics",
+      "type": "boolean"
+    },
+    "include_study": {
+      "default": false,
+      "title": "Include Study",
+      "type": "boolean"
+    },
+    "knowledge_max_bytes": {
+      "default": 32768,
+      "enum": [
+        16384,
+        32768,
+        49152
+      ],
+      "title": "Knowledge Max Bytes",
+      "type": "integer"
+    },
+    "notes": {
+      "anyOf": [
+        {
+          "maxLength": 8000,
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Notes"
+    },
+    "previous_context_id": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Previous Context Id"
+    },
+    "project_id": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Project Id"
+    },
+    "query": {
+      "default": "",
+      "maxLength": 4000,
+      "title": "Query",
+      "type": "string"
+    },
+    "redactions": {
+      "items": {
+        "type": "string"
+      },
+      "maxItems": 12,
+      "title": "Redactions",
+      "type": "array"
+    },
+    "selected_run_ids": {
+      "items": {
+        "type": "string"
+      },
+      "maxItems": 5,
+      "title": "Selected Run Ids",
+      "type": "array"
+    },
+    "selection": {
+      "anyOf": [
+        {
+          "additionalProperties": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "type": "object"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Selection"
+    },
+    "spec_id": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Spec Id"
+    }
+  },
+  "title": "ContextRequest",
+  "type": "object"
+}

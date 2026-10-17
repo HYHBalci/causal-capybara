@@ -1,0 +1,85 @@
+schema: capy.explain
+version: 1
+entries:
+  design.survival:
+    title: Time-to-event studies and causal questions
+    short: Define the event, time zero, baseline intervention, population, observation mechanism and horizon before fitting a survival model.
+    detail: A duration/event pair records the earlier of event time and censoring time, plus whether the single event occurred. The app supports positive elapsed times, independent people, baseline binary treatment and right censoring. It refuses competing-event codes, delayed entry, interval censoring, repeated-person records and time-varying treatments. A survival model describes event times; the study design and identifying assumptions determine whether a contrast supports a causal interpretation.
+    common_mistake: Starting follow-up before treatment classification is complete, creating immortal-time bias; or interpreting any fitted treatment coefficient as causal.
+    references: ["Hernán and Robins (2020), Causal Inference: What If", "Hernán (2010), The Hazards of Hazard Ratios"]
+    see_also: [concept.survival_time_zero, concept.survival_censoring, concept.survival_competing_events, estimand.rmst_difference]
+
+  method.survival.kaplan_meier:
+    title: Unadjusted Kaplan–Meier survival contrast
+    short: The product-limit estimator accounts for right censoring in observed groups; their probability difference at tau is an association.
+    detail: Events are processed before censoring at tied times. Independent censoring within each group is required for the raw curves. Independence only conditional on other prognostic covariates does not suffice. The app requires a common supported horizon and explicit time unit, reports censoring/risk-set counts and uses seeded within-group subject bootstrap intervals. Bootstrap samples without horizon support are refused and reported. An optional prespecified categorical baseline modifier forms subgroup contrasts, with resampling within each treatment-by-subgroup cell and a direct equality test at the same horizon. Baseline covariates are not adjusted by this method.
+    common_mistake: Calling a raw difference between selected treatment groups a causal treatment effect, or silently treating competing death as ordinary censoring.
+    references: ["Kaplan and Meier (1958), Nonparametric Estimation from Incomplete Observations", "Hernán (2010), The Hazards of Hazard Ratios"]
+    see_also: [method.survival.aft, concept.survival_censoring, diagnostic.survival_heterogeneity]
+
+  method.survival.rmst:
+    title: Unadjusted restricted mean survival contrast
+    short: Integrate each observed Kaplan–Meier curve from zero through the same tau; subtract treatment 0 from treatment 1 in time units.
+    detail: RMST is the expected event-free time restricted to a prespecified horizon. It does not require proportional hazards or an extrapolated infinite tail. Here the two raw group distributions are different observed populations, so their contrast remains unadjusted. Independent censoring within each arm, independent people and support through tau are required. A sparse tail is flagged. Seeded within-group bootstrap intervals resample people and recompute the whole curve integral. An optional prespecified categorical baseline modifier compares subgroup RMST differences directly; all cells use the same supported horizon and time unit, with resampling within each treatment-by-subgroup cell.
+    common_mistake: Describing restricted event-free time as lifetime gained, or choosing tau after viewing the treatment differences.
+    references: ["Uno et al. (2014), Moving Beyond the Hazard Ratio in Quantifying the Between-Group Difference in Survival Analysis"]
+    see_also: [estimand.rmst_difference, method.survival.aft, diagnostic.survival_heterogeneity]
+
+  method.survival.aft:
+    title: Censored AFT regression and causal standardization
+    short: Fit a right-censored common-scale log-normal or Weibull AFT model, then distinguish its conditional time factor from marginal standardized survival and RMST.
+    detail: The likelihood uses the event-time density for events and survival probability for right-censored observations. For a supported horizon, predict both treatments for every complete-case baseline covariate profile and average over that empirical target population. An optional prespecified categorical baseline modifier adds all subgroup main effects and treatment-by-subgroup interactions to one pooled common-scale model. In that mode, both treatment predictions are averaged over the same observed profiles within each subgroup; those subgroup populations can have different covariate distributions. The displayed time-factor headline is the reference subgroup's conditional factor, and the subgroup table gives all factors. Survival/RMST standardization is causal only under justified consistency, no interference, exchangeability, treatment positivity, independent censoring conditional on treatment/covariates and correct model form. Those conditions remain untested. Each subject bootstrap sample refits the likelihood and re-averages over its resampled target population; subgroup mode resamples within baseline subgroups, conditioning on their observed counts. The optimizer must converge to a finite interior solution with stable positive curvature. A complete-case target may differ from the original population; the flow reports missingness.
+    math: "Without a modifier, log(T) = beta0 + betaA*A + betaL*L + sigma*epsilon and r = exp(betaA). With categorical G, add sum_g gamma_g*I(G=g) + sum_g delta_g*A*I(G=g) over non-reference levels. Then r_ref = exp(betaA) and r_g = exp(betaA + delta_g). Weibull shape = 1/sigma and scale(L,A,G) = exp(mu(L,A,G)). Within subgroup g, S_g^a(tau) = mean_{i:G_i=g} S(tau | A=a, L_i, G=g); RMST_g^a(tau) = integral_0^tau S_g^a(u) du. RMST_g^1(tau) is not generally r_g times RMST_g^0(tau)."
+    common_mistake: Calling exp(betaA) a hazard ratio, a marginal causal effect or a structural failure-time estimate; or presenting the reference subgroup's time factor as common to every subgroup. The model retains a common residual scale, supports one optional categorical baseline modifier and uses baseline treatment only. Equality of conditional time factors does not imply equality of standardized survival or RMST differences.
+    references: ["Wei (1992), The accelerated failure time model: a useful alternative to the Cox regression model in survival analysis", "Hernán (2010), The Hazards of Hazard Ratios", "Hernán and Robins (2020), Causal Inference: What If"]
+    see_also: [estimand.time_ratio, estimand.survival_difference, estimand.rmst_difference, concept.survival_hazard, diagnostic.survival_heterogeneity]
+
+  diagnostic.survival_heterogeneity:
+    title: Baseline subgroup heterogeneity in survival contrasts
+    short: Test equality of subgroup treatment contrasts directly on one prespecified scale and horizon using their full joint bootstrap covariance.
+    detail: One categorical baseline modifier defines 2–8 supported subgroups. For Kaplan–Meier and RMST, the contrasts remain raw observed-group associations. For adjusted AFT survival/RMST, each subgroup uses its own empirical baseline profiles under both treatment predictions; time-factor equality is tested on the log scale. A Wald omnibus test compares an independent vector of between-subgroup contrasts. Singular contrast covariance yields no p-value; fewer than 200 usable bootstrap draws trigger a Monte Carlo precision warning. Reference-subgroup comparisons and confidence intervals are pointwise, without multiplicity adjustment; searches across modifiers, methods, scales and horizons require an explicit analysis plan. Sparse events, unsupported cell-specific follow-up and failed bootstrap refits are reported. A prespecification declaration cannot verify the protocol or baseline timing.
+    common_mistake: Inferring interaction from significance in one subgroup but not another, substituting an arm-wise log-rank test for equality of treatment contrasts, or interpreting a large p-value as equivalence. An interaction test does not resolve confounding, informative censoring or unsupported extrapolation.
+    references: ["Altman and Bland (2003), Interaction revisited: the difference between two estimates", "Wang et al. (2007), Statistics in Medicine — Reporting of Subgroup Analyses in Clinical Trials", "Knol and VanderWeele (2012), Recommendations for presenting analyses of effect modification and interaction"]
+    see_also: [method.survival.kaplan_meier, method.survival.rmst, method.survival.aft, concept.heterogeneity_scale, concept.heterogeneity_prespecification]
+
+  concept.survival_time_zero:
+    title: Align eligibility, treatment and follow-up
+    short: Time zero is when eligibility is assessed, the baseline treatment strategy is classified and follow-up begins.
+    detail: Counting event-free follow-up before a person could be classified as treated creates immortal-time bias. A baseline treatment analysis cannot silently stand in for a treatment that changes during follow-up. Delayed entry also changes the risk sets and is unsupported by these adapters.
+    references: ["Hernán and Robins (2020), Causal Inference: What If"]
+
+  concept.survival_censoring:
+    title: Censoring is an observation mechanism
+    short: Right censoring means follow-up ends before the event is observed; the event time remains unknown.
+    detail: Administrative end of follow-up and prognosis-related dropout can have different implications. Raw arm-specific Kaplan–Meier needs independence within arms. The adjusted AFT likelihood assumes independence given treatment and included baseline covariates. Counts and model convergence do not verify either condition. Positivity of observation through the horizon and meaningful conditional treatment support also need substantive review.
+    references: ["Hernán and Robins (2020), Causal Inference: What If"]
+
+  concept.survival_hazard:
+    title: Hazard, survival probability and time ratios
+    short: A hazard is an instantaneous event rate among those still event-free. It is not an event probability.
+    detail: A hazard ratio conditions on evolving risk sets and does not equal a survival probability or risk ratio. AFT exp(betaA) stretches conditional event times under a common log-time shape; with subgroup interactions, exp(betaA) is the reference subgroup factor and exp(betaA + delta_g) is the factor for subgroup g. A Weibull AFT model also implies a conditional hazard ratio exp(-betaA/sigma) in the reference subgroup, a different quantity; replace betaA by betaA + delta_g for other subgroups. The app reports the requested time factor, probability difference or RMST difference with its scale; it does not substitute one for another.
+    references: ["Hernán (2010), The Hazards of Hazard Ratios", "Wei (1992), The accelerated failure time model: a useful alternative to the Cox regression model in survival analysis"]
+
+  concept.survival_competing_events:
+    title: Competing events require a causal question
+    short: An event that prevents the outcome of interest is not automatically ordinary right censoring.
+    detail: The cumulative incidence of an event with competing death, a hypothetical intervention eliminating competing death and separable treatment effects are different targets. None is supplied by recoding competing death to zero in these single-event adapters. Choose and justify an appropriate competing-risk design and estimator separately.
+    references: ["Hernán and Robins (2020), Causal Inference: What If"]
+
+  assumption.survival_consistency:
+    title: A well-defined baseline intervention
+    short: Observed event times must agree with the potential event times under the treatment actually received, with meaningful treatment versions.
+    detail: Define the treatment strategy, event, time zero and duration unit. A model coefficient cannot repair an ill-defined intervention. This remains untested.
+    references: ["Hernán and Robins (2020), Causal Inference: What If"]
+
+  assumption.survival_no_interference:
+    title: No interference between people
+    short: One person's event time is assumed unaffected by other people's treatment assignments.
+    detail: Contagion, shared care resources and spillovers may violate this condition. These adapters also assume independent subjects for resampling; clustered uncertainty requires another adapter. This remains untested.
+    references: ["Hernán and Robins (2020), Causal Inference: What If"]
+
+  assumption.conditional_independent_censoring:
+    title: Conditional independent censoring
+    short: Given baseline treatment and covariates, censoring must not convey additional information about the unobserved event time.
+    detail: The AFT likelihood relies on this untested condition. Raw Kaplan–Meier instead needs independence within each treatment group; the conditional statement alone cannot justify a raw group curve. Prognosis-dependent dropout, unmeasured predictors and unsupported observation horizons need review.
+    references: ["Hernán and Robins (2020), Causal Inference: What If"]

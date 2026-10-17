@@ -1,0 +1,24 @@
+{
+  "$id": "https://causalcapybara.dev/schemas/capy.assistant.knowledge-context.request.v1.json",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "properties": {
+    "max_bytes": {
+      "default": 16384,
+      "maximum": 65536,
+      "minimum": 1024,
+      "title": "Max Bytes",
+      "type": "integer"
+    },
+    "query": {
+      "maxLength": 4000,
+      "title": "Query",
+      "type": "string"
+    }
+  },
+  "required": [
+    "query"
+  ],
+  "title": "KnowledgeContextRequest",
+  "type": "object"
+}

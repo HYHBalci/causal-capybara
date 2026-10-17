@@ -27,7 +27,8 @@ def safe_url(url: str) -> bool:
 def resolve(reference: str) -> dict:
     text = normal(reference)
     matches = [r for r in records() if
-               (r.get('match') and all(part in text for part in r['match']))
+               normal(r['citation']) == text
+               or (r.get('match') and all(part in text for part in r['match']))
                or any(normal(alias) == text for alias in r.get('aliases', []))]
     if len(matches) == 1:
         row = matches[0]

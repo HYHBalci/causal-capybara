@@ -79,7 +79,9 @@ jobs:
           CAPY_HOME: ${{ runner.temp }}/causal-capybara-release-tests
           PYTHONDONTWRITEBYTECODE: "1"
         run: |
-          & ./.capy-build/release/windows-x64/runtimes/python/python.exe -B -m pytest tests/python --ignore=tests/python/test_cross_engine.py -q -p no:cacheprovider
+          # The optional MCP SDK belongs to the independently installed companion;
+          # its wire/client tests run in ontology.yml, not the desktop runtime.
+          & ./.capy-build/release/windows-x64/runtimes/python/python.exe -B -m pytest tests/python --ignore=tests/python/test_cross_engine.py --ignore=tests/python/test_knowledge_mcp.py --ignore=tests/python/test_knowledge_mcp_budget.py --ignore=tests/python/test_ontology_clients.py -q -p no:cacheprovider
           if ($LASTEXITCODE -ne 0) { throw "Embedded Python test suite failed with exit $LASTEXITCODE." }
       - name: Remove build paths and unused Python launchers
         shell: pwsh

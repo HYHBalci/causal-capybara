@@ -12,12 +12,13 @@
 
 import { useState } from 'react'
 import { useStore } from '../store'
-import type { ColumnMeta, DesignZone } from '../types'
+import type { Artifact, DesignZone } from '../types'
 import { ArtifactView } from '../components/VegaChart'
 import { MarkReviewedButton } from '../components/Provisional'
 import { useSplitPane } from '../components/SplitPane'
 import { Schematic } from './Schematic'
 import { count } from '../format'
+import { canAssignColumn, roleColumnOptions } from '../roleColumns'
 
 export function DesignBoard() {
   const spec = useStore((s) => s.spec)
@@ -95,6 +96,7 @@ function Zone({ zone }: { zone: DesignZone }) {
   const setRole = useStore((s) => s.setRole)
   const setExplain = useStore((s) => s.setExplain)
   const guardrails = useStore((s) => s.guardrails)
+  const toast = useStore((s) => s.toast)
   const [over, setOver] = useState(false)
   const [picking, setPicking] = useState(false)
 
@@ -105,8 +107,7 @@ function Zone({ zone }: { zone: DesignZone }) {
   const isValue = zone.kind === 'value' || zone.kind === 'values'
   const flagged = new Set((guardrails?.bad_controls ?? []).map((b) => b.variable))
 
-  const accepts = (c: ColumnMeta) => !zone.accepts?.length || zone.accepts.includes(c.kind)
-  const options = columns.filter(accepts)
+  const options = roleColumnOptions(columns, zone.accepts, raw)
 
   const add = (name: string) => {
     if (zone.multiple) setRole(zone.role, [...new Set([...list, name])], `Added ${name} to ${zone.label}`)
@@ -123,10 +124,13 @@ function Zone({ zone }: { zone: DesignZone }) {
       }}
       onDragLeave={() => setOver(false)}
       onDrop={(e) => {
+        if (isValue) return
         e.preventDefault()
         setOver(false)
         const name = e.dataTransfer.getData('text/capy-variable')
-        if (name) add(name)
+        const column = columns.find((candidate) => candidate.name === name)
+        if (column && canAssignColumn(column, zone.accepts)) add(name)
+        else if (name) toast('info', `${zone.label} takes ${acceptedKinds(zone)}.`)
       }}
       role="group"
       aria-label={`${zone.label}${zone.required ? ' (required)' : ''}`}
@@ -192,7 +196,13 @@ function Zone({ zone }: { zone: DesignZone }) {
         <div className="zone-picker card">
           <div className="scroll" style={{ maxHeight: 220 }}>
             {options.map((c) => (
-              <button key={c.name} className="qslot-option" onClick={() => add(c.name)}>
+              <button key={c.name} className={`qslot-option${(zone.multiple ? list.includes(c.name) : single === c.name) ? ' on' : ''}`}
+                aria-pressed={zone.multiple ? list.includes(c.name) : single === c.name}
+                onClick={() => {
+                  if (zone.multiple && list.includes(c.name)) setRole(zone.role, list.filter((name) => name !== c.name), `Removed ${c.name} from ${zone.label}`)
+                  else if (!zone.multiple && single === c.name) setRole(zone.role, null, `Cleared ${zone.label}`)
+                  else add(c.name)
+                }}>
                 <span className={`kind-icon ${c.kind}`} aria-hidden />
                 <span className="grow">{c.name}</span>
                 <span className="tiny hint">{c.kind}</span>
@@ -251,11 +261,9 @@ function StaggeredNotice() {
     <div className="banner warning board-notice">
       <strong>{design.staggered_copy}</strong>
       <span>
-        {' '}Your units did not all start at the same time, and that quietly changes the arithmetic.
-        The ordinary before-and-after regression ends up comparing units that were treated earlier
-        against units that were already treated — a comparison that answers no question you asked, and
-        that can pull the average in the wrong direction. Two of the recommended methods are built to
-        avoid it, and the app will put them at the top of the list.
+        {' '}A cohort is a group of units first treated in the same period. The rollout groups them
+        by that date; the outcome chart shows their observed levels over calendar time. Choose a
+        cohort-aware estimator to compare them with untreated or not-yet-treated units.
       </span>
       <button className="linky" onClick={() => setExplain('concept.staggered_adoption')}>
         Why different start dates matter
@@ -285,10 +293,9 @@ function EstimandPicker() {
     <section className="estimand-block">
       <div className="panel-title">What exactly do you want a number for?</div>
       <p className="tiny hint" style={{ margin: '2px 0 8px' }}>
-        Each line is a different question, and they can have different answers on the same data — the
-        effect on everybody is not the effect on the people who actually took the programme. Choosing
-        one before you choose a method is the whole trick; the technical name for the number you pick
-        is the <em>estimand</em>.{' '}
+        {spec.design === 'survival'
+          ? <>Choose an event-free probability difference at a horizon, a restricted mean event-free time difference through that horizon, or an AFT time factor. Declare the population, time zero, unit and horizon before choosing a method. Raw group contrasts are associations; a causal interpretation requires justified identification and censoring assumptions. The target quantity is the <em>estimand</em>.{' '}</>
+          : <>Each line is a different question, and they can have different answers on the same data — the effect on everybody is not the effect on the people who actually took the programme. Choose one before choosing a method; the technical name for the number is the <em>estimand</em>.{' '}</>}
         <button className="linky" onClick={() => setExplain('concept.estimand_first')}>
           Why this comes first
         </button>
@@ -428,7 +435,7 @@ export function LiveSketch({ full = false, showReview = true }: { full?: boolean
       ))}
 
       {sketch.artifacts?.map((a) => (
-        <ArtifactView key={a.id} artifact={a} onExplain={setExplain} height={full ? 260 : 190} />
+        <SketchArtifact key={a.id} artifact={a} onExplain={setExplain} full={full} />
       ))}
 
       {sketch.ready && sketch.id && showReview && (
@@ -455,6 +462,20 @@ export function LiveSketch({ full = false, showReview = true }: { full?: boolean
       </p>
     </section>
   )
+}
+
+/** Detail plots keep their row-based height and are mounted only on demand.
+ *  A 51-state rollout should not be squeezed into the same 190px as a line plot. */
+export function SketchArtifact({ artifact, onExplain, full = false }: {
+  artifact: Artifact; onExplain?: (key: string) => void; full?: boolean
+}) {
+  const [open, setOpen] = useState(false)
+  const height = typeof artifact.spec?.height === 'number' ? undefined : full ? 260 : 190
+  if (!artifact.collapsed) return <ArtifactView artifact={artifact} onExplain={onExplain} height={height} />
+  return <details className="sketch-values" onToggle={(event) => setOpen(event.currentTarget.open)}>
+    <summary>{artifact.title ?? 'Inspect chart details'}</summary>
+    {open && <ArtifactView artifact={artifact} onExplain={onExplain} height={height} compact />}
+  </details>
 }
 
 /** The keys the sketches emit are storage names. Swapping the underscores for

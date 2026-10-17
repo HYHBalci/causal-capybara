@@ -38,6 +38,22 @@ SYNTHETIC_RIGHTS = ("Generated locally by Causal Capybara from original simulati
 
 EXAMPLES: list[dict[str, Any]] = [
     {
+        "id": "heterogeneous_outcomes", "title": "Treatment heterogeneity across outcome types",
+        "design": "rct", "blurb": "One randomized baseline study with continuous, binary, count and categorical outcomes. Compare prespecified effect scales and direct interaction tests.",
+        "teaches": "direct heterogeneity tests, scale dependence and multiplicity",
+        "n": 1800, "difficulty": "medium", "source": "simulated",
+        "citation": "Methodological context: Altman and Bland (2003), Knol and VanderWeele (2012).",
+        "truth": "Continuous subgroup effects are 0.5 and 2.0. Other outcomes have distinct nonlinear contrasts; no individual treatment effects are observed.",
+    },
+    {
+        "id": "survival_followup", "title": "Baseline treatment and event-free follow-up",
+        "design": "survival", "blurb": "Confounded baseline treatment, right censoring and a prespecified eight-month horizon. Compare raw RMST with AFT standardization over the same baseline population.",
+        "teaches": "event definition, time zero, censoring and conditional versus marginal contrasts",
+        "n": 1600, "difficulty": "medium", "source": "simulated",
+        "citation": "Methodological context: Hernán (2010), Wei (1992) and Uno et al. (2014).",
+        "truth": "The standardized RMST difference at eight months is built in; the raw group difference intentionally misses it.",
+    },
+    {
         "id": "lalonde",
         "title": "Job training and later earnings",
         "design": "observational",
@@ -52,10 +68,10 @@ EXAMPLES: list[dict[str, Any]] = [
     },
     {
         "id": "minimum_wage",
-        "title": "A minimum wage rise in one state",
+        "title": "Minimum wage: New Jersey and Pennsylvania",
         "design": "did",
-        "blurb": "Two states, two periods, one policy change. The cleanest difference-in-differences there "
-                 "is, and the place to learn what parallel trends actually asks of you.",
+        "blurb": "Simulated restaurants in New Jersey and Pennsylvania, before and after one wage rise. "
+                 "A two-period difference-in-differences example; treatment starts together in New Jersey.",
         "teaches": "the 2x2 difference-in-differences",
         "n": 820,
         "difficulty": "start here",
@@ -64,10 +80,10 @@ EXAMPLES: list[dict[str, Any]] = [
     },
     {
         "id": "medicaid",
-        "title": "A policy states adopted at different times",
+        "title": "Medicaid expansion: states adopt at different times",
         "design": "did",
-        "blurb": "Staggered adoption with effects that grow after treatment. Two-way fixed effects gets the "
-                 "wrong answer here, and the app will keep saying so until you look.",
+        "blurb": "51 simulated states, three adoption years and 17 never-treated states. Compare "
+                 "cohort-aware estimates of the uninsured rate with two-way fixed effects.",
         "teaches": "why TWFE misleads under staggered adoption",
         "n": 1020,
         "difficulty": "the important one",
@@ -189,6 +205,8 @@ EXAMPLES: list[dict[str, Any]] = [
 ]
 
 _CITATION_URLS = {
+    "heterogeneous_outcomes": "https://doi.org/10.1136/bmj.326.7382.219",
+    "survival_followup": "https://doi.org/10.1097/EDE.0b013e3181c1ea43",
     "lalonde": "https://doi.org/10.2307/2529249",
     "minimum_wage": "https://doi.org/10.1257/aer.84.4.772",
     "medicaid": "https://doi.org/10.1016/j.jeconom.2020.12.001",
@@ -298,6 +316,8 @@ def _minimum_wage() -> tuple[pd.DataFrame, dict[str, Any], dict[str, Any], list[
     truth = {"estimand": "ATT", "value": tau,
              "note": f"The rise adds {tau} full-time equivalents per store in the treated state's second period."}
     notes = [SIMULATED,
+             "NJ labels the treated-state stores and PA the comparison-state stores. Period 0 is before "
+             "the wage rise; period 1 is after. These are simulated restaurant records, not state-level observations.",
              "Two states, two periods: the canonical 2x2. Parallel trends is untestable with two periods, "
              "which is exactly why the design deserves an argument rather than a test."]
     return df, roles, truth, notes
@@ -341,8 +361,11 @@ def _medicaid() -> tuple[pd.DataFrame, dict[str, Any], dict[str, Any], list[str]
                      "effect grows over three years. The average effect on treated state-years is the "
                      "number above. Two-way fixed effects will not return it."}
     notes = [SIMULATED,
-             "This is the dataset the product exists for. Run TWFE and Callaway-Sant'Anna side by side and "
-             "read the forest."]
+             "The state_00 through state_50 labels are synthetic identifiers. Twelve states adopt in 2014, "
+             "twelve in 2016, ten in 2019, and seventeen are never treated. The outcome is the uninsured rate; "
+             "this is a Medicaid expansion scenario, distinct from the two-period minimum-wage example.",
+             "Compare cohort-aware methods with TWFE against the known simulation effect. Sampling variation "
+             "and the method's aggregation weights matter when reading their differences."]
     return df, roles, truth, notes
 
 
@@ -755,7 +778,72 @@ def _california_tobacco() -> tuple[pd.DataFrame, dict[str, Any], dict[str, Any],
     return df, roles, truth, notes
 
 
+def _survival_followup() -> tuple[pd.DataFrame, dict[str, Any], dict[str, Any], list[str]]:
+    """Original simulation, not records or results from a cited study."""
+    from scipy.special import ndtr
+
+    rng = np.random.default_rng(20261013)
+    n, tau, sigma, beta = 1600, 8.0, 0.55, 0.45
+    x = rng.normal(size=n)
+    a = rng.binomial(1, 1 / (1 + np.exp(-1.1 * x)))
+    mu0 = 2.0 - 0.6 * x
+    latent = np.exp(mu0 + beta * a + sigma * rng.normal(size=n))
+    censor = rng.uniform(9.0, 18.0, size=n)
+    duration = np.minimum(latent, censor)
+    event = (latent <= censor).astype(int)
+    def restricted(mu):
+        z = (np.log(tau) - mu) / sigma
+        return np.exp(mu + sigma**2 / 2) * ndtr(z - sigma) + tau * ndtr(-z)
+    truth = float(np.mean(restricted(mu0 + beta) - restricted(mu0)))
+    df = pd.DataFrame({"person": [f"person_{i}" for i in range(n)], "treatment": a,
+                       "followup_months": duration, "event": event, "baseline_risk": x,
+                       "baseline_group": np.where(x >= 0, "higher baseline risk", "lower baseline risk")})
+    role = {"unit": "person", "treatment": "treatment", "duration": "followup_months",
+            "event": "event", "confounders": ["baseline_risk"]}
+    target = {"value": truth, "estimand": "RMST_difference", "horizon": tau,
+              "time_unit": "months", "time_ratio": float(np.exp(beta)),
+              "note": "Expected event-free time is restricted to eight months and averaged over this simulated baseline population. The raw unadjusted RMST association intentionally misses the causal standardized target because baseline risk affects both treatment and event time."}
+    notes = [
+        "This data is simulated by original local code, not taken from the cited articles.",
+        "Each independent person is observed from baseline. Treatment is 0/1 at time zero; event is 1 and right censoring is 0. Durations and the fixed horizon are in months.",
+        f"The built-in standardized RMST difference through {tau:g} months is {truth:.4g} months. The conditional common AFT time factor is exp(0.45), a different target.",
+        "Baseline risk affects treatment and event time. The unadjusted observed-group association intentionally misses the standardized target; AFT includes that baseline confounder. The simulation makes the assumptions true by construction; real studies must justify them independently.",
+    ]
+    return df, role, target, notes
+
+
+def _heterogeneous_outcomes():
+    """Original synthetic baseline study with multiple outcome families."""
+    from scipy.special import expit, softmax
+    rng = np.random.default_rng(20261014)
+    n = 1800
+    z = rng.binomial(1, .5, n)
+    x = rng.normal(size=n)
+    a = rng.binomial(1, .5, n)
+    exposure = rng.uniform(.5, 2., n)
+    y = 1 + .6*x + .8*z + a*(.5+1.5*z) + rng.normal(size=n)
+    binary = rng.binomial(1, expit(-.8 + .4*x + .6*z + a*(.2+.9*z)))
+    count = rng.poisson(exposure*np.exp(.4+.2*x+.2*z+a*(.1+.5*z)))
+    probabilities = softmax(np.column_stack([np.zeros(n), .1+.3*x+.2*z+.2*a, -.2-.1*x+.4*z+a*(.1+.8*z)]), axis=1)
+    category = (rng.random(n)[:,None] > probabilities.cumsum(axis=1)).sum(axis=1)
+    df = pd.DataFrame({"id":np.arange(n), "treatment":a, "baseline_group":np.where(z==0,"group A","group B"),
+        "baseline_score":x, "exposure":exposure, "continuous_outcome":y, "binary_outcome":binary,
+        "count_outcome":count, "category_outcome":np.asarray(["category A","category B","category C"])[category]})
+    assigned = {"treatment":"treatment", "outcome":"continuous_outcome", "unit":"id", "confounders":["baseline_score"], "effect_modifiers":["baseline_group"]}
+    return df, assigned, {"value":float(np.mean(.5+1.5*z)), "estimand":"GATE", "subgroup_effects":{"group A":.5,"group B":2.},
+        "note":"The continuous-outcome treatment effects are 0.5 in group A and 2.0 in group B. "
+               "The headline truth averages those effects over this sample's baseline groups. "
+               "Binary, count and categorical outcomes have different generated effects and scales."}, [
+        "Original simulated independent-person randomized data; no external study rows are included.",
+        "The categorical modifier, continuous modifier values and outcome scales should be specified before viewing effects. The built-in baseline_group was specified in the generating code.",
+        "Start with the continuous outcome. Change the Outcome role and select the matching binary, count or categorical method to compare outcome types. Count outcomes use the fixed exposure column for rates.",
+        "Subgroup significance is not an interaction test. Use the direct omnibus comparison and report the complete family of outcomes and scales explored.",
+    ]
+
+
 GENERATORS = {
+    "heterogeneous_outcomes": _heterogeneous_outcomes,
+    "survival_followup": _survival_followup,
     "lalonde": _lalonde,
     "minimum_wage": _minimum_wage,
     "medicaid": _medicaid,
@@ -794,6 +882,9 @@ def _build(example_id: str) -> tuple[pd.DataFrame, dict[str, Any], dict[str, Any
 
 
 METHOD_OPTIONS: dict[str, dict[str, dict[str, Any]]] = {
+    "heterogeneous_outcomes": {"heterogeneity.continuous": {"subgroups":["baseline_group"], "subgroups_prespecified":True}},
+    "survival_followup": {"survival.aft": {"distribution": "lognormal", "time_unit": "months", "horizon": 8.0, "bootstrap_reps": 100},
+                          "survival.rmst": {"time_unit": "months", "horizon": 8.0, "bootstrap_reps": 100}},
     "rct_noncompliance": {"rct.cace": {"takeup": "attended"}},
     # Spelled out rather than left to the default, so the month the effect is read at is visible on
     # the method card and matches the month the built-in answer was worked out for.
@@ -802,6 +893,8 @@ METHOD_OPTIONS: dict[str, dict[str, dict[str, Any]]] = {
 }
 
 DEFAULT_METHODS: dict[str, list[str]] = {
+    "heterogeneous_outcomes": ["heterogeneity.continuous"],
+    "survival_followup": ["survival.aft", "survival.rmst"],
     "lalonde": ["obs.aipw", "obs.weighting.ipw", "obs.matching.nn", "obs.outcome_regression"],
     "minimum_wage": ["did.twoway_2x2", "did.twfe"],
     "medicaid": ["did.callaway_santanna", "did.sun_abraham", "did.twfe"],
@@ -817,6 +910,8 @@ DEFAULT_METHODS: dict[str, list[str]] = {
 }
 
 DEFAULT_ESTIMAND: dict[str, str] = {
+    "heterogeneous_outcomes": "GATE",
+    "survival_followup": "RMST_difference",
     "lalonde": "ATT", "minimum_wage": "ATT", "medicaid": "ATT", "close_elections": "LATE",
     "basque": "ATT", "encouragement": "LATE", "its_public_health": "ATT", "rct_noncompliance": "ITT",
     "project_star": "ITT", "draft_lottery": "LATE", "ihdp": "ATT", "california_tobacco": "ATT",
@@ -855,7 +950,7 @@ def materialise(example_id: str, store: Store, *, name: str | None = None) -> Pr
         "estimand": DEFAULT_ESTIMAND.get(example_id),
         "question": {
             "treatment": roles.get("treatment"),
-            "outcome": roles.get("outcome"),
+            "outcome": roles.get("outcome") or roles.get("duration"),
             "population": _population_phrase(example_id),
             "comparison": _comparison_phrase(meta["design"]),
         },
@@ -877,6 +972,7 @@ def materialise(example_id: str, store: Store, *, name: str | None = None) -> Pr
 
 def _population_phrase(example_id: str) -> str:
     return {
+        "survival_followup": "the complete-case simulated baseline population",
         "lalonde": "people eligible for the training programme",
         "minimum_wage": "fast-food restaurants in the two states",
         "medicaid": "adults in states that expanded",
@@ -894,6 +990,7 @@ def _population_phrase(example_id: str) -> str:
 
 def _comparison_phrase(design: str) -> str:
     return {
+        "survival": "baseline treatment 0 through the same follow-up horizon",
         "observational": "comparable people who did not take part",
         "did": "the same units before, and units not yet treated",
         "rd": "districts just the other side of the cutoff",
@@ -909,6 +1006,12 @@ def _comparison_phrase(design: str) -> str:
 # ---------------------------------------------------------------------------
 
 TOURS: dict[str, list[dict[str, str]]] = {
+    "survival_followup": [
+        {"step": "1", "title": "Define the event and time zero", "focus": "board", "body": "One independent person per row; treatment is set at baseline. Follow-up is elapsed months until event or right censoring. Event is 1, censoring 0. No competing-event, delayed-entry or time-varying-treatment analysis is implied."},
+        {"step": "2", "title": "Choose the target before the estimate", "focus": "recommend", "body": "The horizon is fixed at eight months with observed follow-up in both groups. RMST is event-free time restricted to that horizon; it is neither unrestricted lifetime nor a hazard ratio."},
+        {"step": "3", "title": "Compare association with standardization", "focus": "dashboard", "body": "Raw unadjusted RMST intentionally misses the built-in standardized effect because baseline risk confounds treatment. AFT adjusts the correctly generated baseline model and averages both treatment predictions over the same population. In this simulation the assumptions hold by construction; model convergence and balance cannot verify them in an actual study."},
+        {"step": "4", "title": "Read the assumptions and uncertainty", "focus": "diagnose", "body": "Identification, censoring and model assumptions remain labelled untested. Subject bootstrap uncertainty refits the AFT model and re-averages the target in every sample. exp(beta) is a conditional common time factor and generally does not equal the RMST ratio at eight months."},
+    ],
     "lalonde": [
         {"step": "1", "title": "Read the question", "focus": "question",
          "body": "The strip at the top is the whole analysis in one sentence: the effect of the training "
@@ -939,18 +1042,21 @@ TOURS: dict[str, list[dict[str, str]]] = {
                  "estimate away?"},
     ],
     "medicaid": [
-        {"step": "1", "title": "The card changes its own copy", "focus": "board",
-         "body": "Drop the unit, period and treatment indicator and the design card notices that states "
-                 "adopted at different times. It says so on the board, before any menu of estimators."},
+        {"step": "1", "title": "Identify the states, years and outcome", "focus": "board",
+         "body": "This Medicaid expansion simulation measures the uninsured rate in 51 synthetic states. "
+                 "The state labels are identifiers, not real jurisdictions. Each row is a state-year; "
+                 "expanded switches from zero to one when that state's policy begins."},
         {"step": "2", "title": "Look at the rollout", "focus": "diagnose",
-         "body": "The adoption heatmap is sorted by adoption date. Three cohorts, seventeen never-treated "
-                 "states, and effects that grow for three years after adoption."},
+         "body": "The rollout groups states by first treatment: 12 start in 2014, 12 in 2016, 10 in 2019 "
+                 "and 17 are never treated. The outcome lines show observed means over calendar years. "
+                 "Open individual units to inspect the underlying state histories."},
         {"step": "3", "title": "Run the wrong method on purpose", "focus": "recommend",
          "body": "Two-way fixed effects is in the catalogue, greyed, with the reason attached. Include it "
                  "anyway: seeing the wrong number next to the right one teaches more than hiding it."},
         {"step": "4", "title": "Compare", "focus": "dashboard",
-         "body": "Callaway-Sant'Anna and Sun-Abraham recover the built-in effect. TWFE does not, because it "
-                 "averages 2x2 comparisons that include already-treated states used as controls."},
+         "body": "Compare the cohort-aware estimates with the built-in average effect on treated state-years. "
+                 "Sampling variation and aggregation weights can make the estimates differ. TWFE also uses "
+                 "already-treated states as controls and can target a different weighted contrast."},
         {"step": "5", "title": "Decompose the damage", "focus": "dashboard",
          "body": "The Goodman-Bacon decomposition shows exactly which comparisons TWFE leaned on and what "
                  "weight it gave them. That plot is the argument."},

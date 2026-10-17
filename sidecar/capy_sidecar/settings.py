@@ -1,8 +1,10 @@
 """Where things live, and the few knobs the user can turn.
 
-Local-first: data never leaves the machine unless the user exports. The single
-exception is `realdata`, which downloads published study datasets when a person
-explicitly asks for one -- a fetch, never an upload, and never automatic.
+Local-first: data stays on the machine unless the user exports or explicitly
+consents to disclose inspected assistant context to a selected cloud provider.
+The assistant excludes raw study rows and never persists provider credentials.
+`realdata` downloads published study datasets when a person explicitly asks
+for one -- a fetch, never an upload, and never automatic.
 `allow_downloads` switches even that off for machines that should not reach out
 at all.
 """

@@ -1,0 +1,62 @@
+schema: capy.explain
+version: 1
+entries:
+  method.heterogeneity.continuous:
+    title: Continuous outcome heterogeneity
+    short: Compare mean treatment contrasts across one prespecified baseline modifier, with a direct joint test and pairwise comparisons.
+    detail: The OLS model retains treatment, modifier main effects, baseline adjustment and treatment-by-modifier terms. A categorical modifier defines 2–8 subgroups; continuous mode evaluates two declared values within both arms' observed range without automatic binning. HC3 or supported cluster sandwich covariance feeds a joint Wald test and delta-method intervals. Standardization conditions on empirical baseline profiles; causal interpretation still needs the design and identifying assumptions. Sparse cells, rank deficiency and singular contrast covariance are explicit limitations.
+    common_mistake: Comparing subgroup significance labels, treating robust standard errors as protection against confounding, or calling a controlled continuous-profile contrast an observed subgroup average.
+    references: ["Altman and Bland (2003), Interaction revisited: the difference between two estimates", "Kent et al. (2020), The Predictive Approaches to Treatment effect Heterogeneity (PATH) Statement"]
+    see_also: [diagnostic.outcome_heterogeneity, diagnostic.link_heterogeneity, concept.heterogeneity_scale]
+
+  method.heterogeneity.binary:
+    title: Binary outcome heterogeneity
+    short: Fit logistic treatment interactions and separately test standardized risk differences, risk ratios or marginal odds ratios.
+    detail: The outcome must be 0 or 1, with supported events and non-events in each required treatment-by-modifier cell. The conditional logit-interaction test and the selected marginal-effect equality test answer different questions. Both treatment predictions use the declared baseline target profiles. Ratios are compared on the log scale and have positive confidence limits. HC0 or supported cluster sandwich and delta inference is asymptotic and conditions on fixed profiles; separation and unsupported ratios are refused.
+    common_mistake: Calling a logistic interaction a risk-difference interaction, or interpreting a conditional odds ratio as the reported marginal odds ratio.
+    references: ["Knol and VanderWeele (2012), Recommendations for presenting analyses of effect modification and interaction", "Kent et al. (2020), The Predictive Approaches to Treatment effect Heterogeneity (PATH) Statement"]
+    see_also: [diagnostic.outcome_heterogeneity, diagnostic.link_heterogeneity, concept.heterogeneity_scale]
+
+  method.heterogeneity.count:
+    title: Count and rate outcome heterogeneity
+    short: Compare standardized count means or fixed-exposure rates using a Poisson mean model with robust uncertainty.
+    detail: Counts must be nonnegative integers. The log-link interaction concerns a conditional mean ratio; the selected marginal mean difference or ratio gets its own direct equality test. An optional strictly positive baseline or fixed observation opportunity enters as log exposure with coefficient one. Such predictions are rates per one exposure unit. HC0 or supported cluster sandwich covariance allows specified variance misspecification under asymptotic conditions but still requires the mean specification and an appropriate independence or cluster unit. Post-treatment person-time exposure is unsupported.
+    common_mistake: Comparing unequal observation windows as raw counts, treating exposure as a freely estimated coefficient, or claiming a treatment-dependent denominator identifies the same causal target.
+    references: ["Knol and VanderWeele (2012), Recommendations for presenting analyses of effect modification and interaction", "statsmodels GLM documentation"]
+    see_also: [diagnostic.outcome_heterogeneity, concept.heterogeneity_scale]
+
+  method.heterogeneity.categorical:
+    title: Nominal and ordinal outcome heterogeneity
+    short: Compare treatment-induced category-probability contrasts jointly without assigning numerical scores to labels.
+    detail: A multinomial logit model retains treatment, baseline modifier main effects and their interactions. The modifier may be categorical or continuous with two declared evaluation values. Nominal or ordered outcome labels are analyzed as a full distribution; this is not a proportional-odds model or a common ordinal shift. Predictions are probabilities for each category. Because they sum to one, the joint marginal test uses an independent contrast basis and excludes one redundant category. HC0 or supported cluster sandwich covariance feeds delta inference. Displayed category-specific subgroup comparisons have a stated Holm family. Required category support, model convergence and covariance rank are checked.
+    common_mistake: Treating numerical category codes as continuous distances or interpreting the joint probability test as a single ordered-score effect.
+    references: ["statsmodels MNLogit documentation", "Altman and Bland (2003), Interaction revisited: the difference between two estimates"]
+    see_also: [diagnostic.outcome_heterogeneity, diagnostic.link_heterogeneity]
+
+  diagnostic.outcome_heterogeneity:
+    title: Direct heterogeneity test on the selected outcome scale
+    short: Test equality of the specified subgroup treatment contrasts using their full joint covariance.
+    detail: The Wald statistic compares an independent vector of between-group contrasts to zero. The tested scale can be a mean or risk difference, log ratio, or category-probability contrast. The null concerns that scale and target population. Singular covariance produces no p-value. Pairwise p-values use Holm adjustment over all displayed subgroup-pair/category comparisons in this run; the intervals remain pointwise. Additional outcomes, models, modifiers and horizons lie outside that family and require a separate analysis plan.
+    common_mistake: Concluding that every subgroup differs after one omnibus rejection, or that a large p-value establishes homogeneous effects or equivalence.
+    references: ["Altman and Bland (2003), Interaction revisited: the difference between two estimates", "statsmodels joint Wald test documentation", "statsmodels multiple-testing documentation"]
+    see_also: [diagnostic.link_heterogeneity, concept.heterogeneity_prespecification]
+
+  diagnostic.link_heterogeneity:
+    title: Conditional treatment-by-modifier interaction
+    short: Test all fitted treatment-by-modifier coefficients jointly while retaining their main effects.
+    detail: The link scale is the conditional mean for OLS, log odds for binary logistic models, log mean or rate for Poisson models, and category log odds versus the reference for multinomial models. Equality on that conditional scale need not imply equality of marginal risk, mean or survival contrasts. A coefficient test depends on the specified functional form and supports no claim that intervening on the modifier causes the treatment effect to change.
+    common_mistake: Treating different link-scale and outcome-scale p-values as contradictory answers to the same null hypothesis.
+    references: ["Knol and VanderWeele (2012), Recommendations for presenting analyses of effect modification and interaction", "statsmodels joint Wald test documentation"]
+    see_also: [diagnostic.outcome_heterogeneity, concept.heterogeneity_scale]
+
+  concept.heterogeneity_scale:
+    title: Heterogeneity depends on the effect scale
+    short: Absolute and relative treatment contrasts can vary differently across the same baseline groups.
+    detail: Specify outcome family, coding, population and contrast before fitting. Conditional odds, rate or AFT time-factor interaction terms have different nulls from equality of standardized additive contrasts. For survival, keep the horizon and units fixed across subgroups. For continuous modifiers, distinguish setting a common profile to two values from averaging over people observed at those values.
+    references: ["Knol and VanderWeele (2012), Recommendations for presenting analyses of effect modification and interaction", "Kent et al. (2020), The Predictive Approaches to Treatment effect Heterogeneity (PATH) Statement"]
+
+  concept.heterogeneity_prespecification:
+    title: Baseline hypotheses, support and multiplicity
+    short: Fix the modifier, coding, outcome and tested scale before inspecting effects, and report the complete testing family.
+    detail: Treatment can affect post-treatment subgroup definitions and introduce selection bias. A prespecification checkbox records the user's declaration; it does not validate timing or the protocol. Inspect arm support in every subgroup and the chosen continuous evaluation values. An interaction test compares effects directly, whereas comparing separate p-values does not. Holm adjustment for one displayed family does not cover repeated outcome, model or horizon searches, and non-significance is not evidence of equivalence.
+    references: ["Sun et al. (2010), Is a subgroup effect believable? Updating criteria to evaluate the credibility of subgroup analyses", "Altman and Bland (2003), Interaction revisited: the difference between two estimates"]

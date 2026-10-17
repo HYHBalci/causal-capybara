@@ -6,6 +6,8 @@ import { useDialogFocus } from './components/useDialogFocus'
 import { Literature } from './canvas/Literature'
 import { ProjectNavigator } from './components/ProjectNavigator'
 import { QuestionStrip } from './components/QuestionStrip'
+import { ResearchAssistant } from './components/ResearchAssistant'
+import { ResearchTree } from './canvas/ResearchTree'
 import { Compare } from './canvas/Compare'
 import { Dashboard } from './canvas/Dashboard'
 import { DagEditor } from './canvas/DagEditor'
@@ -20,6 +22,7 @@ import { Recommend } from './canvas/Recommend'
 import { Settings } from './canvas/Settings'
 import { Welcome } from './canvas/Welcome'
 import { useStore } from './store'
+import { useResearch } from './research/store'
 
 /** Screens that are part of the window itself and need nothing computed.
  *
@@ -27,7 +30,7 @@ import { useStore } from './store'
  * are replaced by the screen that explains how to get one -- rather than by a
  * spinner, an empty panel, or the error toast the request would otherwise
  * produce. */
-const WORKS_WITHOUT_ENGINE = new Set(['learn', 'literature', 'settings', 'engines'])
+const WORKS_WITHOUT_ENGINE = new Set(['learn', 'literature', 'research', 'settings', 'engines'])
 
 /** Screens that are about the application rather than about a project.
  *
@@ -36,7 +39,7 @@ const WORKS_WITHOUT_ENGINE = new Set(['learn', 'literature', 'settings', 'engine
  * and "Select a variable and its details appear here" beside a page that has
  * neither, spending over 500px of a 1440px window on two apologies. On a 1280px
  * laptop that left the catalogue article too narrow to read comfortably. */
-const FULL_WIDTH_VIEWS = new Set(['welcome', 'learn', 'literature', 'settings', 'engines'])
+const FULL_WIDTH_VIEWS = new Set(['welcome', 'learn', 'literature', 'research', 'settings', 'engines'])
 
 export default function App() {
   const booted = useStore((s) => s.booted)
@@ -51,6 +54,9 @@ export default function App() {
   const newSpec = useStore((s) => s.newSpec)
   const goBack = useStore((s) => s.goBack)
   const goForward = useStore((s) => s.goForward)
+  const assistantOpen = useResearch((s) => s.assistantOpen)
+  const assistantExpanded = useResearch((s) => s.assistantExpanded)
+  useEffect(() => { useResearch.getState().setExpanded(false) }, [view])
 
   useEffect(() => { void boot() }, [])
   useEffect(() => { setTheme(theme) }, [])
@@ -58,6 +64,7 @@ export default function App() {
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
       const mod = e.ctrlKey || e.metaKey
+      if (mod && e.shiftKey && e.key.toLowerCase() === 'a') { e.preventDefault(); useResearch.getState().ask(); document.querySelector<HTMLTextAreaElement>('#research-assistant-panel textarea')?.focus() }
       if (mod && e.key.toLowerCase() === 'k') { e.preventDefault(); setPalette(true) }
       if (mod && e.key.toLowerCase() === 'q') { e.preventDefault(); void newSpec() }
       if (e.altKey && e.key === 'ArrowLeft') { e.preventDefault(); goBack() }
@@ -99,7 +106,7 @@ export default function App() {
       <a className="skip-link" href="#main-content">Skip to main content</a>
       <MenuBar />
       <WorkspaceBar />
-      <div className={`app-body${wide ? ' full-width' : ''}`}>
+      <div className={`app-body${wide ? ' full-width' : ''}${assistantOpen ? ' assistant-open' : ''}${assistantExpanded ? ' assistant-expanded' : ''}`}>
         {!wide && <ProjectNavigator />}
         <main id="main-content" tabIndex={-1} className="canvas col grow">
           {project && !wide && <QuestionStrip />}
@@ -108,13 +115,14 @@ export default function App() {
             <CanvasView view={view} />
           </div>
         </main>
-        {!wide && <Inspector />}
+        {!wide && !assistantOpen && <Inspector />}
+        <ResearchAssistant />
       </div>
       <JobBar />
       <StatusBar />
       <CommandPalette />
       <Toasts />
-      {wide && <ExplanationDialog />}
+      {(wide || assistantOpen) && <ExplanationDialog />}
     </div>
   )
 }
@@ -126,6 +134,7 @@ function CanvasView({ view }: { view: string }) {
   switch (view) {
     case 'learn': return <Learn />
     case 'literature': return <Literature />
+    case 'research': return <ResearchTree />
     case 'settings': return <Settings />
     case 'engines': return <Engines />
     default: break

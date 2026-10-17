@@ -28,6 +28,16 @@ def test_resolution_preserves_locator_and_handles_unknowns():
     assert not literature.safe_url('javascript:alert(1)')
 
 
+def test_software_documentation_resolves_its_canonical_citation_and_alias():
+    rows = [row for row in literature.records() if row['id'].startswith('statsmodels-')]
+    assert len(rows) == 4
+    for row in rows:
+        for reference in [row['citation'], *row['aliases']]:
+            resolved = literature.resolve(reference)
+            assert resolved['resolved'] and resolved['id'] == row['id']
+            assert resolved['url'] == row['url']
+
+
 def test_report_reference_links_survive_text_html_latex_and_word():
     source = literature.resolve("Callaway & Sant'Anna (2021)")
     blocks = [{'type': 'reference', 'text': source['citation'], 'url': source['url']}]

@@ -1,0 +1,83 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Normalized versioned node",
+  "type": "object",
+  "required": [
+    "id",
+    "kind",
+    "title",
+    "summary",
+    "relations",
+    "citations",
+    "rights",
+    "review"
+  ],
+  "properties": {
+    "id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "kind": {
+      "enum": [
+        "concept",
+        "design",
+        "estimand",
+        "method",
+        "probe",
+        "assumption",
+        "diagnostic",
+        "softwarepackage",
+        "example",
+        "study",
+        "source",
+        "evidencelocator",
+        "claim",
+        "review"
+      ]
+    },
+    "title": {
+      "type": "string"
+    },
+    "summary": {
+      "type": "string"
+    },
+    "relations": {
+      "type": "array"
+    },
+    "citations": {
+      "type": "array"
+    },
+    "rights": {
+      "$ref": "rights.schema.json"
+    },
+    "review": {
+      "$ref": "review.schema.json"
+    },
+    "ontology_role": {
+      "type": "string",
+      "enum": [
+        "causal_foundation",
+        "method_idea",
+        "good_practice",
+        "scope_note"
+      ]
+    }
+  },
+  "additionalProperties": true,
+  "allOf": [
+    {
+      "if": {
+        "required": [
+          "ontology_role"
+        ]
+      },
+      "then": {
+        "properties": {
+          "kind": {
+            "const": "concept"
+          }
+        }
+      }
+    }
+  ]
+}

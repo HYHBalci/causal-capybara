@@ -1,0 +1,33 @@
+{
+  "$id": "https://causalcapybara.dev/schemas/capy.assistant.handoff.request.v1.json",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "properties": {
+    "client": {
+      "enum": [
+        "codex",
+        "claude",
+        "grok"
+      ],
+      "title": "Client",
+      "type": "string"
+    },
+    "context_hash": {
+      "maxLength": 100,
+      "title": "Context Hash",
+      "type": "string"
+    },
+    "context_id": {
+      "maxLength": 200,
+      "title": "Context Id",
+      "type": "string"
+    }
+  },
+  "required": [
+    "context_id",
+    "context_hash",
+    "client"
+  ],
+  "title": "HandoffRequest",
+  "type": "object"
+}

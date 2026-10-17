@@ -15,6 +15,7 @@ import '@fontsource-variable/jetbrains-mono'
 import './theme.css'
 import './app.css'
 import './panels.css'
+import './research.css'
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>

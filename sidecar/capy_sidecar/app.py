@@ -8,10 +8,12 @@ from __future__ import annotations
 
 import json
 import sys
+import tempfile
 from pathlib import Path
 from typing import Any
 
-from fastapi import Body, FastAPI, HTTPException, Query
+from fastapi import Body, FastAPI, HTTPException, Query, Request
+from starlette.concurrency import run_in_threadpool
 from fastapi.middleware.cors import CORSMiddleware
 from starlette.middleware.trustedhost import TrustedHostMiddleware
 from fastapi.responses import JSONResponse, PlainTextResponse
@@ -23,7 +25,7 @@ from .store import STORE, Project, StoreError, new_id, now_iso
 if str(PY_ENGINE_DIR) not in sys.path:
     sys.path.insert(0, str(PY_ENGINE_DIR))
 
-from . import dataio, engines, learn, registry  # noqa: E402
+from . import dataio, engines, engine_install_jobs, learn, registry  # noqa: E402
 from .jobs import QUEUE  # noqa: E402
 
 app = FastAPI(title=f"{APP_NAME} sidecar", version=__version__)
@@ -158,9 +160,26 @@ def post_install(body: dict[str, Any] = Body(...)) -> dict[str, Any]:
     if not stack:
         raise HTTPException(400, "Name the stack to install.")
     try:
-        return engines.install_stack(str(stack), approved=bool(body.get("approved")))
+        if body.get("approved") is not True:
+            return engines.install_stack(str(stack), approved=False)
+        return engine_install_jobs.operations().start(str(stack), body.get("request_id"))
     except KeyError as exc:
         raise _fail(exc, 404) from None
+    except ValueError as exc:
+        raise _fail(exc, 400) from None
+
+
+@app.get("/engines/installs")
+def get_installs() -> list[dict[str, Any]]:
+    return engine_install_jobs.operations().list()
+
+
+@app.get("/engines/installs/{installation_id}")
+def get_install(installation_id: str) -> dict[str, Any]:
+    record = engine_install_jobs.operations().get(installation_id)
+    if record is None:
+        raise HTTPException(404, "No installation with that id.")
+    return record
 
 
 @app.get("/engines/lock/{engine}", response_class=PlainTextResponse)
@@ -328,10 +347,19 @@ def get_project(project_id: str) -> dict[str, Any]:
 @app.patch("/projects/{project_id}")
 def patch_project(project_id: str, patch: dict[str, Any] = Body(...)) -> dict[str, Any]:
     proj = _project(project_id)
-    for key in ("name", "profile", "seed", "roles_global"):
-        if key in patch:
-            proj.meta[key] = patch[key]
-    proj.save()
+    from .data_selection import SelectionConflict, validate_references
+    with proj._lock:
+        try:
+            if "roles_global" in patch:
+                validate_references(proj, roles_global=patch["roles_global"])
+        except SelectionConflict as exc:
+            raise _fail(exc, 409) from None
+        except StoreError as exc:
+            raise _fail(exc) from None
+        for key in ("name", "profile", "seed", "roles_global"):
+            if key in patch:
+                proj.meta[key] = patch[key]
+        proj.save()
     return proj.summary()
 
 
@@ -373,6 +401,18 @@ def delete_object(project_id: str, object_id: str) -> dict[str, Any]:
 # Data
 # ---------------------------------------------------------------------------
 
+MAX_BROWSER_UPLOAD_BYTES = 256 * 1024 * 1024
+
+
+def _store_import(proj: Project, path: str, options: dict | None = None, *, filename: str | None = None) -> dict[str, Any]:
+    try:
+        imported = dataio.read_any(path, options or {})
+    except Exception as exc:
+        raise _fail(exc) from None
+    proj.set_data(imported.df, original_path=path, original_path_label=filename,
+                  import_options=imported.options, columns=imported.columns, checksum=imported.checksum)
+    return {"project": proj.summary(), "columns": imported.columns, "notes": imported.notes, "options": imported.options}
+
 
 @app.post("/projects/{project_id}/import")
 def import_data(project_id: str, body: dict[str, Any] = Body(...)) -> dict[str, Any]:
@@ -380,25 +420,44 @@ def import_data(project_id: str, body: dict[str, Any] = Body(...)) -> dict[str, 
     path = body.get("path")
     if not path:
         raise HTTPException(400, "Give the path of a data file to import.")
-    try:
-        imported = dataio.read_any(path, body.get("options") or {})
-    except dataio.ImportError_ as exc:
-        raise _fail(exc) from None
-    except Exception as exc:
-        raise _fail(exc) from None
-    proj.set_data(
-        imported.df,
-        original_path=str(path),
-        import_options=imported.options,
-        columns=imported.columns,
-        checksum=imported.checksum,
-    )
-    return {
-        "project": proj.summary(),
-        "columns": imported.columns,
-        "notes": imported.notes,
-        "options": imported.options,
-    }
+    return _store_import(proj, str(path), body.get("options"))
+
+
+@app.post("/projects/{project_id}/import-upload")
+async def import_upload(project_id: str, request: Request, filename: str = Query(..., min_length=1, max_length=255)) -> dict[str, Any]:
+    """Receive a browser-selected file locally, without trusting a client path."""
+    proj = _project(project_id)
+    reserved = {"CON", "PRN", "AUX", "NUL", *(f"COM{i}" for i in range(1, 10)), *(f"LPT{i}" for i in range(1, 10))}
+    if (any(char in filename for char in '/\\:<>"|?*') or any(ord(char) < 32 for char in filename)
+            or filename.endswith((' ', '.')) or filename.split('.', 1)[0].upper() in reserved):
+        raise HTTPException(400, "Choose a data file with a plain filename, without folders or special path characters.")
+    if Path(filename).suffix.lower() not in dataio.SUPPORTED:
+        raise HTTPException(400, f"Unsupported data format. Supported: {', '.join(sorted(dataio.SUPPORTED))}.")
+    if request.headers.get('content-type', '').split(';', 1)[0].lower() != 'application/octet-stream':
+        raise HTTPException(415, "Send the selected file as binary data.")
+    size_limit = "Browser import supports files up to 256 MiB. Use the full-path import for larger files."
+    if request.headers.get('content-length'):
+        try:
+            declared_size = int(request.headers['content-length'])
+        except ValueError:
+            raise HTTPException(400, "The upload size is invalid.") from None
+        if declared_size < 0:
+            raise HTTPException(400, "The upload size is invalid.")
+        if declared_size > MAX_BROWSER_UPLOAD_BYTES:
+            raise HTTPException(413, size_limit)
+    proj.ensure_dirs()
+    with tempfile.TemporaryDirectory(prefix='.upload-', dir=proj.data_dir) as directory:
+        uploaded = Path(directory) / filename
+        total = 0
+        with uploaded.open('wb') as target:
+            async for chunk in request.stream():
+                total += len(chunk)
+                if total > MAX_BROWSER_UPLOAD_BYTES:
+                    raise HTTPException(413, size_limit)
+                target.write(chunk)
+        if not total:
+            raise HTTPException(400, "The selected file is empty. Choose a file containing data.")
+        return await run_in_threadpool(_store_import, proj, str(uploaded), filename=filename)
 
 
 @app.get("/projects/{project_id}/data/formats")
@@ -411,6 +470,19 @@ def data_columns(project_id: str) -> list[dict[str, Any]]:
     proj = _project(project_id)
     cols = (proj.meta.get("data") or {}).get("columns")
     if cols:
+        # Older imports inferred "binary" for zero or one observed value. Repair
+        # that display hint from the stored data without rewriting the import,
+        # its labels, or its values. A declared Boolean type remains binary.
+        stale = [col for col in cols if col.get("kind") == "binary" and col.get("n_unique") in (0, 1)]
+        if stale:
+            try:
+                df = proj.data()
+            except StoreError as exc:
+                raise _fail(exc, 404) from None
+            corrected = {col["name"]: dataio.infer_kind(df[col["name"]])
+                         for col in stale if col.get("name") in df.columns}
+            return [dict(col, kind=corrected[col["name"]]) if col.get("name") in corrected else col
+                    for col in cols]
         return cols
     try:
         return dataio.profile_columns(proj.data())
@@ -443,6 +515,25 @@ def data_rows(
         "columns": list(window.columns),
         "rows": json.loads(window.to_json(orient="values", date_format="iso", default_handler=str)),
     }
+
+
+@app.get("/projects/{project_id}/data/selection")
+def data_selection(project_id: str) -> dict[str, Any]:
+    try:
+        return _project(project_id).data_selection()
+    except StoreError as exc:
+        raise _fail(exc) from None
+
+
+@app.put("/projects/{project_id}/data/selection")
+def select_data_columns(project_id: str, body: dict[str, Any] = Body(...)) -> dict[str, Any]:
+    from .data_selection import SelectionConflict
+    try:
+        return _project(project_id).select_columns(body.get("included_columns"), body.get("expected_revision"))
+    except SelectionConflict as exc:
+        raise _fail(exc, 409) from None
+    except (StoreError, ValueError) as exc:
+        raise _fail(exc) from None
 
 
 @app.get("/projects/{project_id}/data/health")
@@ -487,7 +578,13 @@ def list_specs(project_id: str) -> list[dict[str, Any]]:
 def save_spec(project_id: str, spec: dict[str, Any] = Body(...)) -> dict[str, Any]:
     proj = _project(project_id)
     spec.setdefault("seed", proj.meta.get("seed"))
-    return proj.save_spec(spec)
+    from .data_selection import SelectionConflict
+    try:
+        return proj.save_spec(spec)
+    except SelectionConflict as exc:
+        raise _fail(exc, 409) from None
+    except StoreError as exc:
+        raise _fail(exc) from None
 
 
 @app.get("/projects/{project_id}/specs/{spec_id}")
@@ -786,7 +883,13 @@ def save_dag(project_id: str, body: dict[str, Any] = Body(...)) -> dict[str, Any
     body.setdefault("schema", "capy.dag")
     body.setdefault("version", 1)
     body.setdefault("id", new_id("dag"))
-    return proj.save_json_object("dag", body)
+    from .data_selection import SelectionConflict
+    try:
+        return proj.save_json_object("dag", body)
+    except SelectionConflict as exc:
+        raise _fail(exc, 409) from None
+    except StoreError as exc:
+        raise _fail(exc) from None
 
 
 @app.get("/projects/{project_id}/dags/{dag_id}")
@@ -1002,6 +1105,11 @@ def main() -> None:  # pragma: no cover
     import uvicorn
 
     uvicorn.run(app, host="127.0.0.1", port=8760, log_level="info")
+
+
+from .ontology_api import router as ontology_router
+
+app.include_router(ontology_router)
 
 
 if __name__ == "__main__":  # pragma: no cover

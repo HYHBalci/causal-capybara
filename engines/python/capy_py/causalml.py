@@ -1060,11 +1060,12 @@ def diag_cate_calibration(
             f"effect runs from {rows[0]['realised_effect']:.4g} in the lowest group to "
             f"{rows[-1]['realised_effect']:.4g} in the highest. The best linear predictor test gives a "
             f"calibration slope of {beta:.3f} (SE {se_beta:.3f}); 1.0 means the predicted spread is "
-            f"exactly right, 0 means the ranking carries no information."
+            f"consistent with the fitted linear calibration target, while 0 is its no-linear-association null. "
+            "These are approximate learned-score diagnostics, not an independently validated treatment rule."
         ),
-        worry_when="The calibration slope is near zero or negative: the model is ranking units at random, "
-                   "and any targeting built on it will not beat treating everyone. A slope far above 1 "
-                   "means the model understates how different units really are.",
+        worry_when="A slope near zero or negative may reflect a weak ranking, limited power or unstable nuisance fits. "
+                   "A slope far above 1 suggests calibration mismatch. None of these outcomes establishes "
+                   "homogeneity or the value of a policy without appropriate independent evaluation.",
         artifact_ids=[forest_id, scatter_id, table_id],
         explain_key="diagnostic.cate_calibration",
         values={
@@ -1163,9 +1164,9 @@ def diag_rate(
             + f"; Qini = {qini:.4g}. AUTOC above zero means treating the highest-ranked units first "
               "beats treating a random subset of the same size."
         ),
-        worry_when="AUTOC is indistinguishable from zero: the CATE ranking is not usable for targeting, "
-                   "whatever the histogram looks like. Note the bootstrap holds the fitted ranking fixed, "
-                   "so it understates the uncertainty coming from having estimated that ranking at all.",
+        worry_when="An interval including zero may reflect limited power or a weak ranking; it does not establish "
+                   "that targeting has no value. This row bootstrap holds the fitted ranking fixed and omits "
+                   "its learning uncertainty. It does not implement all guarantees of an independently evaluated RATE procedure.",
         artifact_ids=[art],
         explain_key="diagnostic.rate",
         values={
@@ -1773,7 +1774,7 @@ def dml_plr(ctx: RunContext) -> dict[str, Any]:
                 "the confounders. That forces one effect on everyone; with a binary treatment the "
                 "number it recovers is a variance-weighted average effect, which equals the ATE "
                 "only when the effect really is constant.",
-        worry_when="The calibration diagnostic finds real heterogeneity. Then read the interactive "
+        worry_when="The calibration diagnostic suggests variation requiring independent assessment. Then read the interactive "
                    "regression model (ml.dml_irm) instead, which targets the ATE directly.",
         explain_key="diagnostic.constant_effect",
         values={"treatment_binary": binary},

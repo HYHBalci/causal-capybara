@@ -1,0 +1,35 @@
+{
+  "$id": "https://causalcapybara.dev/schemas/capy.assistant.reproduction.request.v1.json",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "properties": {
+    "absolute_tolerance": {
+      "default": 1e-10,
+      "maximum": 0.01,
+      "minimum": 0,
+      "title": "Absolute Tolerance",
+      "type": "number"
+    },
+    "candidate_run_id": {
+      "title": "Candidate Run Id",
+      "type": "string"
+    },
+    "reference_run_id": {
+      "title": "Reference Run Id",
+      "type": "string"
+    },
+    "relative_tolerance": {
+      "default": 1e-10,
+      "maximum": 0.01,
+      "minimum": 0,
+      "title": "Relative Tolerance",
+      "type": "number"
+    }
+  },
+  "required": [
+    "reference_run_id",
+    "candidate_run_id"
+  ],
+  "title": "ReproductionRequest",
+  "type": "object"
+}

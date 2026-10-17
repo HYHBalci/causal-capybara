@@ -1,0 +1,71 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Rights decision",
+  "type": "object",
+  "required": [
+    "license_id",
+    "attribution",
+    "content_type",
+    "review_basis",
+    "permissions"
+  ],
+  "properties": {
+    "license_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "license_url": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "attribution": {
+      "type": "string",
+      "minLength": 1
+    },
+    "content_type": {
+      "type": "string",
+      "minLength": 1
+    },
+    "review_basis": {
+      "type": "string",
+      "minLength": 1
+    },
+    "modified": {
+      "type": "boolean"
+    },
+    "private_overlay": {
+      "type": "boolean"
+    },
+    "permissions": {
+      "type": "object",
+      "required": [
+        "cache",
+        "display",
+        "adapt",
+        "model_context",
+        "public_export"
+      ],
+      "properties": {
+        "cache": {
+          "type": "boolean"
+        },
+        "display": {
+          "type": "boolean"
+        },
+        "adapt": {
+          "type": "boolean"
+        },
+        "model_context": {
+          "type": "boolean"
+        },
+        "public_export": {
+          "type": "boolean"
+        }
+      },
+      "additionalProperties": false
+    }
+  },
+  "additionalProperties": false
+}

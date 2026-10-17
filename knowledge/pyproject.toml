@@ -1,0 +1,28 @@
+[build-system]
+requires = ["setuptools>=69"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "capy-knowledge"
+version = "0.3.0"
+description = "Offline, evidence-aware causal-method knowledge for Causal Capybara"
+readme = "README.md"
+requires-python = ">=3.11"
+license = {text = "Apache-2.0"}
+authors = [{name = "Causal Capybara contributors"}]
+dependencies = []
+
+[project.optional-dependencies]
+mcp = ["mcp==2.3.0", "jsonschema==4.26.0"]
+test = ["pytest>=8,<10", "jsonschema>=4.20,<5"]
+
+[project.scripts]
+capy-knowledge = "capy_knowledge.cli:main"
+capy-knowledge-mcp = "capy_knowledge.mcp:main"
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["capy_knowledge*"]
+
+[tool.setuptools.package-data]
+capy_knowledge = ["data/*", "data/seed/*", "data/seed/evidence/*", "data/seed/schemas/*", "assets/*.json", "assets/skills/*/*.md", "assets/skills/*/references/*.md", "assets/skills/*/templates/*.md"]

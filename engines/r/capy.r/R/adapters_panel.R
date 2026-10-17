@@ -90,7 +90,7 @@ capy_run_rct_diff_means <- function(ctx) {
 
 # --- did.twoway_2x2 and did.twfe --------------------------------------------
 
-capy_did_prepare <- function(ctx, rb) {
+capy_did_prepare <- function(ctx, rb, drop_always = FALSE) {
   capy_require_design_roles(ctx$spec, "did")
   outcome <- capy_require_role(ctx$spec, "outcome")
   unit <- capy_require_role(ctx$spec, "unit")
@@ -126,20 +126,35 @@ capy_did_prepare <- function(ctx, rb) {
   first <- tapply(ifelse(d > 0.5, tm, NA_real_), u, function(v)
     if (all(is.na(v))) never else min(v, na.rm = TRUE))
   cohort <- as.numeric(first[u])
+  if (drop_always) {
+    keep <- cohort != min(tm)
+    if (any(!keep)) {
+      n_always <- length(unique(u[!keep])); removed <- sum(!keep)
+      df <- df[keep, , drop = FALSE]
+      d <- d[keep]; y <- y[keep]; u <- u[keep]; tm <- tm[keep]; cohort <- cohort[keep]
+      capy_add_flow(rb, "Already treated before the window", nrow(df),
+        n_treated = sum(d > 0.5), n_control = sum(d <= 0.5), dropped = removed,
+        reason = paste0(n_always, " unit(s) were already treated in the first period and have no before period."))
+      capy_add_warning(rb, paste0(n_always, " already-treated unit(s) were dropped; a 2x2 needs a clean before period."),
+        level = "caution", code = "always_treated_dropped")
+      if (!nrow(df)) capy_stop(capy_data_error("Every unit is already treated in the first period."))
+    }
+  }
   treated_cohorts <- sort(unique(cohort[cohort > never]))
   staggered <- length(treated_cohorts) > 1
 
   capy_seed_ledger(rb, "did")
   capy_set_counts(rb, n = nrow(df), n_treated = sum(d > 0.5), n_control = sum(d <= 0.5))
+  covariates <- setdiff(capy_confounders(ctx$spec), c(treatment, outcome, unit, time))
   capy_set_roles_used(rb, list(treatment = treatment, outcome = outcome, unit = unit,
-                               time = time, cluster = cluster_name))
+                               time = time, cluster = cluster_name, confounders = as.list(covariates)))
   cluster <- if (cluster_name %in% names(df)) as.character(df[[cluster_name]]) else u
 
   list(df = df, d = d, y = y, u = u, tm = tm, cohort = cohort, never = never,
        staggered = staggered, treated_cohorts = treated_cohorts,
        n_units = length(unique(u)), n_periods = length(unique(tm)),
        cluster = cluster, cluster_name = cluster_name,
-       outcome = outcome, unit = unit, time = time, treatment = treatment)
+       outcome = outcome, unit = unit, time = time, treatment = treatment, covariates = covariates)
 }
 
 capy_did_diag_adoption <- function(rb, p) {
@@ -163,6 +178,40 @@ capy_did_diag_adoption <- function(rb, p) {
   invisible(rb)
 }
 
+capy_did_absorb <- function(X, unit, period) {
+  # Alternating projections work for both balanced and unbalanced panels.
+  # Subtracting the two marginal means once only works for a balanced panel.
+  out <- as.matrix(X)
+  factors <- list(as.integer(factor(unit)), as.integer(factor(period)))
+  threshold <- 1e-10 * max(1, max(abs(out)))
+  for (iteration in seq_len(10000L)) {
+    before <- out
+    for (g in factors) {
+      means <- rowsum(out, g, reorder = FALSE) / as.numeric(table(factor(g, levels = unique(g))))
+      out <- out - means[match(g, unique(g)), , drop = FALSE]
+    }
+    if (max(abs(out - before)) < threshold) return(out)
+  }
+  capy_stop(capy_data_error("The unit and period fixed effects did not converge.",
+                           "Inspect disconnected or very sparse sections of the panel."))
+}
+
+capy_did_fe_rank <- function(unit, period) {
+  # A disconnected panel spends U + T - connected-components parameters.
+  u <- as.integer(factor(unit)); t <- as.integer(factor(period))
+  n_u <- max(u); n_t <- max(t)
+  parent <- seq_len(n_u + n_t)
+  root <- function(i) {
+    while (parent[i] != i) i <- parent[i]
+    i
+  }
+  for (i in seq_along(u)) {
+    a <- root(u[i]); b <- root(n_u + t[i])
+    if (a != b) parent[b] <- a
+  }
+  n_u + n_t - length(unique(vapply(seq_along(parent), root, integer(1))))
+}
+
 capy_run_did_twfe <- function(ctx) {
   rb <- capy_result(ctx, method_label = "Two-way fixed effects", package = "stats",
                     package_version = as.character(getRversion()))
@@ -170,28 +219,44 @@ capy_run_did_twfe <- function(ctx) {
   rb$res$estimand <- ctx$spec$estimand %||% "ATT"
   rb$res$estimand_label <- capy_describe_estimand(rb$res$estimand, p$treatment, p$outcome)
 
-  # within transformation on unit and period
-  demean <- function(v) {
-    v - stats::ave(v, p$u) - stats::ave(v, factor(p$tm)) + mean(v)
-  }
-  yd <- demean(p$y); dd <- demean(p$d)
-  n_absorb <- length(unique(p$u)) + length(unique(p$tm)) - 1L
-  X <- matrix(dd, ncol = 1)
+  covariates <- p$covariates
+  cov <- capy_design_matrix(p$df, covariates, intercept = FALSE)
+  raw_X <- cbind(p$d, cov$X)
+  names_out <- c(p$treatment, cov$names)
+  within <- capy_did_absorb(cbind(p$y, raw_X), p$u, p$tm)
+  yd <- within[, 1]; X <- within[, -1, drop = FALSE]
+  alive <- sqrt(colSums(X^2)) > 1e-8 * pmax(sqrt(colSums(raw_X^2)), 1e-12)
+  if (!alive[1]) capy_stop(capy_data_error(
+    paste0("'", p$treatment, "' has no variation left after unit and period fixed effects.")))
+  dropped <- names_out[!alive]
+  X <- X[, alive, drop = FALSE]; names_out <- names_out[alive]
+  q <- qr(X, tol = 1e-9)
+  keep <- sort(q$pivot[seq_len(q$rank)])
+  dropped <- c(dropped, names_out[setdiff(seq_along(names_out), keep)])
+  X <- X[, keep, drop = FALSE]; names_out <- names_out[keep]
+  if (!(p$treatment %in% names_out)) capy_stop(capy_data_error(
+    "Treatment cannot be separated from the covariates and fixed effects."))
+  if (length(dropped)) capy_add_warning(rb,
+    paste0("Dropped for collinearity with the fixed effects: ", paste(dropped, collapse = ", "), "."),
+    level = "info", code = "collinear_dropped")
+  n_absorb <- capy_did_fe_rank(p$u, p$tm)
   # the within transformation consumed n_absorb degrees of freedom, and the
   # cluster-robust correction has to know that or the interval is too narrow
-  fit <- capy_ols(yd, X, p$treatment, cluster = p$cluster, absorb_df = n_absorb)
+  fit <- capy_ols(yd, X, names_out, cluster = p$cluster, absorb_df = n_absorb)
   est <- capy_coef(fit, p$treatment); se <- capy_stderr(fit, p$treatment)
-  ci <- capy_ci(est, se, fit$df_resid)
+  level <- capy_opt(ctx, "ci_level", 0.95)
+  ci <- capy_ci(est, se, fit$df_resid, level = level)
   capy_set_estimate(rb, est, se = se, ci = ci, p_value = capy_pvalue(est, se, fit$df_resid),
                     statistic = est / se,
                     inference = paste0("cluster(", fit$n_clusters, ") by ", p$cluster_name))
+  rb$res$ci_level <- level
 
   capy_did_diag_adoption(rb, p)
   if (p$staggered) {
     capy_add_warning(rb, paste0(
       "Adoption is staggered (", length(p$treated_cohorts), " adoption dates). Two-way fixed ",
       "effects does not estimate an average treatment effect on the treated when effects ",
-      "differ across cohorts: it averages 2x2 comparisons with weights that can go negative ",
+      "differ across cohorts: already-treated comparison groups can induce negative weights on treatment effects ",
       "(Goodman-Bacon 2021; de Chaisemartin & D'Haultfoeuille 2020). Use ",
       "did.callaway_santanna or did.sun_abraham, and keep this row as a comparison."),
       level = "warning", code = "staggered_twfe")
@@ -208,14 +273,15 @@ capy_run_did_twfe <- function(ctx) {
     paste0("Staggered : ", p$staggered),
     paste0("Clustered : ", p$cluster_name, " (", fit$n_clusters, " clusters)"),
     "",
-    sprintf("Estimate %.6g   SE %.6g   95%% CI [%.6g, %.6g]", est, se, ci[1], ci[2])))
+    paste0("Covariates: ", if (length(covariates)) paste(covariates, collapse = ", ") else "none"),
+    sprintf("Estimate %.6g   SE %.6g   %.0f%% CI [%.6g, %.6g]", est, se, 100 * level, ci[1], ci[2])))
   capy_finish(rb)
 }
 
 capy_run_did_2x2 <- function(ctx) {
   rb <- capy_result(ctx, method_label = "Canonical 2x2 difference-in-differences",
                     package = "stats", package_version = as.character(getRversion()))
-  p <- capy_did_prepare(ctx, rb)
+  p <- capy_did_prepare(ctx, rb, drop_always = TRUE)
   rb$res$estimand <- "ATT"
   rb$res$estimand_label <- capy_describe_estimand("ATT", p$treatment, p$outcome)
   if (p$n_periods != 2L) {
@@ -230,12 +296,16 @@ capy_run_did_2x2 <- function(ctx) {
   }
   X <- cbind(1, ever, post, ever * post)
   nm <- c("(Intercept)", "treated_group", "post", "did")
+  cov <- capy_design_matrix(p$df, p$covariates, intercept = FALSE)
+  X <- cbind(X, cov$X); nm <- c(nm, cov$names)
   fit <- capy_ols(p$y, X, nm, cluster = p$cluster)
   est <- capy_coef(fit, "did"); se <- capy_stderr(fit, "did")
-  ci <- capy_ci(est, se, fit$df_resid)
+  level <- capy_opt(ctx, "ci_level", 0.95)
+  ci <- capy_ci(est, se, fit$df_resid, level = level)
   capy_set_estimate(rb, est, se = se, ci = ci, p_value = capy_pvalue(est, se, fit$df_resid),
                     statistic = est / se,
                     inference = paste0("cluster(", fit$n_clusters, ") by ", p$cluster_name))
+  rb$res$ci_level <- level
   cells <- list()
   for (g in c(0, 1)) for (q in c(0, 1)) {
     sel <- ever == g & post == q
@@ -247,7 +317,9 @@ capy_run_did_2x2 <- function(ctx) {
   tab <- capy_add_artifact(rb, "table", title = "Cell means", data = cells,
                            columns = c("group", "period", "mean", "n"))
   capy_add_diagnostic(rb, "cell_means", "The four cells", status = "info",
-    summary = "The estimate is the difference of the two differences in this table.",
+    summary = if (length(p$covariates))
+      "Unadjusted cell means; the headline regression additionally adjusts for the assigned covariates."
+      else "The estimate is the difference of the two differences in this table.",
     worry_when = paste("Parallel trends is untestable with two periods, so this design needs",
                        "an argument rather than a test."),
     artifact_ids = list(tab), explain_key = "diagnostic.cell_means")
@@ -263,7 +335,7 @@ capy_run_did_2x2 <- function(ctx) {
                   vapply(cells, function(c) c$mean, numeric(1)),
                   vapply(cells, function(c) c$n, integer(1))), collapse = "\n"),
     "",
-    sprintf("DiD estimate %.6g   SE %.6g   95%% CI [%.6g, %.6g]", est, se, ci[1], ci[2])))
+    sprintf("DiD estimate %.6g   SE %.6g   %.0f%% CI [%.6g, %.6g]", est, se, 100 * level, ci[1], ci[2])))
   capy_finish(rb)
 }
 

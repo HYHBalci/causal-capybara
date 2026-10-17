@@ -19,7 +19,7 @@ designs:
     board_caption: Put the column that says who was offered the programme in Assignment, and what it was meant to change in Outcome. Blocks and clusters describe how the assignment was actually done, so they are facts about the study rather than choices you make here.
     zones:
       - { role: treatment, label: Assignment, help: "Who was offered or given the programme.", accepts: [binary, categorical], required: true }
-      - { role: outcome, label: Outcome, help: "What the programme was meant to change.", accepts: [continuous, binary], required: true }
+      - { role: outcome, label: Outcome, help: "What the programme was meant to change. Select a method appropriate to continuous, binary, count or categorical outcomes.", accepts: [continuous, binary, categorical], required: true }
       - { role: strata, label: Blocks, help: "If randomisation happened within blocks or strata.", accepts: [categorical, binary], multiple: true }
       - { role: cluster, label: Randomised in clusters of, help: "If whole schools, clinics or villages were assigned together.", accepts: [id, categorical] }
       - { role: confounders, label: Baseline covariates, help: "Measured before assignment. Used for precision, not for identification.", accepts: [continuous, binary, categorical], multiple: true }
@@ -40,7 +40,7 @@ designs:
     board_caption: Every column you put in "measured confounders" is a claim that it was recorded before treatment was decided. Anything measured afterwards belongs in the box below it instead.
     zones:
       - { role: treatment, label: Treatment, help: "Who got the programme.", accepts: [binary, categorical], required: true }
-      - { role: outcome, label: Outcome, accepts: [continuous, binary], required: true }
+      - { role: outcome, label: Outcome, accepts: [continuous, binary, categorical], required: true }
       - { role: confounders, label: Measured confounders, help: "Causes of both treatment and outcome, measured before treatment.", accepts: [continuous, binary, categorical, datetime], multiple: true, required: true }
       - { role: forbidden, label: "Do not adjust for (post-treatment / colliders)", help: "Anything measured after treatment. Adjusting for it blocks part of the effect.", accepts: [continuous, binary, categorical], multiple: true, tone: forbidden }
       - { role: cluster, label: Cluster standard errors by, accepts: [id, categorical] }
@@ -201,6 +201,27 @@ designs:
     default_estimand: ATE
     assumptions: [no_time_varying_confounding, positivity, sequential_ignorability, sutva, consistency]
     methods_hint: [long.msm_iptw, long.gformula, long.ltmle]
+
+  - id: survival
+    title: Time until an event
+    sentence: Follow people from a common time zero; some leave follow-up before the event is observed.
+    aliases: [Survival analysis, time-to-event, right censoring, Kaplan-Meier, restricted mean survival time, RMST, accelerated failure time, AFT, event-free survival]
+    schematic: survival_steps
+    order: 10
+    explain_key: design.survival
+    board_caption: Define one event and a common time zero. Duration is elapsed follow-up, with 1 for the event and 0 for right censoring. Treatment is set at baseline. Choose the duration unit and a common supported horizon on the method cards. Raw group curves are associations; causal standardization needs explicit identification and censoring assumptions.
+    zones:
+      - { role: treatment, label: Baseline treatment, help: "Code 0 or 1 at time zero. Treatment starting during follow-up needs another adapter.", accepts: [binary], required: true }
+      - { role: duration, label: Elapsed follow-up duration, help: "Positive time from a common time zero to event or right censoring, all in one unit.", accepts: [continuous], required: true }
+      - { role: event, label: Event indicator, help: "1 is the single event; 0 is right censoring. Competing death is not automatically censoring.", accepts: [binary], required: true }
+      - { role: unit, label: Person identifier, help: "One baseline row per independent person; repeated IDs are refused.", accepts: [id, categorical] }
+      - { role: confounders, label: Baseline confounders, help: "Causes of treatment and event time measured before treatment; used only by AFT standardization.", accepts: [continuous, binary, categorical], multiple: true }
+      - { role: forbidden, label: "Do not adjust for (post-treatment / colliders)", help: "Follow-up measurements may be affected by treatment and do not belong in the baseline AFT adjustment set.", accepts: [continuous, binary, categorical], multiple: true, tone: forbidden }
+    live_sketch: survival_followup
+    estimands: [survival_difference, RMST_difference, time_ratio]
+    default_estimand: RMST_difference
+    assumptions: [exchangeability, positivity, survival_consistency, survival_no_interference, conditional_independent_censoring]
+    methods_hint: [survival.rmst, survival.kaplan_meier, survival.aft]
 
   - id: catalogue
     title: I already know the method

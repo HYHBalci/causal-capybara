@@ -12,6 +12,7 @@ import { Resizer, usePanelSize } from './Resizer'
 import { fmtNum } from './VegaChart'
 import { count } from '../format'
 import { useDialogFocus } from './useDialogFocus'
+import { useResearch } from '../research/store'
 
 /* ------------------------------------------------------------- menu bar */
 
@@ -100,6 +101,8 @@ export function MenuBar() {
       items: [
         { label: 'Learn: the method catalogue', action: () => store.setView('learn') },
         { label: 'Literature library', action: () => store.setView('literature') },
+        { label: 'Ontological research tree', action: () => store.setView('research') },
+        { label: 'Research assistant', action: () => useResearch.getState().ask() },
         { label: 'Command palette', action: () => store.setPalette(true), hint: 'Ctrl+K' },
         { separator: true },
         { label: 'What is confounding?', action: () => store.setExplain('concept.confounding') },
@@ -506,7 +509,7 @@ export function CommandPalette() {
       go('diagnose', 'Diagnostics'), go('recommend', 'Method cards'), go('dashboard', 'Result dashboard'),
       go('compare', 'Comparison'), go('sim', 'Simulation lab'), go('dag', 'Graph editor'),
       go('report', 'Report'), go('code', 'Code: spec, R, Python'), go('engines', 'Engine setup'),
-      go('learn', 'Learn: the method catalogue'), go('literature', 'Literature library'), go('settings', 'Settings'),
+      go('learn', 'Learn: the method catalogue'), go('literature', 'Literature library'), go('research', 'Ontological research tree'), go('settings', 'Settings'),
       { id: 'act.newq', title: 'New question', group: 'Do',
         run: () => { void store.newSpec(); setPalette(false) } },
       { id: 'act.profile.b', title: 'Profile: Guided', group: 'Do',
@@ -620,7 +623,7 @@ export function GuidedMiniMap() {
 
   const steps: { id: CanvasView; label: string; done: boolean }[] = [
     { id: 'design', label: 'Design', done: spec.design !== 'undecided' },
-    { id: 'board', label: 'Roles', done: !!guardrails && !guardrails.missing_roles.length },
+    { id: 'board', label: 'Roles', done: spec.design !== 'undecided' && !!guardrails && !guardrails.missing_roles.length },
     { id: 'diagnose', label: 'Diagnose', done: !!guardrails?.core_diagnostic_viewed },
     { id: 'recommend', label: 'Methods', done: (spec.methods?.length ?? 0) > 0 },
     { id: 'dashboard', label: 'Estimate', done: runs.some((r) => r.status === 'ok') },

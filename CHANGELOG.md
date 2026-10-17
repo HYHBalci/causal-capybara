@@ -6,6 +6,15 @@ Publication is pending; no release is claimed by this file.
 
 ## Unreleased — 0.1.0 release candidate
 
+- Added an offline ontological research tree, versioned evidence and rights records,
+  reproducible knowledge compiler/index, standalone CLI, local read-only MCP and
+  agent skill with client setup and verification reports.
+- Added inspectable assistant context, redaction, optional local/cloud help and
+  study proposals with desktop approval, revision checks, expiring single-use tokens
+  and minimal audit records. AI cannot mark assumptions or diagnostics reviewed.
+- Added direct run input/output provenance and separate numerical reproduction
+  evaluations with explicit tolerances and an honest ancestry limit.
+
 See the [draft v0.1.0 release notes](docs/RELEASE_NOTES_0.1.0.md).
 
 - Documented command-line source installation from GitHub, with a local browser preview
