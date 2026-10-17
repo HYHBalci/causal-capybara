@@ -623,7 +623,7 @@ export function GuidedMiniMap() {
 
   const steps: { id: CanvasView; label: string; done: boolean }[] = [
     { id: 'design', label: 'Design', done: spec.design !== 'undecided' },
-    { id: 'board', label: 'Roles', done: !!guardrails && !guardrails.missing_roles.length },
+    { id: 'board', label: 'Roles', done: spec.design !== 'undecided' && !!guardrails && !guardrails.missing_roles.length },
     { id: 'diagnose', label: 'Diagnose', done: !!guardrails?.core_diagnostic_viewed },
     { id: 'recommend', label: 'Methods', done: (spec.methods?.length ?? 0) > 0 },
     { id: 'dashboard', label: 'Estimate', done: runs.some((r) => r.status === 'ok') },

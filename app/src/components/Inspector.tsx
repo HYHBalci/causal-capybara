@@ -351,7 +351,7 @@ function NextSteps() {
 
   const steps: { label: string; go: () => void; done: boolean }[] = [
     { label: 'Choose a design', go: () => setView('design'), done: spec.design !== 'undecided' },
-    { label: 'Fill the board', go: () => setView('board'), done: !!guardrails && !guardrails.missing_roles.length },
+    { label: 'Fill the board', go: () => setView('board'), done: spec.design !== 'undecided' && !!guardrails && !guardrails.missing_roles.length },
     {
       label: 'Look at the core diagnostic',
       go: () => setView('diagnose'),

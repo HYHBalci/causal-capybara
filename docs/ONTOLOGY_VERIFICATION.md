@@ -1,5 +1,15 @@
 # Ontology, survival and outcome heterogeneity verification
 
+## 17 October: live desktop Codex acceptance attempt
+
+The [live-check record](ASSISTANT_LIVE_CHECK.md) documents the disposable study,
+prepared question and remaining inference/application steps. The native test
+exposed a Windows extended-path failure in the knowledge index; the corrected
+runtime now prepares context successfully. All 176 targeted regression tests and
+the byte-exact knowledge rebuild passed. A live model response and native
+application remain pending explicit authorization for the CLI's native
+configuration and managed hooks; they are not reported as completed.
+
 ## 17 October: persistent assistant, CLI models and guided changes
 
 The [assistant guide](ASSISTANT_GUIDE.md) describes the new persistent panel,
