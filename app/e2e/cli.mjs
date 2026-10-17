@@ -236,10 +236,10 @@ try {
   }
   scenario = 'held'
   const cancelledRequest = await send()
-  const questionBeforeNavigation = await dialog().getByLabel('Your research question', { exact: true }).inputValue()
+  const questionBeforeNavigation = await dialog().getByRole('textbox', { name: 'Your research question', exact: true }).inputValue()
   await page.getByRole('button', { name: 'Method catalogue', exact: true }).click()
   assert(await dialog().isVisible(), 'Assistant must remain beside the catalogue')
-  assert.equal(await dialog().getByLabel('Your research question', { exact: true }).inputValue(), questionBeforeNavigation)
+  assert.equal(await dialog().getByRole('textbox', { name: 'Your research question', exact: true }).inputValue(), questionBeforeNavigation)
   assert(!cancellations.includes(cancelledRequest.request_id), 'Page navigation must not cancel an unchanged-context answer')
   await dialog().getByRole('button', { name: 'Expand assistant', exact: true }).click()
   assert.equal(await page.locator('.canvas').isVisible(), false)
