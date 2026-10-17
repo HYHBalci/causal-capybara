@@ -10,7 +10,7 @@ import shutil
 import socket
 import sqlite3
 import sys
-from pathlib import Path
+from pathlib import Path, PureWindowsPath
 
 import pytest
 
@@ -19,6 +19,7 @@ sys.path.insert(0, str(ROOT / "knowledge"))
 from capy_knowledge import KnowledgeBase, KnowledgeError
 from capy_knowledge.compiler import compile_pack
 from capy_knowledge.contracts import canonical, digest, safe_path, validate_records
+from capy_knowledge.core import _readonly_index_uri
 
 
 @pytest.fixture(scope="module")
@@ -35,6 +36,27 @@ def seed(tmp_path):
 
 def hashes(root):
     return {p.relative_to(root).as_posix(): digest(p.read_bytes()) for p in root.rglob("*") if p.is_file()}
+
+
+def test_sqlite_uri_normalizes_windows_extended_drive_path():
+    extended = PureWindowsPath(r"\\?\D:\study # café\index.sqlite")
+    ordinary = PureWindowsPath(r"D:\study # café\index.sqlite")
+    assert _readonly_index_uri(extended) == _readonly_index_uri(ordinary)
+    assert _readonly_index_uri(extended) == "file:///D:/study%20%23%20caf%C3%A9/index.sqlite?mode=ro&immutable=1"
+
+
+@pytest.mark.skipif(os.name != "nt", reason="Desktop extended-length paths require Windows")
+def test_desktop_extended_path_loads_and_searches_without_writing(tmp_path):
+    pack = tmp_path / "knowledge # café"
+    shutil.copytree(ROOT / "knowledge/capy_knowledge/data", pack)
+    before = hashes(pack)
+    kb = KnowledgeBase("\\\\?\\" + str(pack.resolve()))
+    assert kb.release_info()["status"] == "ok"
+    assert kb.search("ATT overlap", limit=3)["results"]
+    with sqlite3.connect(_readonly_index_uri(kb.root / "index.sqlite"), uri=True) as db:
+        with pytest.raises(sqlite3.OperationalError, match="readonly"):
+            db.execute("DELETE FROM nodes")
+    assert hashes(pack) == before
 
 
 def test_complete_public_inventory_and_stable_ids(kb):

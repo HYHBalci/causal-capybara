@@ -10,7 +10,7 @@ import sqlite3
 import unicodedata
 from collections import deque
 from contextlib import closing
-from pathlib import Path
+from pathlib import Path, PureWindowsPath
 
 from .contracts import (KINDS, RELATIONS, RESPONSE_VERSION, KnowledgeError,
                         canonical, digest, safe_path, validate_records, validate_rights)
@@ -19,6 +19,15 @@ from .ontology import COVERAGE_LEVELS, validate_ontology
 
 MAX_RESPONSE_BYTES = 131072
 STOPWORDS = set("a an the of and or to for in into on is are do does did it this that why how what which with by can i my we from about under when explain use using please prove proves provide provides sentence translate".split())
+
+
+def _readonly_index_uri(path):
+    # Tauri supplies extended-length drive paths on Windows. Path.as_uri()
+    # treats their \\?\ prefix as the authority "%3F", which SQLite rejects.
+    # Normalize only that drive prefix; keep URI escaping and read-only flags.
+    if isinstance(path, PureWindowsPath) and re.match(r"^\\\\\?\\[A-Za-z]:\\", str(path)):
+        path = PureWindowsPath(str(path)[4:])
+    return path.as_uri() + "?mode=ro&immutable=1"
 
 
 def _tokens(text):
@@ -65,7 +74,7 @@ class KnowledgeBase:
             expected = "sha256:" + digest(canonical({"pack": semantic_pack, "inputs": self.manifest["inputs"]}).encode("utf-8"))
             if expected != self.snapshot_id:
                 raise KnowledgeError("stale_pack", "Knowledge semantic fingerprint does not match its release.")
-            uri = safe_path(self.root, "index.sqlite").as_uri() + "?mode=ro&immutable=1"
+            uri = _readonly_index_uri(safe_path(self.root, "index.sqlite"))
             with closing(sqlite3.connect(uri, uri=True)) as db:
                 db.execute("PRAGMA query_only=ON")
                 if db.execute("SELECT COUNT(*) FROM nodes").fetchone()[0] != len(self.nodes):
@@ -298,7 +307,7 @@ class KnowledgeBase:
                 raise ValueError("Unknown design or estimand filter.")
         # Parameter-bound FTS literals: user input is neither SQL nor MATCH syntax.
         match = " OR ".join('"' + token.replace('"', '""') + '"' for token in tokens)
-        uri = safe_path(self.root, "index.sqlite").as_uri() + "?mode=ro&immutable=1"
+        uri = _readonly_index_uri(safe_path(self.root, "index.sqlite"))
         with closing(sqlite3.connect(uri, uri=True)) as db:
             db.execute("PRAGMA query_only=ON")
             candidates = {row[0] for row in db.execute("SELECT id FROM search WHERE search MATCH ?", (match,))} if tokens else set(self.nodes)
