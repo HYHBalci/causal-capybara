@@ -74,11 +74,18 @@ function AssistantPanel() {
   const close = useCallback(() => { controller.current?.abort(); useResearch.getState().close() }, [])
   useEffect(() => {
     dialog.current?.querySelector<HTMLTextAreaElement>('textarea')?.focus()
-    const escape = (event: KeyboardEvent) => { if (event.key === 'Escape') close() }
     const element = dialog.current
-    element?.addEventListener('keydown', escape)
+    const escape = (event: KeyboardEvent) => {
+      if (event.key !== 'Escape' || event.defaultPrevented) return
+      const inPanel = event.target instanceof Node && element?.contains(event.target)
+      // Completed/cancelled requests can remove the focused button. Keep Escape
+      // available then, without intercepting work in another page or modal.
+      const focusReleased = document.activeElement === document.body && !document.querySelector('[role="dialog"][aria-modal="true"]')
+      if (inPanel || focusReleased) close()
+    }
+    document.addEventListener('keydown', escape)
     return () => {
-      element?.removeEventListener('keydown', escape)
+      document.removeEventListener('keydown', escape)
       document.querySelector<HTMLButtonElement>('.assistant-launch')?.focus()
     }
   }, [close])

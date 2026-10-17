@@ -24,8 +24,8 @@ save any answer you want to keep first.
 4. Choose **Prepare and inspect context**. Review the source count and expand
    **Inspect exact context** to see the actual payload. Raw data rows are excluded.
 5. Review the provider and native-configuration consent controls, then ask.
-   The response appears in the panel. Use **Copy Markdown answer** or
-   **Save answer (.md)** to keep the answer and its supplied references.
+   The response appears in the panel. For CLI replies, use **Copy Markdown
+   answer** or **Save answer (.md)** to keep the answer and supplied references.
 
 Changing the question or study context invalidates the prepared request and
 cancels its old CLI job. Navigating to another page alone does not. Provider
