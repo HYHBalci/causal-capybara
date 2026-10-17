@@ -1,6 +1,6 @@
 import { request } from '../api'
 import { isDesktop } from '../desktop'
-import type { AssistantAnswer, AssistantCliClient, AssistantCliJob, AssistantHandoff, AssistantHandoffClient, AssistantProvider, KnowledgeAudit, KnowledgeCoverage, KnowledgeDetail, KnowledgeEnvelope, KnowledgeEvidence, KnowledgeRelations, KnowledgeSearch, ReproductionEvaluation, ResearchRecord, StudyProposal } from './types'
+import type { AssistantAnswer, AssistantCliClient, AssistantCliJob, AssistantCliModels, AssistantHandoff, AssistantHandoffClient, AssistantProvider, KnowledgeAudit, KnowledgeCoverage, KnowledgeDetail, KnowledgeEnvelope, KnowledgeEvidence, KnowledgeRelations, KnowledgeSearch, ReproductionEvaluation, ResearchRecord, StudyProposal } from './types'
 
 function qs(params: Record<string, string | number | undefined>): string {
   const values = new URLSearchParams()
@@ -24,6 +24,7 @@ export const researchApi = {
   context: (body: ResearchRecord, signal?: AbortSignal) => post<ResearchRecord>('/assistant/context', body, signal),
   handoff: (body: { context_id: string; context_hash: string; client: AssistantHandoffClient }, signal?: AbortSignal) => post<AssistantHandoff>('/assistant/handoff', body, signal),
   cliClients: (signal?: AbortSignal) => get<{ clients: AssistantCliClient[] }>('/assistant/cli/clients', signal ?? AbortSignal.timeout(20000)),
+  cliModels: (client: AssistantHandoffClient, signal?: AbortSignal) => get<AssistantCliModels>(`/assistant/cli/models/${client}`, signal ?? AbortSignal.timeout(25000)),
   cliStart: (body: { context_id: string; context_hash: string; client: AssistantHandoffClient; model?: string; effort?: string; cloud_consent: boolean; native_config_consent: boolean; request_id: string }) => post<AssistantCliJob>('/assistant/cli/jobs', body, AbortSignal.timeout(20000)),
   cliJob: (id: string, signal?: AbortSignal) => get<AssistantCliJob>(`/assistant/cli/jobs/${encodeURIComponent(id)}`, signal ? AbortSignal.any([signal, AbortSignal.timeout(10000)]) : undefined),
   cliCancelRequest: (id: string) => post<AssistantCliJob | { request_id: string; status: 'cancelled' }>(`/assistant/cli/requests/${encodeURIComponent(id)}/cancel`, {}, AbortSignal.timeout(15000)),

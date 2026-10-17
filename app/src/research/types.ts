@@ -67,6 +67,8 @@ export interface AssistantCliClient {
 }
 
 export interface AssistantCliJob {
+  proposal?: { changes: ResearchRecord } | null
+  proposal_warning?: string | null
   schema: 'capy.assistant.cli.job'
   version: 1
   job_id: string
@@ -85,6 +87,13 @@ export interface AssistantCliJob {
   error: { code: string; message: string } | null
   cloud_request_made: boolean | null
   cli_invoked?: boolean
+}
+
+export interface AssistantCliModels {
+  client: AssistantHandoffClient
+  models: { id: string; label: string; default: boolean; efforts: string[] }[]
+  status: 'reported' | 'unavailable' | 'unsupported'
+  message: string
 }
 
 export interface AssistantHandoff {

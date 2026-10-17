@@ -1,5 +1,8 @@
 # Use Codex, Claude Code or Grok CLI
 
+For the persistent in-app panel, model selection and reviewed study changes,
+see the [assistant guide](ASSISTANT_GUIDE.md).
+
 Causal Capybara can ask an installed Codex, Claude Code or Grok CLI from the app
 and return its answer as Markdown. Sign in using the CLI's normal terminal flow,
 prepare and inspect context in the app, then choose the client and send the

@@ -29,7 +29,7 @@ from . import assistant
 
 LABELS = {"codex": "Codex", "claude": "Claude Code", "grok": "Grok CLI"}
 EFFORTS = ("low", "medium", "high", "xhigh", "max")
-CLIENT_EFFORTS = {"codex": ("low", "medium", "high", "xhigh"),
+CLIENT_EFFORTS = {"codex": ("low", "medium", "high", "xhigh", "max"),
                   "claude": ("low", "medium", "high", "xhigh", "max"),
                   "grok": ("low", "medium", "high", "xhigh")}
 MAX_OUTPUT = 512 * 1024
@@ -341,6 +341,29 @@ class Discovery:
 DISCOVERY = Discovery()
 
 
+def suggested_changes(text, context):
+    """Extract suggestions as data only. Applying still requires a validated,
+    revision-bound proposal and a separate desktop approval capability."""
+    blocks = re.findall(r"```capy-proposal\s*\n(.*?)\n```", text, re.DOTALL)
+    if not blocks:
+        return None, None
+    try:
+        if len(blocks) != 1 or len(blocks[0].encode()) > 16384 or not context.get("base_revision"):
+            raise ValueError()
+        data = json.loads(blocks[0])
+        if not isinstance(data, dict) or set(data) != {"changes"}:
+            raise ValueError()
+        changes = data["changes"]
+        if not isinstance(changes, dict) or not changes or set(changes) - assistant.AssistantService.CHANGE_KEYS:
+            raise ValueError()
+        # Reject nonfinite values and nested unsupported fields at the ordinary
+        # proposal endpoint before any approval can be requested.
+        assistant.canonical(changes)
+        return {"changes": changes}, None
+    except (ValueError, TypeError):
+        return None, "The answer contains an invalid study suggestion. Ask for a revised suggestion using current study context."
+
+
 def command(client, binary, directory, body):
     if client == "codex":
         argv = [binary, "exec", "--json", "--ephemeral", "--sandbox", "read-only", "--skip-git-repo-check",
@@ -553,6 +576,12 @@ class CLIService:
                 "The supplied knowledge snapshot and evidence are your research material. "
                 "Return your final answer in Markdown, with source identifiers and links from the supplied citations. "
                 "Identify missing evidence without inventing papers, computations or completed audits.\n")
+            if context.get("base_revision"):
+                prompt += (
+                    "If the user asks you to set up or change their study, explain the suggested changes and include exactly one fenced capy-proposal block containing JSON {\"changes\":{...}}. "
+                    "Only title, question, design, estimand, roles and methods may be proposed. Use only supplied column names and registered methods; omit uncertain fields and ask for missing information. "
+                    "Each supplied field replaces that entire field, including question, roles and methods: preserve the existing values you are not changing. Never include approvals, assumptions, diagnostic review, results, commands or credentials. "
+                    "Suggestions will be validated and shown as a diff for separate human approval. Never claim they have been applied.\n")
             binary = _executable(job.body["client"])
             if not binary:
                 raise error("The CLI is no longer installed. Check it in your terminal.")
@@ -573,10 +602,12 @@ class CLIService:
                 text = answer_text(job.body["client"], output)
                 context = self._fresh(job)
                 answer, references, unknown = markdown(text, context, job.body)
+                proposal, proposal_warning = suggested_changes(text, context)
                 with self.lock:
                     if job.cancel.is_set():
                         raise error("CLI request cancelled.", "cancelled", 409)
-                    outcome = dict(status="completed", answer_markdown=answer, references=references, unknown_citation_ids=unknown)
+                    outcome = dict(status="completed", answer_markdown=answer, references=references, unknown_citation_ids=unknown,
+                                   proposal=proposal, proposal_warning=proposal_warning)
         except assistant.AssistantError as exc:
             outcome = dict(status="cancelled" if exc.code == "cancelled" else "failed",
                            answer_markdown=None, error={"code": exc.code, "message": str(exc)})
@@ -609,7 +640,7 @@ class CLIService:
                 try:
                     self._fresh(job)
                 except (ValueError, KeyError):
-                    job.snapshot.update(status="failed", answer_markdown=None,
+                    job.snapshot.update(status="failed", answer_markdown=None, proposal=None, proposal_warning=None,
                                         error={"code": "stale_context", "message": "The inspected context changed or expired. Prepare it again before asking."})
             return copy.deepcopy(job.snapshot)
 
@@ -630,7 +661,7 @@ class CLIService:
         if not job.done.wait(6):
             raise error("The CLI is still stopping. Poll its job before starting another request.", "cancel_pending", 503)
         with self.lock:
-            job.snapshot.update(status="cancelled", answer_markdown=None,
+            job.snapshot.update(status="cancelled", answer_markdown=None, proposal=None, proposal_warning=None,
                                 error={"code": "cancelled", "message": "CLI request cancelled."})
             return copy.deepcopy(job.snapshot)
 

@@ -53,6 +53,9 @@ elif mode == 'large-stderr':
     sys.stderr.write('x' * (1024 * 1024))
 elif mode == 'malformed':
     print('not a protocol answer')
+elif mode == 'proposal':
+    print(json.dumps({'type': 'item.completed', 'item': {'type': 'agent_message', 'text': 'Review this title.\n```capy-proposal\n{"changes":{"title":"Clarified study question"}}\n```'}}))
+    print(json.dumps({'type': 'turn.completed', 'usage': {}}))
 elif mode == 'claude':
     print(json.dumps({'type': 'result', 'subtype': 'success', 'is_error': False, 'result': '## Causal assessment\nUse source:known. source:invented requires evidence.'}))
 elif mode == 'grok':
@@ -120,6 +123,29 @@ def terminal(h, job_id):
         value = response.json()
         return value if value["status"] in cli.TERMINAL else None
     return eventually(fetch)
+
+
+def test_cli_suggestion_requires_separate_validated_human_approval(harness):
+    h = harness
+    h.state['mode'] = 'proposal'
+    h.body['effort'] = 'max'  # Supported by current Codex model/list.
+    before = h.project.spec_path(h.spec['id']).read_bytes()
+    result = terminal(h, start(h)['job_id'])
+    assert result['status'] == 'completed'
+    assert result['proposal'] == {'changes': {'title': 'Clarified study question'}}
+    assert h.project.spec_path(h.spec['id']).read_bytes() == before
+    staged = h.client.post('/assistant/proposals', json={
+        'project_id': h.project.id, 'spec_id': h.spec['id'], 'base_revision': h.context['base_revision'],
+        'changes': result['proposal']['changes'], 'reason': 'Human reviewed suggestion'}).json()
+    ident = staged['proposal_id']
+    assert h.client.post(f'/assistant/proposals/{ident}/approve', json={'action': 'apply'}).status_code == 403
+    approved = h.client.post(f'/assistant/proposals/{ident}/approve', json={'action': 'apply'},
+                            headers={'X-Capy-Approval-Authority': 'private-approval-authority'})
+    assert approved.status_code == 200
+    applied = h.client.post(f'/assistant/proposals/{ident}/apply', json={'approval_token': approved.json()['approval_token']})
+    assert applied.status_code == 200 and h.project.spec(h.spec['id'])['title'] == 'Clarified study question'
+    stale = h.client.get(f'/assistant/cli/jobs/{result["job_id"]}').json()
+    assert stale['status'] == 'failed' and stale['proposal'] is None
 
 
 @pytest.mark.parametrize("client", ["codex", "claude", "grok"])
@@ -341,7 +367,7 @@ def test_discovery_reports_native_policy_acknowledgement_requirement(monkeypatch
     assert "managed policies" in result["reason"]
 
 
-@pytest.mark.parametrize("client,effort", [("codex", "max"), ("grok", "max")])
+@pytest.mark.parametrize("client,effort", [("grok", "max")])
 def test_effort_is_validated_for_the_selected_client_before_launch(harness, client, effort):
     h = harness
     reply = h.client.post("/assistant/cli/jobs", json={**h.body, "client": client, "effort": effort})

@@ -22,6 +22,7 @@ import { Recommend } from './canvas/Recommend'
 import { Settings } from './canvas/Settings'
 import { Welcome } from './canvas/Welcome'
 import { useStore } from './store'
+import { useResearch } from './research/store'
 
 /** Screens that are part of the window itself and need nothing computed.
  *
@@ -53,6 +54,9 @@ export default function App() {
   const newSpec = useStore((s) => s.newSpec)
   const goBack = useStore((s) => s.goBack)
   const goForward = useStore((s) => s.goForward)
+  const assistantOpen = useResearch((s) => s.assistantOpen)
+  const assistantExpanded = useResearch((s) => s.assistantExpanded)
+  useEffect(() => { useResearch.getState().setExpanded(false) }, [view])
 
   useEffect(() => { void boot() }, [])
   useEffect(() => { setTheme(theme) }, [])
@@ -60,6 +64,7 @@ export default function App() {
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
       const mod = e.ctrlKey || e.metaKey
+      if (mod && e.shiftKey && e.key.toLowerCase() === 'a') { e.preventDefault(); useResearch.getState().ask(); document.querySelector<HTMLTextAreaElement>('#research-assistant-panel textarea')?.focus() }
       if (mod && e.key.toLowerCase() === 'k') { e.preventDefault(); setPalette(true) }
       if (mod && e.key.toLowerCase() === 'q') { e.preventDefault(); void newSpec() }
       if (e.altKey && e.key === 'ArrowLeft') { e.preventDefault(); goBack() }
@@ -101,7 +106,7 @@ export default function App() {
       <a className="skip-link" href="#main-content">Skip to main content</a>
       <MenuBar />
       <WorkspaceBar />
-      <div className={`app-body${wide ? ' full-width' : ''}`}>
+      <div className={`app-body${wide ? ' full-width' : ''}${assistantOpen ? ' assistant-open' : ''}${assistantExpanded ? ' assistant-expanded' : ''}`}>
         {!wide && <ProjectNavigator />}
         <main id="main-content" tabIndex={-1} className="canvas col grow">
           {project && !wide && <QuestionStrip />}
@@ -110,14 +115,14 @@ export default function App() {
             <CanvasView view={view} />
           </div>
         </main>
-        {!wide && <Inspector />}
+        {!wide && !assistantOpen && <Inspector />}
+        <ResearchAssistant />
       </div>
       <JobBar />
       <StatusBar />
       <CommandPalette />
       <Toasts />
-      {wide && <ExplanationDialog />}
-      <ResearchAssistant />
+      {(wide || assistantOpen) && <ExplanationDialog />}
     </div>
   )
 }

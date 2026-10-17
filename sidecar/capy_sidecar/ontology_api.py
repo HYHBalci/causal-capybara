@@ -7,7 +7,7 @@ from typing import Any, Literal
 from fastapi import APIRouter, Header, HTTPException, Request
 from pydantic import BaseModel, ConfigDict, Field, field_validator
 
-from . import assistant, assistant_cli
+from . import assistant, assistant_cli, assistant_models
 from .store import StoreError
 
 router = APIRouter()
@@ -191,6 +191,11 @@ def handoff(body: HandoffRequest):
 @router.get("/assistant/cli/clients")
 def cli_clients():
     return assistant_cli.SERVICE.discovery.all()
+
+
+@router.get("/assistant/cli/models/{client}")
+def cli_models(client: Literal["codex", "claude", "grok"]):
+    return call(assistant_models.discover, client)
 
 
 @router.post("/assistant/cli/jobs", status_code=202)

@@ -61,7 +61,7 @@ export function proposalChanges(text: string): ResearchRecord {
   const value: unknown = JSON.parse(text)
   if (!value || typeof value !== 'object' || Array.isArray(value)) throw new Error('Use a JSON object containing the study fields to change.')
   const changes = value as ResearchRecord
-  const allowed = new Set(['title', 'question', 'design', 'estimand', 'roles', 'methods', 'seed', 'sample', 'dag_id'])
+  const allowed = new Set(['title', 'question', 'design', 'estimand', 'roles', 'methods'])
   for (const key of Object.keys(changes)) if (!allowed.has(key)) throw new Error(`“${key}” cannot be changed through a study proposal.`)
   if (!Object.keys(changes).length) throw new Error('Add at least one study change to inspect.')
   return changes

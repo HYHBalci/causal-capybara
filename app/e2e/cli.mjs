@@ -32,6 +32,7 @@ await page.route('**/*', async (route) => {
     client, label, installed: true, available: true, version: 'synthetic-hosted-test', reason: null,
     requires_native_config_consent: true, efforts: client === 'claude' ? ['low', 'medium', 'high', 'max'] : ['low', 'medium', 'high', 'xhigh'],
   })) })
+  if (endpoint.startsWith('/assistant/cli/models/')) return fulfill(route, { client: endpoint.split('/').at(-1), status: 'reported', message: 'Synthetic CLI catalogue', models: [{ id: 'fixture-model', label: 'Fixture model', default: true, efforts: ['high', 'xhigh'] }] })
   if (endpoint === '/assistant/cli/jobs' && request.method() === 'POST') {
     const body = request.postDataJSON()
     assert.equal(body.cloud_consent, true)
@@ -67,7 +68,7 @@ await page.route('**/*', async (route) => {
     if (record.scenario === 'late-poll') await new Promise((resolve) => { releasePoll = resolve })
     const terminal = record.scenario === 'failed'
       ? { ...record.job, status: 'failed', error: { code: 'cli_failed', message: 'Synthetic CLI sign-in expired. Sign in through the client and retry.' } }
-      : ['held', 'cancel-retry'].includes(record.scenario) ? record.job : { ...record.job, status: 'completed', answer_markdown: markdown, finished_at: '2026-10-15T10:00:02Z' }
+      : ['held', 'cancel-retry'].includes(record.scenario) ? record.job : { ...record.job, status: 'completed', answer_markdown: markdown, proposal: { changes: { title: 'Suggested policy study title' } }, finished_at: '2026-10-15T10:00:02Z' }
     return fulfill(route, terminal).catch((error) => { if (!request.failure()) throw error })
   }
   assert(!endpoint.startsWith('/assistant/cli/'), `Unmocked native CLI route: ${endpoint}`)
@@ -76,7 +77,7 @@ await page.route('**/*', async (route) => {
   await route.fulfill({ response })
 })
 
-const dialog = () => page.getByRole('dialog', { name: 'Research assistant', exact: true })
+const dialog = () => page.getByRole('region', { name: 'Research assistant', exact: true })
 const cli = () => dialog().getByRole('region', { name: 'Ask through your CLI', exact: true })
 const answer = () => cli().getByRole('region', { name: 'CLI answer', exact: true })
 async function until(predicate, label) {
@@ -103,12 +104,13 @@ async function prepare() {
   assert.equal(response.status(), 200, await response.text())
   const prepared = await response.json()
   assert.equal(response.request().postDataJSON().knowledge_max_bytes, prepared.context_limits.knowledge_max_bytes)
+  await dialog().getByText('Inspect exact context', { exact: true }).click()
   await dialog().getByRole('region', { name: 'Exact assistant context', exact: true }).waitFor()
   assert.deepEqual(JSON.parse(await dialog().getByRole('region', { name: 'Exact assistant context', exact: true }).innerText()), prepared)
   return prepared
 }
 async function send(client = 'codex') {
-  if (await cli().getByRole('combobox', { name: 'Run through', exact: true }).inputValue() !== client) await cli().getByRole('combobox', { name: 'Run through', exact: true }).selectOption(client)
+  if (await cli().getByRole('combobox', { name: 'CLI provider', exact: true }).inputValue() !== client) await cli().getByRole('combobox', { name: 'CLI provider', exact: true }).selectOption(client)
   await cli().getByLabel(`Send the inspected context through ${labels[client]} to its provider.`, { exact: true }).check()
   await cli().getByLabel(`Allow ${labels[client]} to use its native configuration and managed policies, including configured hooks. These may run local commands or add context beyond the preview.`, { exact: true }).check()
   const count = starts.length
@@ -144,8 +146,12 @@ try {
   await page.getByRole('button', { name: 'Research assistant', exact: true }).click()
   await dialog().getByRole('textbox', { name: 'Your research question', exact: true }).fill('Review the ATT, parallel trends and inference for the minimum wage study')
   assert(await cli().getByRole('button', { name: 'Ask Codex', exact: true }).isDisabled())
+  await dialog().getByText('Customize context and add notes', { exact: true }).click()
   await dialog().getByRole('textbox', { name: 'Research notes (optional)', exact: true }).fill('Target restaurants in both states. token="do-not-send-this-credential"')
+  await cli().getByRole('combobox', { name: 'CLI model', exact: true }).selectOption('fixture-model')
   const publicContext = await prepare()
+  await cli().getByRole('option', { name: 'Fixture model (recommended by CLI)', exact: true }).waitFor({ state: 'attached' })
+  assert.equal(await cli().getByRole('combobox', { name: 'CLI model', exact: true }).inputValue(), 'fixture-model')
   assert.equal(publicContext.study, null)
   assert.equal(publicContext.context_limits.knowledge_max_bytes, 32768)
   assert(publicContext.knowledge.citations.length > 0, 'The default broad policy question must retain complete cited evidence')
@@ -155,8 +161,10 @@ try {
   await cli().getByLabel('Send the inspected context through Codex to its provider.', { exact: true }).check()
   assert(await cli().getByRole('button', { name: 'Ask Codex', exact: true }).isDisabled(), 'Provider consent alone must not authorize native configuration and hooks')
   assert.equal(starts.length, 0)
+  await dialog().getByText('Customize context and add notes', { exact: true }).click()
   await dialog().getByRole('combobox', { name: 'Public knowledge detail', exact: true }).selectOption('49152')
   await dialog().getByRole('button', { name: 'Implementation review', exact: true }).click()
+  await dialog().getByText('Customize context and add notes', { exact: true }).click()
   const resultChoices = dialog().locator('.assistant-result-choices input[type="checkbox"]')
   await resultChoices.nth(1).waitFor()
   for (const choice of await resultChoices.all()) await choice.uncheck()
@@ -178,9 +186,9 @@ try {
   await context.grantPermissions(['clipboard-read', 'clipboard-write'], { origin: new URL(url).origin })
   for (const client of ['codex', 'claude', 'grok']) {
     scenario = 'completed'
-    await cli().getByRole('combobox', { name: 'Run through', exact: true }).selectOption(client)
+    await cli().getByRole('combobox', { name: 'CLI provider', exact: true }).selectOption(client)
     assert(await cli().getByRole('button', { name: `Ask ${labels[client]}`, exact: true }).isDisabled())
-    await cli().getByRole('textbox', { name: 'CLI model (optional)', exact: true }).fill('fixture-model')
+    await cli().getByRole('combobox', { name: 'CLI model', exact: true }).selectOption('fixture-model')
     const effort = client === 'claude' ? 'high' : 'xhigh'
     await cli().getByRole('combobox', { name: 'CLI reasoning effort', exact: true }).selectOption(effort)
     const request = await send(client)
@@ -207,6 +215,15 @@ try {
     assert(job.polls > 0, 'Answer must arrive through asynchronous polling')
     checks.push({ name: `${labels[client]} async answer and exact Markdown exports`, passed: true, native_cli_invoked: false, model_contacted: false })
     await audit(`${client}-markdown-answer`)
+    if (client === 'codex') {
+      await answer().getByRole('button', { name: 'Review suggested study changes' }).click()
+      const preview = dialog().getByRole('region', { name: 'Exact study changes' })
+      await preview.getByText('Suggested policy study title', { exact: false }).waitFor()
+      assert.equal(await dialog().getByLabel('Proposed study fields (JSON)').isVisible(), false)
+      await dialog().getByRole('button', { name: 'Validate and preview proposal' }).click()
+      assert(await dialog().getByRole('button', { name: 'Approve and apply this diff' }).isDisabled())
+      checks.push({ name: 'CLI-generated suggestion validates as a reviewable diff; browser cannot approve', passed: true })
+    }
   }
   for (const mode of ['failed', 'mismatch']) {
     scenario = mode
@@ -219,6 +236,16 @@ try {
   }
   scenario = 'held'
   const cancelledRequest = await send()
+  const questionBeforeNavigation = await dialog().getByLabel('Your research question', { exact: true }).inputValue()
+  await page.getByRole('button', { name: 'Method catalogue', exact: true }).click()
+  assert(await dialog().isVisible(), 'Assistant must remain beside the catalogue')
+  assert.equal(await dialog().getByLabel('Your research question', { exact: true }).inputValue(), questionBeforeNavigation)
+  assert(!cancellations.includes(cancelledRequest.request_id), 'Page navigation must not cancel an unchanged-context answer')
+  await dialog().getByRole('button', { name: 'Expand assistant', exact: true }).click()
+  assert.equal(await page.locator('.canvas').isVisible(), false)
+  await dialog().getByRole('button', { name: 'Show beside workspace', exact: true }).click()
+  assert(await page.locator('.canvas').isVisible())
+  checks.push({ name: 'Assistant stays mounted with pending answer across page navigation and expand/dock', passed: true })
   await cli().getByRole('button', { name: 'Cancel CLI request', exact: true }).click()
   await cli().getByRole('status').filter({ hasText: 'CLI request cancelled. No answer was saved.' }).waitFor()
   assert(cancellations.includes(cancelledRequest.request_id))

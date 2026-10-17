@@ -88,8 +88,9 @@ test('context redaction removes selected groups without changing the original st
 
 test('study proposal preview refuses review acknowledgements and result edits', () => {
   for (const input of ['{"diagnostics_viewed":["overlap"]}', '{"assumptions":[]}', '{"estimate":9}', '{"approved":true}', '[]', '{}']) assert.throws(() => research.proposalChanges(input))
-  const changes = research.proposalChanges('{"estimand":"ATT","seed":0}')
-  assert.deepEqual(research.proposalDiff({ estimand: 'ATE', seed: 0 }, changes), [{ field: 'estimand', before: 'ATE', after: 'ATT' }])
+  for (const input of ['{"seed":0}', '{"sample":{}}', '{"dag_id":"d"}']) assert.throws(() => research.proposalChanges(input))
+  const changes = research.proposalChanges('{"estimand":"ATT","title":"Study"}')
+  assert.deepEqual(research.proposalDiff({ estimand: 'ATE', title: 'Study' }, changes), [{ field: 'estimand', before: 'ATE', after: 'ATT' }])
 })
 
 test('citation rendering accepts only safe web URLs and does not expose embedded credentials', () => {

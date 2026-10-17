@@ -1,5 +1,26 @@
 # Ontology, survival and outcome heterogeneity verification
 
+## 17 October: persistent assistant, CLI models and guided changes
+
+The [assistant guide](ASSISTANT_GUIDE.md) describes the new persistent panel,
+model picker, context presets and reviewed study-change workflow. Navigating
+between pages and expanding/docking keep the assistant mounted. Changes to the
+question or study still invalidate context and cancel its old CLI request.
+
+Local checks passed: 187 focused backend tests, 91 frontend tests, TypeScript,
+the production build, published request-schema checks and the UI mechanical
+detector. Direct browser inspection verified the assistant alongside the
+catalogue/research tree, retained question/model/answer state, expand/dock,
+and the narrow layout at 390 CSS pixels without page overflow or console errors.
+
+Native discovery returned seven models from Codex 0.159.0 and four from Grok CLI
+1.0.13, including Grok 4.7. These probes used the clients' own authentication;
+they started no inference turn. Claude Code retains its native default/custom-ID
+fallback. Hosted browser regressions cover generated suggestions, validated
+diffs, pending requests across navigation, consent and stale-response handling;
+consult the current PR checks for their execution result. Actual provider
+inference and authenticated Claude Code/Antigravity checks remain release gates.
+
 ## 15 October: native CLI setup and reviewed context handoff
 
 The [AI integration](AI_INTEGRATIONS.md) adds one project setup command for

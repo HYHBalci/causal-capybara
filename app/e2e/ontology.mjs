@@ -32,6 +32,10 @@ async function saveEvidence() {
     passed: !failure && !errors.length && accessibility.every((screen) => !screen.violations.length),
     accessibility, keyboard, handoffs, page_errors: errors, failure }, null, 2))
 }
+async function showContext(dialog) {
+  if (!await dialog.getByLabel('Exact assistant context').isVisible()) await dialog.getByText('Inspect exact context', { exact: true }).click()
+  await dialog.getByLabel('Exact assistant context').waitFor()
+}
 const handoffSummary = 'Continue in Codex, Claude Code or Grok CLI'
 async function exerciseHandoff(dialog, prepared, client) {
   await dialog.getByLabel('CLI client', { exact: true }).selectOption(client)
@@ -79,6 +83,7 @@ if (process.env.CAPY_ONTOLOGY_LIVE_ENGINE) {
   try {
     await page.route('**/api/**', async (route) => {
       const request = new URL(route.request().url())
+      if (request.pathname.startsWith('/api/assistant/cli/models/')) return route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify({ client: request.pathname.split('/').at(-1), models: [], status: 'unavailable', message: 'Synthetic test: no native clients called.' }) })
       if (request.pathname === '/api/assistant/cli/clients') return route.fulfill({ status: 200, contentType: 'application/json', body: '{"clients":[]}' })
       const response = await route.fetch({ url: engine + request.pathname.replace(/^\/api/, '') + request.search })
       await route.fulfill({ response })
@@ -102,7 +107,9 @@ if (process.env.CAPY_ONTOLOGY_LIVE_ENGINE) {
     await page.getByRole('button', { name: /^Method Doubly robust \(AIPW\)/ }).click()
     await page.getByRole('heading', { name: 'Method requirements' }).waitFor()
     await page.getByRole('button', { name: 'Ask about this: Doubly robust (AIPW)' }).click()
-    let dialog = page.getByRole('dialog', { name: 'Research assistant' })
+    let dialog = page.getByRole('region', { name: 'Research assistant', exact: true })
+    await dialog.getByLabel('Answer with', { exact: true }).selectOption('offline')
+    await dialog.getByText('Customize context and add notes', { exact: true }).click()
     await dialog.getByLabel('Your research question').fill('AIPW ATT overlap and control nuisance C:\\private\\dataset.csv')
     const contextResponse = page.waitForResponse((response) => response.url().endsWith('/assistant/context') && response.request().method() === 'POST')
     await dialog.getByRole('button', { name: 'Prepare and inspect context' }).click()
@@ -135,14 +142,17 @@ if (process.env.CAPY_ONTOLOGY_LIVE_ENGINE) {
     const project = await (await opened).json()
     const specId = project.specs[0].id
     await page.getByRole('button', { name: 'Research assistant', exact: true }).click()
-    dialog = page.getByRole('dialog', { name: 'Research assistant' })
+    dialog = page.getByRole('region', { name: 'Research assistant', exact: true })
+    await dialog.getByLabel('Answer with', { exact: true }).selectOption('offline')
+    await dialog.getByText('Customize context and add notes', { exact: true }).click()
     await dialog.getByLabel('Your research question').fill('Explain the current study assumptions and methodological sources')
     await dialog.getByText('Include the current study and selected results', { exact: true }).click()
     await dialog.getByRole('button', { name: 'Prepare and inspect context' }).click()
-    await dialog.getByLabel('Exact assistant context').waitFor()
+    await showContext(dialog)
     await checkKeyboardRegion(dialog.getByRole('region', { name: 'Exact assistant context', exact: true }), 'Live assistant context')
     await audit('live-assistant-context')
-    await dialog.getByRole('button', { name: /Inspect a study proposal/ }).click()
+    await dialog.getByRole('button', { name: 'Review study changes', exact: true }).click()
+    await dialog.getByText('Edit proposal JSON (advanced)', { exact: true }).click()
     await dialog.getByLabel('Proposed study fields (JSON)').fill('{"title":"Live ontology test proposal"}')
     const proposalResponse = page.waitForResponse((response) => response.url().endsWith('/assistant/proposals') && response.request().method() === 'POST')
     await dialog.getByRole('button', { name: 'Validate and preview proposal' }).click()
@@ -222,6 +232,7 @@ await page.route('**/*', async (route) => {
   else if (path === '/registry/explain') result = {}
   else if (path === '/registry/methods') result = [{ id: 'obs.aipw', title: 'AIPW', options: [{ name: 'folds', type: 'int', default: 5 }], engines: { python: true }, designs: ['observational'], estimands: ['ATE', 'ATT'] }]
   else if (path === '/engines') result = { python: { status: 'healthy', found: true }, r: { status: 'unavailable', found: false } }
+  else if (path.startsWith('/assistant/cli/models/')) result = { client: path.split('/').at(-1), models: [], status: 'unavailable', message: 'Synthetic test' }
   else if (path === '/assistant/cli/clients') result = { clients: [] }
   else if (path === '/knowledge/search') result = envelope({ results: [method, claim].filter((node) => `${node.title} ${node.summary}`.toLowerCase().includes((parsed.searchParams.get('q') || '').toLowerCase())) })
   else if (path.startsWith('/knowledge/nodes/')) result = abstainNode ? envelope({ status: 'abstained', node: null, omissions: [{ id: 'response_budget', reason: 'Complete node exceeds the response budget' }] }) : envelope({ node: decodeURIComponent(path.split('/').at(-1)) === claim.id ? claim : method })
@@ -323,10 +334,12 @@ try {
   assert(await page.getByText('Measured balance does not prove exchangeability', { exact: true }).count())
   await audit()
   await page.getByRole('button', { name: 'Ask about this: Target-specific overlap' }).click()
-  let dialog = page.getByRole('dialog', { name: 'Research assistant' })
+  let dialog = page.getByRole('region', { name: 'Research assistant', exact: true })
+  await dialog.getByLabel('Answer with', { exact: true }).selectOption('offline')
+  await dialog.getByText('Customize context and add notes', { exact: true }).click()
   await dialog.getByLabel('Your research question').fill('Explain AIPW redact_fixture_secret')
   await dialog.getByRole('button', { name: 'Prepare and inspect context' }).click()
-  await dialog.getByLabel('Exact assistant context').waitFor()
+  await showContext(dialog)
   assert.equal(contextBodies.at(-1).include_study, false)
   await dialog.getByRole('button', { name: 'Retrieve cited answer' }).click()
   await dialog.getByText('Consider identification assumptions and ATT overlap before interpreting AIPW.').waitFor()
@@ -349,9 +362,11 @@ try {
   await dialog.getByRole('button', { name: 'Retrieve cited answer', exact: true }).waitFor({ state: 'visible' })
   await page.waitForFunction(() => [...document.querySelectorAll('.research-assistant button')].some((button) => button.textContent === 'Retrieve cited answer' && !button.disabled))
   await audit()
-  for (let i = 0; i < 18; i++) { await page.keyboard.press(i % 2 ? 'Tab' : 'Shift+Tab'); assert(await dialog.evaluate((element) => element.contains(document.activeElement))) }
+  assert.equal(await dialog.getAttribute('aria-modal'), null, 'Assistant is a navigable page, not a focus trap')
+  await page.getByRole('button', { name: 'Research assistant', exact: true }).focus()
+  await dialog.getByLabel('Your research question').focus()
 
-  await dialog.getByLabel('Answer mode').selectOption('openai-compatible')
+  await dialog.getByLabel('Answer with', { exact: true }).selectOption('openai-compatible')
   await dialog.getByLabel('Model', { exact: true }).fill('test-model')
   await dialog.getByLabel('API key for this request').fill('synthetic-test-key')
   assert(await dialog.getByRole('button', { name: 'Ask with inspected context' }).isDisabled())
@@ -363,7 +378,7 @@ try {
   assert.equal(cloudRequests, 1)
   assert(!(await page.evaluate(() => JSON.stringify({ ...localStorage, ...sessionStorage }))).includes('synthetic-test-key'))
   failProvider = false; holdProvider = true
-  await dialog.getByLabel('Answer mode').selectOption('offline')
+  await dialog.getByLabel('Answer with', { exact: true }).selectOption('offline')
   await dialog.getByRole('button', { name: 'Retrieve cited answer' }).click()
   await dialog.getByRole('button', { name: 'Cancel request' }).click()
   await dialog.getByText('Request canceled. No study changes were submitted.').waitFor()
@@ -371,7 +386,7 @@ try {
   await page.keyboard.press('Escape')
   assert.equal(await dialog.count(), 0)
   await page.waitForFunction(() => !document.querySelector('.research-assistant'))
-  assert(await page.getByRole('button', { name: 'Ask about this: Target-specific overlap' }).evaluate((element) => element === document.activeElement))
+  assert(await page.getByRole('button', { name: 'Research assistant', exact: true }).evaluate((element) => element === document.activeElement))
 
   await page.evaluate(async () => {
     const storeUrl = performance.getEntriesByType('resource').find((resource) => new URL(resource.name).pathname === '/src/store.ts')?.name
@@ -380,15 +395,18 @@ try {
     useStore.setState({ project: { id: 'p', name: 'Synthetic test', has_data: false, specs: [], runs: [], objects: [] }, spec: { schema: 'capy.spec', version: 1, id: 's', modified: 'test', design: 'observational', estimand: 'ATE', question: {}, roles: {}, methods: [{ method_id: 'obs.aipw', engine: 'python', options: {} }], assumptions: [], diagnostics_viewed: [] } })
   })
   await page.getByRole('button', { name: 'Research assistant', exact: true }).click()
-  dialog = page.getByRole('dialog', { name: 'Research assistant' })
+  dialog = page.getByRole('region', { name: 'Research assistant', exact: true })
+  await dialog.getByLabel('Answer with', { exact: true }).selectOption('offline')
+  await dialog.getByText('Customize context and add notes', { exact: true }).click()
   await dialog.getByLabel('Your research question').fill('Compare ATE and ATT')
   await dialog.getByText('Include the current study and selected results', { exact: true }).click()
   await dialog.getByText('Column labels and assigned roles', { exact: true }).click()
   await dialog.getByRole('button', { name: 'Prepare and inspect context' }).click()
-  await dialog.getByLabel('Exact assistant context').waitFor()
+  await showContext(dialog)
   assert(contextBodies.at(-1).redactions.includes('study.roles'))
   assert(!(await dialog.getByLabel('Exact assistant context').innerText()).includes('private_label'))
-  await dialog.getByRole('button', { name: /Inspect a study proposal/ }).click()
+  await dialog.getByRole('button', { name: 'Review study changes', exact: true }).click()
+  await dialog.getByText('Edit proposal JSON (advanced)', { exact: true }).click()
   await dialog.getByLabel('Proposed study fields (JSON)').fill('{"estimand":"ATT"}')
   await dialog.getByRole('button', { name: 'Validate and preview proposal' }).click()
   await dialog.getByText('Proposal proposal:fixture', { exact: false }).waitFor()
@@ -441,14 +459,17 @@ try {
     } }
   })
   await page.getByRole('button', { name: 'Research assistant', exact: true }).click()
-  dialog = page.getByRole('dialog', { name: 'Research assistant' })
+  dialog = page.getByRole('region', { name: 'Research assistant', exact: true })
+  await dialog.getByLabel('Answer with', { exact: true }).selectOption('offline')
+  await dialog.getByText('Customize context and add notes', { exact: true }).click()
   await dialog.getByLabel('Your research question').fill('Inspect a study patch and a separate run')
   await dialog.getByText('Include the current study and selected results', { exact: true }).click()
   await dialog.getByRole('button', { name: 'Prepare and inspect context' }).click()
-  await dialog.getByLabel('Exact assistant context').waitFor()
-  await dialog.getByRole('button', { name: /Inspect a study proposal/ }).click()
+  await showContext(dialog)
+  await dialog.getByRole('button', { name: 'Review study changes', exact: true }).click()
   // The field value is already present. Saving still changes timestamps and the
   // backend revision, while the inspected semantic context remains identical.
+  await dialog.getByText('Edit proposal JSON (advanced)', { exact: true }).click()
   await dialog.getByLabel('Proposed study fields (JSON)').fill('{"estimand":"ATE"}')
   await dialog.getByRole('button', { name: 'Validate and preview proposal' }).click()
   await dialog.getByText('I reviewed this exact diff and approve it.', { exact: true }).click()

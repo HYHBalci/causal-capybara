@@ -72,7 +72,7 @@ jobs:
       - name: Assistant request contracts match their published schemas
         run: python tools/build_assistant_schemas.py --check
       - name: Inspected assistant context and native CLI boundaries
-        run: python -m pytest tests/python/test_assistant_context_options.py tests/python/test_assistant_cli.py -q
+        run: python -m pytest tests/python/test_assistant_context_options.py tests/python/test_assistant_cli.py tests/python/test_assistant_models.py -q
       - name: Adapter contract, across every registered adapter
         shell: bash
         run: |

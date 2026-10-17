@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { isDesktop } from '../desktop'
-import { useStore } from '../store'
+import { useStore, type CanvasView } from '../store'
 import { approvalAuthority, researchApi } from '../research/api'
 import { methodOptionsPreview, proposalChanges, proposalDiff, record, words } from '../research/helpers'
 import { useResearch } from '../research/store'
@@ -8,7 +8,6 @@ import type { AssistantAnswer, AssistantProvider, ResearchRecord, StudyProposal 
 import { KnowledgeCitations } from './KnowledgeCitations'
 import { AssistantHandoff } from './AssistantHandoff'
 import { AssistantCli } from './AssistantCli'
-import { useDialogFocus } from './useDialogFocus'
 
 const REDACTIONS = [
   ['study.question', 'Research question'], ['study.roles', 'Column labels and assigned roles'],
@@ -18,10 +17,14 @@ const REDACTIONS = [
 
 export function ResearchAssistant() {
   const open = useResearch((state) => state.assistantOpen)
-  return open ? <AssistantDialog /> : null
+  return open ? <AssistantPanel /> : null
 }
 
-function AssistantDialog() {
+function AssistantPanel() {
+  const expanded = useResearch((state) => state.assistantExpanded)
+  const navigate = (view: CanvasView) => {
+    useResearch.getState().setExpanded(false); useStore.getState().setView(view)
+  }
   const initialQuery = useResearch((state) => state.query)
   const selection = useResearch((state) => state.selection)
   const project = useStore((state) => state.project)
@@ -39,6 +42,8 @@ function AssistantDialog() {
   const [knowledgeMaxBytes, setKnowledgeMaxBytes] = useState(32768)
   const [chosenRunIds, setChosenRunIds] = useState<string[]>(selectedRunIds.slice(0, 5))
   const [provider, setProvider] = useState<AssistantProvider>('offline')
+  const [useCli, setUseCli] = useState(true)
+  const [preset, setPreset] = useState('public')
   const [model, setModel] = useState('')
   const [endpoint, setEndpoint] = useState('http://127.0.0.1:11434')
   const [apiKey, setApiKey] = useState('')
@@ -67,18 +72,15 @@ function AssistantDialog() {
   const evidenceOmissions = Array.isArray(publicKnowledge.omissions) ? publicKnowledge.omissions.length : 0
   const studySelection = selection?.kind === 'dag' || selection?.kind === 'results'
   const close = useCallback(() => { controller.current?.abort(); useResearch.getState().close() }, [])
-  useDialogFocus(dialog, true, close)
   useEffect(() => {
-    const restoreKeyboard = (event: KeyboardEvent) => {
-      if (dialog.current?.contains(document.activeElement)) return
-      if (event.key === 'Escape') { event.preventDefault(); close() }
-      if (event.key === 'Tab') {
-        event.preventDefault()
-        dialog.current?.querySelector<HTMLElement>('button:not(:disabled)')?.focus()
-      }
+    dialog.current?.querySelector<HTMLTextAreaElement>('textarea')?.focus()
+    const escape = (event: KeyboardEvent) => { if (event.key === 'Escape') close() }
+    const element = dialog.current
+    element?.addEventListener('keydown', escape)
+    return () => {
+      element?.removeEventListener('keydown', escape)
+      document.querySelector<HTMLButtonElement>('.assistant-launch')?.focus()
     }
-    document.addEventListener('keydown', restoreKeyboard)
-    return () => document.removeEventListener('keydown', restoreKeyboard)
   }, [close])
   useEffect(() => () => {
     controller.current?.abort()
@@ -148,24 +150,27 @@ function AssistantDialog() {
   }
 
   function contextPreset(preset: 'public' | 'design' | 'results' | 'code') {
+    setPreset(preset)
     setIncludeStudy(preset !== 'public'); setRedactions(preset === 'design' ? ['selected_runs', 'guardrails', 'selection'] : [])
     setIncludeColumns(preset !== 'public'); setIncludeDiagnostics(preset === 'results' || preset === 'code')
     setIncludeCode(preset === 'code'); setContext(null)
   }
 
-  return <div className="palette-scrim assistant-scrim" onClick={close}>
-    <div className="research-assistant card scroll" ref={dialog} role="dialog" aria-modal="true" aria-labelledby="assistant-title" onClick={(event) => event.stopPropagation()}>
-      <header className="row research-assistant-head"><div className="grow"><span className="eyebrow">CONTEXT AND SOURCES FIRST</span><h2 id="assistant-title">Research assistant</h2></div><button className="btn ghost" onClick={close} aria-label="Close research assistant">Close ✕</button></header>
-      {selection && <p className="hint">Selected {selection.kind}: <strong>{selection.title}</strong></p>}
-      {studySelection && !includeStudy && <p className="tiny hint">This study object’s labels and identifiers are withheld until you include study context.</p>}
-      <label className="research-query">Your research question<textarea rows={3} value={query} maxLength={4000} onChange={(event) => setQuery(event.target.value)} placeholder="Explain the assumptions and limitations, and show the supporting sources…" /></label>
-      <fieldset className="research-context-options"><legend>Choose the context</legend>
+  function reviewChanges(changes: ResearchRecord) {
+    setChangeText(JSON.stringify(changes, null, 2)); setProposalOpen(true)
+    requestAnimationFrame(() => document.getElementById('assistant-proposal')?.scrollIntoView({ block: 'start' }))
+  }
+
+  const contextControls = <>
+      <fieldset className="research-context-options"><legend>Context to include</legend>
         <div className="row wrap context-presets" role="group" aria-label="Context presets">
-          <button className="btn sm" onClick={() => contextPreset('public')}>Public knowledge</button>
-          <button className="btn sm" disabled={!project || !spec} onClick={() => contextPreset('design')}>Study design</button>
-          <button className="btn sm" disabled={!project || !spec} onClick={() => contextPreset('results')}>Results and diagnostics</button>
-          <button className="btn sm" disabled={!project || !spec} onClick={() => contextPreset('code')}>Implementation review</button>
+          <button className="btn sm" aria-pressed={preset === 'public'} onClick={() => contextPreset('public')}>Public knowledge</button>
+          <button className="btn sm" aria-pressed={preset === 'design'} disabled={!project || !spec} onClick={() => contextPreset('design')}>Study design</button>
+          <button className="btn sm" aria-pressed={preset === 'results'} disabled={!project || !spec} onClick={() => contextPreset('results')}>Results and diagnostics</button>
+          <button className="btn sm" aria-pressed={preset === 'code'} disabled={!project || !spec} onClick={() => contextPreset('code')}>Implementation review</button>
         </div>
+        <p className="tiny hint">{includeStudy ? `Includes selected fields from “${spec?.title || project?.name || 'Current study'}”${includeColumns ? ', column types and missingness' : ''}${contextRunIds.length ? `, and ${contextRunIds.length} saved results` : ''}. No raw data rows.` : 'Public research sources only. Your study stays out of the request.'}{notes ? ' Your added notes are also included.' : ''}</p>
+        <details className="assistant-context-detail" onChange={() => setPreset('custom')}><summary>Customize context and add notes</summary>
         <label>Public knowledge detail<select value={knowledgeMaxBytes} onChange={(event) => setKnowledgeMaxBytes(Number(event.target.value))}>
           <option value={16384}>Compact</option><option value={32768}>Standard</option><option value={49152}>Expanded</option>
         </select></label>
@@ -191,30 +196,46 @@ function AssistantDialog() {
         </>}
         <label className="research-query">Research notes (optional)<textarea rows={3} maxLength={8000} value={notes} onChange={(event) => setNotes(event.target.value)} placeholder="Add study background, a decision you need help with, or limitations to discuss…" /></label>
         <p className="tiny hint">Notes you enter are included in the inspected context, including in public-knowledge mode. Review them for sensitive information before sending.</p>
+        </details>
       </fieldset>
-      <div className="row wrap"><button className="btn" disabled={!!busy || !query.trim() || engineDown} onClick={() => void prepare()}>{busy === 'context' ? 'Preparing context…' : 'Prepare and inspect context'}</button>{busy && <button className="btn ghost" onClick={cancel}>Cancel request</button>}{engineDown && <span className="hint">Reconnect the local engine to use the assistant. The research tree remains available offline.</span>}</div>
+      <div className="row wrap"><button className={`btn ${validContext ? '' : 'primary'}`} disabled={!!busy || !query.trim() || engineDown || validContext} onClick={() => void prepare()}>{busy === 'context' ? 'Preparing context…' : validContext ? 'Context ready' : 'Prepare and inspect context'}</button>{busy && <button className="btn ghost" onClick={cancel}>Cancel request</button>}{engineDown && <span className="hint">Reconnect the local engine to use the assistant. The research tree remains available offline.</span>}</div>
       {notice && <p role="status" className="tiny hint">{notice}</p>}
       {error && <p className="banner error" role="alert">{error}</p>}
-      {context && <section className="knowledge-section"><h3>Context preview</h3>
+      {context && <section className="assistant-context-preview" aria-label="Context preview">
         {!validContext && <p className="banner caution" role="status">This context is out of date. Prepare it again before asking.</p>}
-        <p className="tiny hint">This is the server-held context associated with this request. Redacting a group above creates a new context and hash.</p>
         <p className="tiny hint">{referenceCount} source {referenceCount === 1 ? 'reference' : 'references'} included{evidenceOmissions ? '; omitted evidence is listed in the preview.' : '.'}</p>
         {!referenceCount && <p className="banner caution">No public source references are included. Try Expanded or a more specific question to find supporting evidence.</p>}
-        <pre className="research-json" tabIndex={0} role="region" aria-label="Exact assistant context">{JSON.stringify(context, null, 2)}</pre>
+        <details><summary>Inspect exact context</summary><pre className="research-json" tabIndex={0} role="region" aria-label="Exact assistant context">{JSON.stringify(context, null, 2)}</pre></details>
       </section>}
-      <AssistantCli key={`cli:${validContext ? words(context?.context_id) : 'unprepared'}`} context={validContext ? context : null} />
-      <AssistantHandoff key={`${validContext ? words(context?.context_id) : 'unprepared'}:${signature}`} context={validContext ? context : null} />
-      <fieldset className="research-provider"><legend>Optional model</legend>
-        <label>Answer mode<select value={provider} onChange={(event) => changeProvider(event.target.value as AssistantProvider)} disabled={!!busy}>
-          <option value="offline">Sources only — AI disabled</option><option value="ollama">Local model through Ollama</option><option value="openai-compatible">Cloud / OpenAI-compatible provider</option>
-        </select></label>
+  </>
+
+  return <section id="research-assistant-panel" className={`research-assistant scroll${expanded ? '' : ' assistant-docked'}`} ref={dialog} aria-labelledby="assistant-title">
+    <div className="assistant-page">
+      <header className="row research-assistant-head"><div className="grow"><h2 id="assistant-title">Research assistant</h2><p className="hint">{expanded ? 'Work through a causal question, choose your next step, or review a study change.' : 'Here while you work.'}</p></div><div className="row"><button className="btn ghost sm" onClick={() => useResearch.getState().setExpanded(!expanded)}>{expanded ? 'Show beside workspace' : 'Expand assistant'}</button><button className="btn ghost sm" onClick={close} aria-label="Close research assistant">Close</button></div></header>
+      <div className="assistant-layout"><div className="assistant-work">
+      <div className="assistant-starters" role="group" aria-label="Start with a guided question">
+        {[
+          ['Frame my question', 'Help me frame a causal question: treatment, outcome, target population, time zero and estimand. Ask me for missing information.'],
+          ['Review my study', 'Audit my causal study design, assumptions, variable roles and methods. Explain what I should check next and cite sources.'],
+          ['Suggest a study change', 'Help me improve this study. Propose concrete changes to its question, estimand, variable roles or selected methods, explain why, and ask for missing information.'],
+        ].map(([label, prompt]) => <button className="btn sm" key={label} onClick={() => { setQuery(prompt); if (project && spec) contextPreset('design') }}>{label}</button>)}
+      </div>
+      {selection && <p className="tiny hint">Discussing {selection.kind}: <strong>{selection.title}</strong></p>}
+      {studySelection && !includeStudy && <p className="tiny hint">Include study context to share this selected object.</p>}
+      <label className="research-query">Your research question<textarea rows={3} value={query} maxLength={4000} onChange={(event) => setQuery(event.target.value)} placeholder="What would you like to understand or change?" /></label>
+      <label className="assistant-connection">Answer with<select value={useCli ? 'cli' : provider} disabled={!!busy} onChange={(event) => { setUseCli(event.target.value === 'cli'); setApiKey(''); setConsent(false); if (event.target.value !== 'cli') changeProvider(event.target.value as AssistantProvider) }}>
+        <option value="cli">Your signed-in CLI</option><option value="offline">Sources only — AI disabled</option><option value="ollama">Local model through Ollama</option><option value="openai-compatible">Cloud / OpenAI-compatible provider</option>
+      </select></label>
+      {useCli ? <AssistantCli key={`cli:${validContext ? words(context?.context_id) : 'unprepared'}`} context={validContext ? context : null} onProposal={reviewChanges}>{contextControls}</AssistantCli> : <>
+      <fieldset className="research-provider"><legend>{provider === 'offline' ? 'Public evidence' : 'Provider connection'}</legend>
         {provider !== 'offline' && <><div className="research-filter-pair"><label>Model<input value={model} maxLength={150} disabled={!!busy} onChange={(event) => setModel(event.target.value)} placeholder={provider === 'ollama' ? 'Installed model name' : 'Provider model ID'} /></label><label>Provider endpoint<input type="url" value={endpoint} maxLength={500} disabled={!!busy} onChange={(event) => setEndpoint(event.target.value)} autoComplete="off" spellCheck={false} /></label></div>
-          {provider === 'openai-compatible' && <label>API key for this request<input type="password" value={apiKey} maxLength={4096} disabled={!!busy} onChange={(event) => setApiKey(event.target.value)} autoComplete="new-password" /><span className="tiny hint">Kept in memory only and cleared after the request or when this dialog closes.</span></label>}
+          {provider === 'openai-compatible' && <label>API key for this request<input type="password" value={apiKey} maxLength={4096} disabled={!!busy} onChange={(event) => setApiKey(event.target.value)} autoComplete="new-password" /><span className="tiny hint">Kept in memory only and cleared after the request or when this panel closes.</span></label>}
           <p className="banner info">{provider === 'ollama' ? 'The local service sends the inspected context to your selected local Ollama endpoint.' : 'The local service will send the inspected context and question to the selected provider. Local MCP access does not guarantee local inference.'}</p>
         </>}
         {provider === 'offline' && <p className="tiny hint">Retrieve source-backed context without contacting a model. Numerical results continue to come from the statistical engines.</p>}
         {provider === 'openai-compatible' && <label className="row"><input type="checkbox" checked={consent} disabled={!!busy || !validContext} onChange={(event) => setConsent(event.target.checked)} /> I reviewed this context and consent to sending it to this provider.</label>}
       </fieldset>
+      {contextControls}
       <button className="btn primary" disabled={!!busy || !validContext || (provider !== 'offline' && (!model.trim() || !endpoint.trim())) || (provider === 'openai-compatible' && !consent)} onClick={() => void ask()}>{busy === 'answer' ? 'Requesting an answer…' : provider === 'offline' ? 'Retrieve cited answer' : 'Ask with inspected context'}</button>
       {answer && <section className="assistant-answer knowledge-section" aria-label="Assistant response"><h3>{words(answer.interpretation) || (provider === 'offline' ? 'Curated evidence' : 'AI interpretation')}</h3><p className="assistant-answer-text">{answer.text ?? answer.answer}</p>
         {!!words(answer.warnings) && <p className="banner caution">{words(answer.warnings)}</p>}
@@ -222,11 +243,26 @@ function AssistantDialog() {
         <KnowledgeCitations citations={answer.citations ?? []} />
         <p className="tiny hint">An interpretation does not establish causality. Check the sources, assumptions and diagnostic limitations.</p>
       </section>}
-      {project && spec && <section className="knowledge-section"><button className="btn ghost" aria-expanded={proposalOpen} onClick={() => setProposalOpen((value) => !value)}>Inspect a study proposal {proposalOpen ? '−' : '+'}</button>
+      </>}
+      {project && spec && <section className="knowledge-section" id="assistant-proposal"><button className="btn ghost" aria-expanded={proposalOpen} onClick={() => setProposalOpen((value) => !value)}>Review study changes</button>
         {proposalOpen && <StudyProposalPanel context={validContext ? context : null} changeText={changeText} setChangeText={setChangeText} />}
       </section>}
+      <AssistantHandoff key={`${validContext ? words(context?.context_id) : 'unprepared'}:${signature}`} context={validContext ? context : null} />
+      </div><details className="assistant-guide" aria-label="Guided study workflow" open={expanded || undefined}>
+        <summary>Guided study workflow</summary>
+        <h2>Your next step</h2>
+        {project && !spec && <button className="btn" onClick={() => { useResearch.getState().setExpanded(false); void useStore.getState().newSpec() }}>Start a question</button>}
+        <p className="hint">{!project ? 'Open a project to get help with your own study, or ask about causal methods using public sources.' : !spec ? 'Start a question and identify the treatment and outcome.' : 'Review the design before estimating. The assistant can suggest changes; you review the exact diff before applying them in the desktop app.'}</p>
+        <ol>
+          <li><button disabled={!project} onClick={() => navigate('data')}>Check your data</button><span>Variables, types and missingness</span></li>
+          <li><button disabled={!spec} onClick={() => navigate('board')}>Frame the causal question</button><span>Treatment, outcome and target effect</span></li>
+          <li><button disabled={!spec} onClick={() => navigate('diagnose')}>Review diagnostics</button><span>Assumptions and design limitations</span></li>
+          <li><button disabled={!spec} onClick={() => navigate('recommend')}>Choose methods</button><span>Run through the statistical engines</span></li>
+        </ol>
+        <p className="tiny hint">Answers can be saved as Markdown. Study changes and analysis runs each need your review. Assumptions and diagnostic approvals remain yours.</p>
+      </details></div>
     </div>
-  </div>
+  </section>
 }
 
 function StudyProposalPanel({ context, changeText, setChangeText }: { context: ResearchRecord | null; changeText: string; setChangeText: (value: string) => void }) {
@@ -248,6 +284,7 @@ function StudyProposalPanel({ context, changeText, setChangeText }: { context: R
   const eligible = !!context && context.project_id === project?.id && context.spec_id === spec?.id && !!context.base_revision
 
   useEffect(() => { setProposal(null); setConfirmed(false); setRunMode(false); setRevision('') }, [project?.id, spec?.id])
+  useEffect(() => { setProposal(null); setConfirmed(false); setRunMode(false) }, [changeText])
   useEffect(() => { if (context?.context_id) setRevision('') }, [context?.context_id])
 
   async function stage() {
@@ -309,7 +346,8 @@ function StudyProposalPanel({ context, changeText, setChangeText }: { context: R
   const diff = proposal ? (proposal.diff as { path?: string; before?: unknown; after?: unknown }[] ?? []).map((item) => ({ field: item.path ?? 'field', before: item.before, after: item.after })) : preview
   return <div className="study-proposal">
     <p className="hint">Proposals only change allowlisted study fields. They cannot accept assumptions, mark diagnostics reviewed or modify engine results.</p>
-    <label>Proposed study fields (JSON)<textarea className="mono" rows={5} value={changeText} onChange={(event) => { setChangeText(event.target.value); setProposal(null); setConfirmed(false); setRunMode(false) }} placeholder={'{ "estimand": "ATT" }'} /></label>
+    {!preview.length && <p>Ask the assistant to suggest a study change above. Its suggestion will appear here for validation and review.</p>}
+    <details><summary>Edit proposal JSON (advanced)</summary><label>Proposed study fields (JSON)<textarea className="mono" rows={5} value={changeText} onChange={(event) => { setChangeText(event.target.value); setProposal(null); setConfirmed(false); setRunMode(false) }} placeholder={'{ "estimand": "ATT" }'} /></label></details>
     {!eligible && <p className="hint">Include the current study and prepare fresh context before staging a proposal.</p>}
     <button className="btn" disabled={busy || !eligible} onClick={() => void stage()}>Validate and preview proposal</button>
     <button className="btn ghost" disabled={busy || !eligible} onClick={() => void stageRun()}>Preview a run of the current study</button>

@@ -1,18 +1,22 @@
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useRef, useState, type ReactNode } from 'react'
 import { saveFile } from '../desktop'
 import { researchApi } from '../research/api'
 import { words } from '../research/helpers'
-import type { AssistantCliClient, AssistantCliJob, AssistantHandoffClient, ResearchRecord } from '../research/types'
+import type { AssistantCliClient, AssistantCliJob, AssistantCliModels, AssistantHandoffClient, ResearchRecord } from '../research/types'
+import { useResearch } from '../research/store'
 import { MarkdownAnswer } from './MarkdownAnswer'
 
 const LABELS = { codex: 'Codex', claude: 'Claude Code', grok: 'Grok CLI' }
 
 /** Keyed by the prepared context: changed study data cancels the owned request. */
-export function AssistantCli({ context }: { context: ResearchRecord | null }) {
+export function AssistantCli({ context, children, onProposal }: { context: ResearchRecord | null; children?: ReactNode; onProposal: (changes: ResearchRecord) => void }) {
   const [clients, setClients] = useState<AssistantCliClient[]>([])
-  const [client, setClient] = useState<AssistantHandoffClient>('codex')
-  const [model, setModel] = useState('')
-  const [effort, setEffort] = useState('')
+  const { client, model, effort } = useResearch((state) => state.cli)
+  const setConfig = (patch: Partial<{ client: AssistantHandoffClient; model: string; effort: string }>) => useResearch.getState().setCli({ ...useResearch.getState().cli, ...patch })
+  const [catalogue, setCatalogue] = useState<AssistantCliModels | null>(null)
+  const [loadingModels, setLoadingModels] = useState(false)
+  const [modelRefresh, setModelRefresh] = useState(0)
+  const [customModel, setCustomModel] = useState(false)
   const [consent, setConsent] = useState(false)
   const [nativeConfigConsent, setNativeConfigConsent] = useState(false)
   const [checking, setChecking] = useState(false)
@@ -28,6 +32,19 @@ export function AssistantCli({ context }: { context: ResearchRecord | null }) {
   const selected = clients.find((item) => item.client === client)
   const contextId = words(context?.context_id)
   const contextHash = words(context?.context_hash)
+  const selectedModel = catalogue?.models.find((item) => item.id === model)
+  const efforts = selectedModel && client === 'codex' ? selectedModel.efforts : selected?.efforts ?? []
+
+  useEffect(() => {
+    const abort = new AbortController()
+    setCatalogue(null); setLoadingModels(true)
+    void researchApi.cliModels(client, AbortSignal.any([abort.signal, AbortSignal.timeout(25000)])).then((result) => {
+      if (!abort.signal.aborted && result.client === client) setCatalogue(result)
+    }).catch(() => {
+      if (!abort.signal.aborted) setCatalogue({ client, models: [], status: 'unavailable', message: 'Model discovery is unavailable. Retry, use the CLI default, or enter your model ID.' })
+    }).finally(() => { if (!abort.signal.aborted) setLoadingModels(false) })
+    return () => abort.abort()
+  }, [client, modelRefresh])
 
   useEffect(() => {
     mounted.current = true
@@ -124,22 +141,28 @@ export function AssistantCli({ context }: { context: ResearchRecord | null }) {
     } catch { setError('Export was unavailable. Open Markdown source below to select and copy the answer.') }
   }
 
-  return <section className="knowledge-section assistant-cli" aria-label="Ask through your CLI">
-    <h3>Ask through your CLI</h3>
-    <p className="tiny hint">Get an answer here using your own signed-in Codex, Claude Code or Grok CLI. Its account and usage terms apply. The selected context is sent through that client; Capybara does not collect its login credentials.</p>
-    <div className="research-filter-pair">
-      <label>Run through<select value={client} disabled={running} onChange={(event) => { setClient(event.target.value as AssistantHandoffClient); setModel(''); setEffort(''); resetAnswer() }}>
+  return <section className="assistant-cli" aria-label="Ask through your CLI">
+    <div className="assistant-model-row">
+      <label>CLI provider<select value={client} disabled={running} onChange={(event) => { setConfig({client: event.target.value as AssistantHandoffClient, model: '', effort: ''}); setCustomModel(false); resetAnswer() }}>
         {Object.entries(LABELS).map(([value, label]) => <option value={value} key={value}>{label}</option>)}
       </select></label>
-      <label>CLI model (optional)<input value={model} maxLength={150} disabled={running} placeholder="Use the CLI's default model" onChange={(event) => { setModel(event.target.value); resetAnswer() }} /></label>
-      <label>CLI reasoning effort<select value={effort} disabled={running} onChange={(event) => { setEffort(event.target.value); resetAnswer() }}>
-        <option value="">CLI default</option>{selected?.efforts.map((value) => <option key={value} value={value}>{value}</option>)}
+      <label>CLI model<select value={customModel || (model && !selectedModel) ? '__custom' : model} disabled={running || loadingModels} onChange={(event) => { const value = event.target.value; setCustomModel(value === '__custom'); setConfig({ model: value === '__custom' ? '' : value, effort: '' }); resetAnswer() }}>
+        <option value="">{loadingModels ? 'Discovering models…' : 'CLI default'}</option>
+        {catalogue?.models.map((item) => <option key={item.id} value={item.id}>{item.label}{item.default ? ' (recommended by CLI)' : ''}</option>)}
+        <option value="__custom">Enter a model ID…</option>
+      </select></label>
+      <label>CLI reasoning effort<select value={effort} disabled={running} onChange={(event) => { setConfig({effort: event.target.value}); resetAnswer() }}>
+        <option value="">CLI default</option>{efforts.map((value) => <option key={value} value={value}>{value}</option>)}
       </select></label>
     </div>
-    <div className="row wrap"><button className="btn ghost sm" disabled={checking || running} onClick={() => void discover()}>{checking ? 'Checking CLIs…' : 'Refresh CLI availability'}</button>
+    {(customModel || (model && !selectedModel && !loadingModels)) && <label>Custom CLI model ID<input value={model} maxLength={150} disabled={running} onChange={(event) => { setConfig({model: event.target.value, effort: ''}); resetAnswer() }} placeholder="Model ID shown by your CLI" /></label>}
+    <div className="row wrap assistant-client-status"><button className="btn ghost sm" disabled={checking || loadingModels || running} onClick={() => { void discover(); setModelRefresh((value) => value + 1) }}>{checking || loadingModels ? 'Checking CLI…' : 'Refresh models'}</button>
       {selected && <span className="tiny hint">{selected.label}{selected.version ? ` ${selected.version}` : ''}: {selected.available ? 'client detected; uses its own sign-in' : selected.reason || 'Install and sign in through the CLI, then refresh.'}</span>}
     </div>
-    {!contextId && <p className="tiny hint">Prepare and inspect context above to ask through a CLI.</p>}
+    {catalogue && <p className="tiny hint">{catalogue.message}</p>}
+    {children}
+    {!contextId && <p className="tiny hint">Prepare context to review what this question will share.</p>}
+    {contextId && <p className="tiny hint">Uses your CLI account and its usage terms. Capybara does not collect your login credentials.</p>}
     <label className="row"><input type="checkbox" checked={consent} disabled={!contextId || running || !selected?.available} onChange={(event) => setConsent(event.target.checked)} /> Send the inspected context through {LABELS[client]} to its provider.</label>
     {selected?.requires_native_config_consent && <label className="row cli-native-consent"><input type="checkbox" checked={nativeConfigConsent} disabled={!contextId || running} onChange={(event) => setNativeConfigConsent(event.target.checked)} /> Allow {LABELS[client]} to use its native configuration and managed policies, including configured hooks. These may run local commands or add context beyond the preview.</label>}
     <div className="row wrap"><button className="btn primary" disabled={running || checking || !selected?.available || !contextId || !consent || (!!selected?.requires_native_config_consent && !nativeConfigConsent)} onClick={() => void ask()}>{running ? 'Waiting for CLI answer…' : `Ask ${LABELS[client]}`}</button>
@@ -149,7 +172,9 @@ export function AssistantCli({ context }: { context: ResearchRecord | null }) {
     {error && <p className="banner error" role="alert">{error}</p>}
     {job?.status === 'completed' && job.answer_markdown && <section className="knowledge-section" aria-label="CLI answer">
       <div className="row wrap"><h3 className="grow">Your research answer</h3><button className="btn" onClick={() => void exportAnswer('copy')}>Copy Markdown answer</button><button className="btn primary" onClick={() => void exportAnswer('save')}>Save answer (.md)</button></div>
-      <MarkdownAnswer markdown={job.answer_markdown} />
+      <MarkdownAnswer markdown={job.proposal ? job.answer_markdown.replace(/```capy-proposal\s*\n[\s\S]*?\n```/g, '') : job.answer_markdown} />
+      {job.proposal_warning && <p className="banner caution">{job.proposal_warning}</p>}
+      {job.proposal && <button className="btn primary" onClick={() => onProposal(job.proposal!.changes)}>Review suggested study changes</button>}
       <details><summary>Markdown source</summary><textarea readOnly rows={14} aria-label="Markdown answer source" value={job.answer_markdown} /></details>
     </section>}
   </section>
