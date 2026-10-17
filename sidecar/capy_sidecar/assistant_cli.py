@@ -341,6 +341,21 @@ class Discovery:
 DISCOVERY = Discovery()
 
 
+def proposal_contract():
+    """Public app metadata only; derive it from the same schema as validation."""
+    schema = json.loads((assistant.SCHEMAS_DIR / "capy.spec.v1.json").read_text(encoding="utf-8"))
+    fields = {key: copy.deepcopy(schema["properties"][key])
+              for key in sorted(assistant.AssistantService.CHANGE_KEYS)}
+    for key in ("question", "roles"):
+        fields[key]["additionalProperties"] = False
+    fields["title"]["maxLength"] = 200
+    contract = {
+        "changes_schema": {"type": "object", "properties": fields, "additionalProperties": False},
+        "design_estimands": {item["id"]: item.get("estimands", []) for item in assistant.registry.designs()},
+    }
+    return "BEGIN APP PROPOSAL CONTRACT (JSON)\n" + assistant.canonical(contract) + "\nEND APP PROPOSAL CONTRACT"
+
+
 def suggested_changes(text, context):
     """Extract suggestions as data only. Applying still requires a validated,
     revision-bound proposal and a separate desktop approval capability."""
@@ -588,7 +603,12 @@ class CLIService:
                     "If the user asks you to set up or change their study, explain the suggested changes and include exactly one fenced capy-proposal block containing JSON {\"changes\":{...}}. "
                     "Only title, question, design, estimand, roles and methods may be proposed. Use only supplied column names and registered methods; omit uncertain fields and ask for missing information. "
                     "Each supplied field replaces that entire field, including question, roles and methods: preserve the existing values you are not changing. Never include approvals, assumptions, diagnostic review, results, commands or credentials. "
-                    "Suggestions will be validated and shown as a diff for separate human approval. Never claim they have been applied.\n")
+                    "question contains readable labels; roles.treatment and roles.outcome must separately assign the actual column names. "
+                    "A target population label does not filter observations. Keep comparison observations unless the user separately changes the sample. "
+                    "Use the following app contract for accepted field names, types, design IDs and estimands. "
+                    "An empty methods array leaves estimation unselected. "
+                    "Suggestions will be validated and shown as a diff for separate human approval. Never claim they have been applied.\n"
+                    + proposal_contract() + "\n")
             binary = _executable(job.body["client"])
             if not binary:
                 raise error("The CLI is no longer installed. Check it in your terminal.")

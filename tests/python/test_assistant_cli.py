@@ -168,6 +168,20 @@ def test_real_fake_client_roundtrip_preserves_reviewed_context_and_markdown(harn
     invocation = json.loads(h.marker.read_text())
     prompt = invocation["prompt"]
     shared = json.loads(prompt.split("BEGIN QUOTED RESEARCH CONTEXT (JSON)\n", 1)[1].split("\nEND QUOTED", 1)[0])
+    contract = json.loads(prompt.split("BEGIN APP PROPOSAL CONTRACT (JSON)\n", 1)[1].split("\nEND APP", 1)[0])
+    fields = contract["changes_schema"]["properties"]
+    assert set(fields) == assistant.AssistantService.CHANGE_KEYS
+    assert "observational" in fields["design"]["enum"]
+    assert "ATT" in contract["design_estimands"]["observational"]
+    assert fields["roles"]["properties"]["treatment"]["type"] == ["string", "null"]
+    assert fields["roles"]["properties"]["outcome"]["type"] == ["string", "null"]
+    assert fields["roles"]["additionalProperties"] is False
+    # The contract must support a complete question without granting audit or sample edits.
+    changes = {"design": "observational", "estimand": "ATT", "methods": [],
+               "roles": {"treatment": "d", "outcome": "y", "confounders": []}}
+    from jsonschema import Draft202012Validator
+    Draft202012Validator(contract["changes_schema"]).validate(changes)
+    assistant.validate_changes(changes, {**h.spec, **changes}, h.project)
     assert shared["knowledge"] == h.context["knowledge"]
     assert shared["column_profiles"] == h.context["column_profiles"]
     assert shared["research_notes"] == h.context["research_notes"]

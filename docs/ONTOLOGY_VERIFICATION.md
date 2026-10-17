@@ -1,14 +1,21 @@
 # Ontology, survival and outcome heterogeneity verification
 
-## 17 October: live desktop Codex acceptance attempt
+## 17 October: live Codex inference and native proposal acceptance
 
-The [live-check record](ASSISTANT_LIVE_CHECK.md) documents the disposable study,
-prepared question and remaining inference/application steps. The native test
-exposed a Windows extended-path failure in the knowledge index; the corrected
-runtime now prepares context successfully. All 176 targeted regression tests and
-the byte-exact knowledge rebuild passed. A live model response and native
-application remain pending explicit authorization for the CLI's native
-configuration and managed hooks; they are not reported as completed.
+The [live-check record](ASSISTANT_LIVE_CHECK.md) documents a real authenticated
+Codex answer and the exact model proposal applied through the native desktop
+review form. The saved question contains observational design, ATT, treatment,
+outcome and eight baseline covariates. All 2,675 rows and the data hash were
+preserved; assumptions and diagnostics stayed unacknowledged and no estimate ran.
+The [actual Markdown answer](ASSISTANT_EXAMPLE_ANSWER.md) is retained for review.
+
+The test found and fixed extended Windows knowledge paths, recovered-error JSONL
+handling and missing proposal schema information. It also corrected blank-question
+progress and chart export feedback lost during unrelated rerenders. The final
+contract fix passed 58 CLI tests. The preceding `06be28f` checkpoint passed all
+nine hosted jobs, including browser/accessibility and independently installed
+ontology checks. Native screenshot limitations and the browser-to-desktop proposal
+transfer are recorded explicitly; Claude Code/Antigravity gates remain open.
 
 ## 17 October: persistent assistant, CLI models and guided changes
 
@@ -29,7 +36,7 @@ they started no inference turn. Claude Code retains its native default/custom-ID
 fallback. Hosted browser regressions cover generated suggestions, validated
 diffs, pending requests across navigation, consent and stale-response handling;
 consult the current PR checks for their execution result. Actual provider
-inference and authenticated Claude Code/Antigravity checks remain release gates.
+inference was subsequently verified above; authenticated Claude Code/Antigravity checks remain release gates.
 
 ## 15 October: native CLI setup and reviewed context handoff
 
