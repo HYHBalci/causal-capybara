@@ -13,6 +13,7 @@ await mkdir(output, { recursive: true })
 const browser = await chromium.launch({ headless: true, ...(process.env.CAPY_BROWSER_CHANNEL ? { channel: process.env.CAPY_BROWSER_CHANNEL } : {}) })
 const context = await browser.newContext({ viewport: { width: 1440, height: 980 }, acceptDownloads: true })
 const page = await context.newPage()
+page.setDefaultTimeout(30000)
 const errors = [], accessibility = [], keyboard = [], handoffs = []
 let failure = null
 page.on('pageerror', (error) => errors.push(error.message))

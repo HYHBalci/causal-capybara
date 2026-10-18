@@ -1,8 +1,43 @@
 {
+  "$defs": {
+    "ConversationMessage": {
+      "additionalProperties": false,
+      "properties": {
+        "content": {
+          "maxLength": 4000,
+          "minLength": 1,
+          "title": "Content",
+          "type": "string"
+        },
+        "role": {
+          "enum": [
+            "user",
+            "assistant"
+          ],
+          "title": "Role",
+          "type": "string"
+        }
+      },
+      "required": [
+        "role",
+        "content"
+      ],
+      "title": "ConversationMessage",
+      "type": "object"
+    }
+  },
   "$id": "https://causalcapybara.dev/schemas/capy.assistant.context.request.v1.json",
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "additionalProperties": false,
   "properties": {
+    "conversation": {
+      "items": {
+        "$ref": "#/$defs/ConversationMessage"
+      },
+      "maxItems": 12,
+      "title": "Conversation",
+      "type": "array"
+    },
     "include_code": {
       "default": false,
       "title": "Include Code",
