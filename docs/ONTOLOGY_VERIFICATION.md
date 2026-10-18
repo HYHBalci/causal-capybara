@@ -40,6 +40,13 @@ Validation on Windows:
   earnings one year later. The new reply rendered without the export wrapper.
   This used synthetic prose and public references, no study data or study edits.
 
+The additional live ontology browser run passed context, handoff, cited-answer
+and proposal-staging steps, then exceeded its 120-second limit while two survival
+engine jobs remained at startup on this machine. Those disposable jobs were
+cancelled; this is not recorded as a complete survival-suite pass. Local native
+packaging also requires the Windows SDK resource compiler (`RC.EXE`), which was
+unavailable in the build environment. Hosted CI supplies the Windows toolchain.
+
 This checks conversation continuity and software behavior, not the scientific
 correctness of arbitrary model answers. Native proposal acceptance is documented
 in the separate [17 October live check](ASSISTANT_LIVE_CHECK.md). Authenticated

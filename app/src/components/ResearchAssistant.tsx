@@ -147,7 +147,14 @@ function AssistantPanel({ scope }: { scope: string }) {
     }
   }, [signature, contextSignature])
   useEffect(() => { setConsent(false) }, [signature, provider, model, endpoint])
-  useEffect(() => { if (initialQuery) { setQuery(initialQuery); setContext(null) } }, [initialQuery])
+  useEffect(() => {
+    if (initialQuery) {
+      setQuery(initialQuery); setContext(null)
+      // Consume a question opened from another page once. Reopening a different
+      // study must restore that study's draft, not replay an old launcher prompt.
+      useResearch.setState({ query: '' })
+    }
+  }, [initialQuery])
   useEffect(() => { setChosenRunIds(selectedRunIds.slice(0, 5)) }, [project?.id, spec?.id])
 
   async function prepare() {
