@@ -83,6 +83,9 @@ export interface AssistantCliJob {
   started_at: string | null
   finished_at: string | null
   answer_markdown: string | null
+  reply_markdown?: string | null
+  references?: KnowledgeCitation[]
+  unknown_citation_ids?: string[]
   filename: string
   error: { code: string; message: string } | null
   cloud_request_made: boolean | null

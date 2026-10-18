@@ -17,6 +17,11 @@ class Contract(BaseModel):
     model_config = ConfigDict(extra="forbid", strict=True)
 
 
+class ConversationMessage(Contract):
+    role: Literal["user", "assistant"]
+    content: str = Field(min_length=1, max_length=4000)
+
+
 class ContextRequest(Contract):
     query: str = Field(default="", max_length=4000)
     knowledge_max_bytes: Literal[16384, 32768, 49152] = 32768
@@ -31,6 +36,7 @@ class ContextRequest(Contract):
     selected_run_ids: list[str] = Field(default_factory=list, max_length=5)
     redactions: list[str] = Field(default_factory=list, max_length=12)
     previous_context_id: str | None = None
+    conversation: list[ConversationMessage] = Field(default_factory=list, max_length=12)
 
     @field_validator("knowledge_max_bytes", mode="before")
     @classmethod

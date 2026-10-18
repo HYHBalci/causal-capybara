@@ -1,5 +1,50 @@
 # Ontology, survival and outcome heterogeneity verification
 
+## 18 October: locally saved conversational assistant
+
+The assistant now keeps separate conversations and drafts for each project
+location and question, with a general research chat outside a study. The message
+history stays above a follow-up composer; settings, context customization and
+handoff tools are collapsible. Replies have Markdown export and proposal-review
+actions. CLI display text is separate from the complete exported report.
+
+Follow-ups can include the last four completed exchanges, with explicit omission
+and shortening indicators and a history opt-out. The backend validates roles,
+message lengths and a 16 KiB serialized history budget before redaction and
+hashing. History is untrusted context, never approval or proof of applied edits.
+Stored suggestions retain their original revision and still require validation
+and native approval. No authority, consent, configured API key or live context
+token is persisted.
+
+Validation on Windows:
+
+- 95 frontend unit checks passed, including local persistence, study isolation,
+  storage failure, interrupted jobs, bounded Unicode/escaped history and safe
+  Markdown rendering; the changed conversation/Markdown subset also passed.
+- 130 existing assistant/CLI/context checks passed; after adding conversation
+  coverage and the separate CLI reply field, all 99 CLI/context checks passed.
+- 13 browser workflows passed with real study/context routes and mocked native
+  CLI jobs. They cover all three clients, follow-ups, exact exports, proposal
+  staging, consent, failure, stale replies, cancellation retry, page navigation,
+  draft/message restoration after a full reload, history opt-out and mobile
+  layout. There were no page errors or accessibility violations.
+- The synthetic ontology browser suite passed, including API-provider failure,
+  redaction, handoff cancellation, keyboard access and separate simulated
+  apply/run approvals. Simulated IPC is not native-host acceptance.
+- TypeScript and the production frontend build passed. The design detector
+  reported no findings for the changed UI.
+- A real Codex CLI 0.159.0 / GPT-6-Luna / low conversation was exercised through
+  the browser UI against an isolated local backend. The second inspected payload
+  contained the first user/assistant pair. Asked to recall the population and
+  horizon without restating them, the model identified programme enrollees and
+  earnings one year later. The new reply rendered without the export wrapper.
+  This used synthetic prose and public references, no study data or study edits.
+
+This checks conversation continuity and software behavior, not the scientific
+correctness of arbitrary model answers. Native proposal acceptance is documented
+in the separate [17 October live check](ASSISTANT_LIVE_CHECK.md). Authenticated
+Claude Code and Antigravity remain documented release gates.
+
 ## 17 October: live Codex inference and native proposal acceptance
 
 The [live-check record](ASSISTANT_LIVE_CHECK.md) documents a real authenticated

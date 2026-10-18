@@ -159,6 +159,8 @@ def test_real_fake_client_roundtrip_preserves_reviewed_context_and_markdown(harn
     assert result["cli_invoked"] is True and result["cloud_request_made"] is None
     assert result["filename"].endswith(".md") and result["started_at"] and result["finished_at"]
     assert "## Causal assessment" in result["answer_markdown"]
+    assert "## Causal assessment" in result["reply_markdown"]
+    assert "## Run details" not in result["reply_markdown"]
     assert "Review this causal contrast" in result["answer_markdown"]
     assert "https://example.org/method" in result["answer_markdown"]
     assert result["references"] == [{"id": "source:known", "title": "Original method", "url": "https://example.org/method"}]
@@ -281,6 +283,7 @@ def test_completed_reply_is_withheld_when_its_context_changes(harness, change):
     reply = h.client.get(f"/assistant/cli/jobs/{job['job_id']}").json()
     assert reply["status"] == "failed" and reply["answer_markdown"] is None
     assert reply["error"]["code"] == "stale_context"
+    assert reply.get("reply_markdown") is None
 
 
 def test_revoked_context_stops_running_process(harness):

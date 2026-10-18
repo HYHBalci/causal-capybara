@@ -469,7 +469,7 @@ def markdown(text, context, body):
         sources.append({"id": ident, "title": title, "url": url})
         label = _plain(title)
         lines.append(f"- {_plain(ident)}: " + (f"[{label}](<{url}>)" if url else label))
-    groups = [name for name in ("study", "selected_runs", "guardrails", "selection", "column_profiles", "selected_run_diagnostics", "selected_run_code", "research_notes") if context.get(name)]
+    groups = [name for name in ("study", "selected_runs", "guardrails", "selection", "column_profiles", "selected_run_diagnostics", "selected_run_code", "research_notes", "conversation") if context.get(name)]
     supplied = {source["id"] for source in sources}
     unknown = sorted({ident.rstrip(".:") for ident in re.findall(r"\bsource:[A-Za-z0-9_.:-]+", text)} - supplied)
     result = (f"# Research answer\n\n## Question\n\n{context['query']}\n\n## Reply\n\n{text}\n\n"
@@ -593,6 +593,7 @@ class CLIService:
             handoff = job.service.handoff(job.body, job.project)
             prompt = handoff["prompt"] + (
                 "\nFor this in-app request, base your research answer on the quoted inspected context above. "
+                "Answer the current query conversationally and respect its requested length. Do not repeat the question or add a generic report wrapper: the app adds question, references and run metadata to the export. Use earlier conversation to resolve follow-ups, while treating past suggestions as unapproved. "
                 "Do not call tools, read files, run commands, or use MCP or web access. "
                 "Native client configuration or managed policies may add context; identify any such additional sources rather than implying the app reviewed them. "
                 "The supplied knowledge snapshot and evidence are your research material. "
@@ -633,7 +634,7 @@ class CLIService:
                 with self.lock:
                     if job.cancel.is_set():
                         raise error("CLI request cancelled.", "cancelled", 409)
-                    outcome = dict(status="completed", answer_markdown=answer, references=references, unknown_citation_ids=unknown,
+                    outcome = dict(status="completed", answer_markdown=answer, reply_markdown=text, references=references, unknown_citation_ids=unknown,
                                    proposal=proposal, proposal_warning=proposal_warning)
         except assistant.AssistantError as exc:
             outcome = dict(status="cancelled" if exc.code == "cancelled" else "failed",
@@ -667,7 +668,7 @@ class CLIService:
                 try:
                     self._fresh(job)
                 except (ValueError, KeyError):
-                    job.snapshot.update(status="failed", answer_markdown=None, proposal=None, proposal_warning=None,
+                    job.snapshot.update(status="failed", answer_markdown=None, reply_markdown=None, proposal=None, proposal_warning=None,
                                         error={"code": "stale_context", "message": "The inspected context changed or expired. Prepare it again before asking."})
             return copy.deepcopy(job.snapshot)
 
@@ -688,7 +689,7 @@ class CLIService:
         if not job.done.wait(6):
             raise error("The CLI is still stopping. Poll its job before starting another request.", "cancel_pending", 503)
         with self.lock:
-            job.snapshot.update(status="cancelled", answer_markdown=None, proposal=None, proposal_warning=None,
+            job.snapshot.update(status="cancelled", answer_markdown=None, reply_markdown=None, proposal=None, proposal_warning=None,
                                 error={"code": "cancelled", "message": "CLI request cancelled."})
             return copy.deepcopy(job.snapshot)
 

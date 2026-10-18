@@ -3,29 +3,63 @@
 Open **Research assistant** in the top bar, or press **Ctrl+Shift+A**
 (**Command+Shift+A** on macOS). The panel stays open as you move between data,
 study design, diagnostics, results, the method catalogue and the research tree.
-Your question, prepared context and answer remain in the panel when the study
-has not changed. **Expand assistant** gives long answers and proposed changes
-more room; **Show beside workspace** returns to the side panel.
+Your conversation stays beside the workspace. **Expand** gives the chat more
+room; **Dock** returns it to the side panel. Replies appear in a scrollable
+history, with a follow-up composer below them.
 
 On a narrow window, the assistant occupies the lower part of the workspace.
 Both areas scroll independently. Close the panel to restore the ordinary
-inspector. Closing cancels its pending request and clears prepared context;
-save any answer you want to keep first.
+inspector. Closing cancels its pending request and clears prepared context.
+Messages and the unsent draft are saved locally and return when you reopen the
+same study, including after restarting the app. Each project location and
+question has a separate conversation; general research has its own chat.
 
 ## Ask a question
 
 1. Write what you want to understand or change. **Frame my question**, **Review
    my study**, and **Suggest a study change** provide editable starting points.
-2. Under **Answer with**, choose your signed-in CLI, sources only, Ollama, or
-   an API provider. For a CLI, select Codex, Claude Code or Grok and then a model.
-3. Choose **Public knowledge**, **Study design**, **Results and diagnostics**,
+2. Open **Settings** beside the displayed CLI/model to choose Codex, Claude Code
+   or Grok, a model and reasoning effort. **Connection options → Answer with**
+   also offers sources only, Ollama and an API provider.
+3. Open **Context** and choose **Public knowledge**, **Study design**, **Results and diagnostics**,
    or **Implementation review**. **Customize context and add notes** exposes
    individual fields, saved results, evidence detail and optional notes.
-4. Choose **Prepare and inspect context**. Review the source count and expand
+4. Choose **Review & send** (or press Enter). Review the source count and expand
    **Inspect exact context** to see the actual payload. Raw data rows are excluded.
-5. Review the provider and native-configuration consent controls, then ask.
-   The response appears in the panel. For CLI replies, use **Copy Markdown
-   answer** or **Save answer (.md)** to keep the answer and supplied references.
+5. Review the provider and native-configuration consent controls, then choose
+   **Send message**. **Stop reply** cancels a CLI request. Failed and stopped
+   exchanges remain visible with **Try this question again**.
+6. Write a follow-up below the conversation. Shift+Enter adds a line; Enter
+   prepares the context, or sends it once the sharing controls are accepted.
+
+Use **Copy answer** or **Save .md** on a reply for the complete Markdown export.
+CLI exports retain the question, answer, supplied references and run details;
+the chat shows the conversational reply. **Message details** contains references
+and the original Markdown source. Selecting a suggestion opens its review tray.
+
+### What is remembered and shared
+
+The most recent four completed exchanges can accompany a follow-up. Long
+messages are shortened to fit a bounded history budget, with a marker in the
+preview. Older exchanges stay in the local chat but are not sent. **Context**
+shows the included exchange count and any omissions; uncheck **Include earlier
+messages in this chat** to send no history. Earlier messages can contain study
+details even if the new context preset is **Public knowledge**. Every send
+requires fresh review and consent; neither saving nor reopening a chat sends it.
+
+Conversation history is quoted context, not authority: a past suggestion never
+proves that a change was applied or an assumption accepted. The current study
+snapshot takes precedence. Historical suggestions retain their original study
+revision; validation rejects them if the study has changed.
+
+Local saving uses this app's local storage. Desktop and browser origins have
+separate histories. Configured API keys, live context tokens, native approval
+authority and consent are never saved with the chat. Chat text itself may contain
+information you typed or received, so it should be treated as local study material.
+**Clear chat → Delete saved chat** removes the current study's saved conversation
+and draft. Clearing application storage also removes chats. If storage is full
+or unavailable, the app retains the current session and warns you to export
+important answers before closing.
 
 Changing the question or study context invalidates the prepared request and
 cancels its old CLI job. Navigating to another page alone does not. Provider
@@ -77,10 +111,10 @@ or execute commands. Stale or expired proposals must be prepared again.
 
 The browser preview can prepare and validate suggestions; applying changes and
 launching approved assistant runs require the trusted desktop host. The
-**Guided study workflow** links open data, framing, diagnostics and methods
+**Study tools and handoff** links open data, framing, diagnostics and methods
 beside the assistant, so you can make ordinary edits while following its advice.
 
-Live authenticated Claude Code and Antigravity checks, and real provider
-inference checks, remain documented release gates. Automated tests use fake
+Live authenticated Claude Code and Antigravity checks remain documented release
+gates. Codex live inference has a separate acceptance record. Automated tests use fake
 native processes or explicitly mocked replies; they do not certify a model's
 scientific judgment. See [verification](ONTOLOGY_VERIFICATION.md).
