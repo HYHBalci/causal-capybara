@@ -149,6 +149,9 @@ if (process.env.CAPY_ONTOLOGY_LIVE_ENGINE) {
     await page.getByRole('button', { name: 'Open this example', exact: true }).click()
     const project = await (await opened).json()
     const specId = project.specs[0].id
+    // The open response precedes the study load. Wait for its workspace before
+    // opening a chat whose scope would otherwise change during interaction.
+    await page.locator('.board-split').waitFor()
     await page.getByRole('button', { name: 'Research assistant', exact: true }).click()
     dialog = page.getByRole('region', { name: 'Research assistant', exact: true })
     await expandAssistantDetails(dialog, '.chat-connection')

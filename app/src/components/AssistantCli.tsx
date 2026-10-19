@@ -95,6 +95,9 @@ export function AssistantCli({ context, children, onStart, onComplete, onFailure
     const current = () => mounted.current && generation.current === requestGeneration
     const polling = new AbortController()
     pollController.current = polling
+    // Lock the composer in the same update that creates the pending message.
+    // A post-render effect can leave it editable after the request has started.
+    busyCallback.current(true)
     setRunning(true); setError(''); setNotice('Starting your CLI…')
     onStart(requestId, `${LABELS[client]}${model ? ` · ${model}` : ''}`)
     try {
