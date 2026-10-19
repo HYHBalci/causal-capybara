@@ -1,0 +1,74 @@
+{
+  "dimensions": {
+    "width": 1600,
+    "height": 1200
+  },
+  "source_capture_manifest": "../../screenshots/capture.json",
+  "source_captured_at": "2026-10-19T16:11:39.110Z",
+  "presentation": "Full app captures, proportionally scaled inside a captioned frame. No UI content or results are altered.",
+  "images": [
+    {
+      "source": "01-guided-example.png",
+      "filename": "01-guided-examples.png",
+      "title": "Start with a causal question.",
+      "subtitle": "Open a guided example with its question, learning goals and data provenance in view.",
+      "note": "Generated teaching data",
+      "source_sha256": "b759265610e731f6da6aeeffe09b3528ce18c616974cea037fdf22e355f71513",
+      "output_sha256": "ca7e53b2de2535f358db9c0770ffd46b7a1a483f7e9ca1697e63f5937df57879"
+    },
+    {
+      "source": "02-design-board.png",
+      "filename": "02-design-board.png",
+      "title": "Make the study design explicit.",
+      "subtitle": "Define the treatment, outcome and measured confounders before choosing a method.",
+      "note": "Generated teaching data",
+      "source_sha256": "f894ab75c796d5356f565a996c5ac38c63f9ab1b92c22b547300ed563f58afca",
+      "output_sha256": "2f20b032850466e6514306f24a9d672ff6f5b0ff66d346cbc5c3cea34b9f79e6"
+    },
+    {
+      "source": "03-diagnostics.png",
+      "filename": "03-diagnostics.png",
+      "title": "Inspect overlap before estimating.",
+      "subtitle": "Review the diagnostics alongside the causal question they need to support.",
+      "note": "Generated teaching data · Computed in app",
+      "source_sha256": "3913da4724d9167168f2b89c3dc5b85a88b8eaa679e824e959703a32d8543a3c",
+      "output_sha256": "5e0bb3aefb9f8e5bf0bd5de85f3219fc21b2f6984fca89cda71f183d49bf02da"
+    },
+    {
+      "source": "04-methods.png",
+      "filename": "04-methods.png",
+      "title": "Choose methods with assumptions in view.",
+      "subtitle": "Compare adjustment approaches and read the explanation beside the analysis.",
+      "note": "Generated teaching data",
+      "source_sha256": "8394cae6d24749cf9ddf24290715266bf204fa8429a1f227673feecd8ad361dc",
+      "output_sha256": "c1a5c60864d4c6320c48e9cf4a35f6781a5ae8a405184c2f178b4e05bacddf05"
+    },
+    {
+      "source": "05-results.png",
+      "filename": "05-results.png",
+      "title": "Read the estimates together.",
+      "subtitle": "Keep method differences and uncertainty visible for the same causal question.",
+      "note": "Generated teaching data · Real Python estimates",
+      "source_sha256": "244f11cd67757846e2c3893222233360ece5ae94950d23fe174fb749bafdeb63",
+      "output_sha256": "a0fc39c0ee3815037b10a2d5c52c787be5024c22c1b76ada88069842989637e9"
+    },
+    {
+      "source": "06-research-tree.png",
+      "filename": "06-research-tree.png",
+      "title": "Explore the reasoning behind a method.",
+      "subtitle": "Follow a research claim through its conditions, scope, counterevidence and gaps.",
+      "note": "Ontology research tree · Local knowledge pack",
+      "source_sha256": "32662f4cde54524bf2b245a50dbb28973cb3906ab65d3ae8188f7def47303ff4",
+      "output_sha256": "b69f1767738b268aef5396c88b402976dcc1a114d1a54f682c4572ee25ce4c52"
+    },
+    {
+      "source": "07-research-assistant.png",
+      "filename": "07-research-assistant.png",
+      "title": "Keep research guidance beside your work.",
+      "subtitle": "Ask about double robustness while keeping the estimates and their uncertainty visible.",
+      "note": "Sources-only reply · AI disabled",
+      "source_sha256": "3e669cfb27e8968a8b5ef9d25fee49d4529d71c7d143a32d31ec5ae15e856a5e",
+      "output_sha256": "bc2262e1a36794adca30942d032120bf863474818b3b5c0972eccb326908b658"
+    }
+  ]
+}

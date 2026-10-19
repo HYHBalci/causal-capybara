@@ -32,6 +32,8 @@ async function json(route) {
   return response.json()
 }
 async function capture(filename, description) {
+  const dismiss = page.getByRole('region', { name: 'Notifications', exact: true }).getByRole('button', { name: 'Dismiss', exact: true })
+  while (await dismiss.count()) await dismiss.first().click()
   await page.evaluate(async () => {
     await document.fonts.ready
     await Promise.allSettled(document.getAnimations().filter((animation) => animation.playState === 'running'
@@ -87,7 +89,9 @@ try {
   await page.locator('.dashboard .vega-embed').first().waitFor()
   // Wait for every completed run to reach the UI before freezing its comparison.
   await page.waitForFunction((count) => document.querySelectorAll('[aria-label="Estimate comparison table"] tbody tr').length >= count, results.length)
-  while (await page.getByRole('button', { name: 'Dismiss', exact: true }).count()) await page.getByRole('button', { name: 'Dismiss', exact: true }).first().click()
+  // Results and job statuses arrive separately; wait for the UI's final job poll too.
+  await page.locator('.jobbar').waitFor({ state: 'hidden' })
+  await page.locator('.dash-running').waitFor({ state: 'hidden' })
   await capture('05-results.png', 'Actual Python ATT estimates and uncertainty on generated teaching data')
   await page.getByRole('button', { name: 'Research assistant', exact: true }).click()
   const assistant = page.getByRole('region', { name: 'Research assistant', exact: true })

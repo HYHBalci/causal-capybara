@@ -1,12 +1,23 @@
 {
-  "captured_at": "2026-10-19T15:23:28.467Z",
-  "source_commit": "8ce504b0475010d1ee5b7c0902435ff85e89cbb9",
+  "captured_at": "2026-10-19T16:11:39.110Z",
+  "source_commit": "29cf4ae4ac2876ec15ed96bf2766b4dd08f1744a",
   "source_changes": [
-    "README.md",
-    "app/e2e/ontology.mjs",
     "app/package.json",
-    "app/src/components/AssistantCli.tsx",
-    "docs/PROMOTION.md"
+    "docs/PROMOTION.md",
+    "docs/promotion/linkedin/01-guided-examples.png",
+    "docs/promotion/linkedin/02-design-board.png",
+    "docs/promotion/linkedin/03-diagnostics.png",
+    "docs/promotion/linkedin/04-methods.png",
+    "docs/promotion/linkedin/05-results.png",
+    "docs/screenshots/01-guided-example.png",
+    "docs/screenshots/02-design-board.png",
+    "docs/screenshots/03-diagnostics.png",
+    "docs/screenshots/04-methods.png",
+    "docs/screenshots/05-results.png",
+    "docs/screenshots/06-research-tree.png",
+    "docs/screenshots/07-research-assistant.png",
+    "docs/screenshots/capture.json",
+    "tools/capture_screenshots.mjs"
   ],
   "viewport": {
     "width": 1680,
