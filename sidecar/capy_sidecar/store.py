@@ -13,6 +13,7 @@ import shutil
 import sys
 import threading
 import uuid
+import weakref
 from datetime import date, datetime, timezone
 from pathlib import Path
 from typing import Any, Iterable
@@ -343,6 +344,8 @@ class Project:
         spec.setdefault("created", now_iso())
         spec["modified"] = now_iso()
         with self._lock:
+            from .data_selection import validate_references
+            validate_references(self, spec=spec)
             previous_path = self.spec_path(spec["id"])
             if previous_path.exists():
                 previous = _load_yaml(previous_path, "question")
@@ -463,6 +466,9 @@ class Project:
         d = self._obj_dir(kind)
         d.mkdir(parents=True, exist_ok=True)
         with self._lock:
+            if kind == "dag":
+                from .data_selection import validate_references
+                validate_references(self, dag=obj)
             _atomic_write(d / f"{obj['id']}.json", json.dumps(obj, indent=2))
             if not any(o.get("id") == obj["id"] for o in self.objects()):
                 self.add_object(kind, id=obj["id"], name=obj.get("name") or obj.get("title"), status="ran")
@@ -504,21 +510,40 @@ class Project:
         """The analysis table, as pandas. Cached until the parquet changes."""
         import pandas as pd
 
-        p = self.parquet_path
-        if not p.exists():
-            raise StoreError("This project has no data yet. Import a file first.")
-        mtime = p.stat().st_mtime
-        if reload or self._data_cache is None or self._data_mtime != mtime:
-            self._data_cache = pd.read_parquet(p)
-            self._data_mtime = mtime
-        return self._data_cache
+        with self._lock:
+            p = self.parquet_path
+            if not p.exists():
+                raise StoreError("This project has no data yet. Import a file first.")
+            mtime = p.stat().st_mtime
+            if reload or self._data_cache is None or self._data_mtime != mtime:
+                self._data_cache = pd.read_parquet(p)
+                self._data_mtime = mtime
+            return self._data_cache
+
+    def data_selection(self) -> dict[str, Any]:
+        from .data_selection import describe
+        return describe(self)
+
+    def select_columns(self, included_columns, expected_revision) -> dict[str, Any]:
+        from .data_selection import select
+        return select(self, included_columns, expected_revision)
 
     def has_data(self) -> bool:
         return self.parquet_path.exists()
 
     def set_data(self, df, *, original_path: str | None = None, import_options: dict[str, Any] | None = None,
                  columns: list[dict[str, Any]] | None = None, checksum: str | None = None,
-                 copy_original: bool = True) -> None:
+                 copy_original: bool = True, original_path_label: str | None = None) -> None:
+        # Browser uploads have a filename but no client filesystem path. Keep
+        # that label in provenance while copying from the temporary source.
+        with self._lock:
+            self._set_data(df, original_path=original_path, import_options=import_options,
+                           columns=columns, checksum=checksum, copy_original=copy_original,
+                           original_path_label=original_path_label)
+
+    def _set_data(self, df, *, original_path: str | None = None, import_options: dict[str, Any] | None = None,
+                  columns: list[dict[str, Any]] | None = None, checksum: str | None = None,
+                  copy_original: bool = True, original_path_label: str | None = None) -> None:
         self.ensure_dirs()
         temporary = self.parquet_path.with_name(f".analysis.{uuid.uuid4().hex[:8]}.part")
         try:
@@ -542,7 +567,7 @@ class Project:
                     original_copy = None
         with self._lock:
             self.meta["data"] = {
-                "original_path": str(original_path) if original_path else None,
+                "original_path": original_path_label if original_path_label is not None else str(original_path) if original_path else None,
                 "original_copy": original_copy,
                 "original_checksum": checksum,
                 "parquet_path": str(self.parquet_path),
@@ -550,6 +575,7 @@ class Project:
                 "n": int(len(df)),
                 "p": int(df.shape[1]),
                 "columns": columns or [],
+                "revision": new_id("data"),
             }
             self.save()
             for spec in self.specs():
@@ -586,6 +612,9 @@ def run_summary(r: dict[str, Any]) -> dict[str, Any]:
         "design": r.get("design"),
         "estimand": r.get("estimand"),
         "estimand_label": r.get("estimand_label"),
+        "interpretation": r.get("interpretation"),
+        "survival_target": r.get("survival_target"),
+        "heterogeneity_target": r.get("heterogeneity_target"),
         "method": r.get("method"),
         "method_label": r.get("method_label"),
         "engine": r.get("engine"),
@@ -597,6 +626,7 @@ def run_summary(r: dict[str, Any]) -> dict[str, Any]:
         "se": r.get("se"),
         "ci_low": r.get("ci_low"),
         "ci_high": r.get("ci_high"),
+        "ci_level": r.get("ci_level"),
         "p_value": r.get("p_value"),
         "n": r.get("n"),
         "n_treated": r.get("n_treated"),
@@ -616,11 +646,35 @@ def run_summary(r: dict[str, Any]) -> dict[str, Any]:
 # ---------------------------------------------------------------------------
 
 
+# A job or assistant request can outlive a Store.close(). Keep its Project,
+# lock, metadata and data cache shared with subsequent opens until the final
+# reference disappears. Directory identity also covers multiple Store objects.
+_LIVE_PROJECTS: weakref.WeakValueDictionary[str, Project] = weakref.WeakValueDictionary()
+_LIVE_PROJECTS_LOCK = threading.Lock()
+_RECENTS_LOCK = threading.Lock()
+
+
+def _live_project(path: Path) -> Project:
+    canonical = path.resolve()
+    key = os.path.normcase(str(canonical))
+    with _LIVE_PROJECTS_LOCK:
+        existing = _LIVE_PROJECTS.get(key)
+        if existing is not None:
+            # Reloading metadata here could overwrite in-flight changes.
+            return existing
+        project = Project(canonical)
+        _LIVE_PROJECTS[key] = project
+        return project
+
+
 class Store:
     """Open projects, keyed by id, plus a recents list."""
 
     def __init__(self) -> None:
         self._open: dict[str, Project] = {}
+        # Only protect map access. Never hold this while acquiring a Project
+        # lock: approved execution already holds that lock before Store.get().
+        self._map_lock = threading.Lock()
 
     # -- lifecycle --------------------------------------------------------
     def create(self, name: str, *, path: str | Path | None = None, seed: int | None = None) -> Project:
@@ -646,10 +700,11 @@ class Store:
             "profile": SETTINGS.profile,
         }
         _dump_yaml(base / "project.yaml", meta)
-        proj = Project(base)
+        proj = _live_project(base)
         proj.ensure_dirs()
         proj.save()
-        self._open[proj.id] = proj
+        with self._map_lock:
+            self._open[proj.id] = proj
         self._touch_recent(proj)
         return proj
 
@@ -659,13 +714,15 @@ class Store:
             p = p.parent
         if not (p / "project.yaml").exists():
             raise StoreError(f"{p} is not a Causal Capybara project.")
-        proj = Project(p)
-        self._open[proj.id] = proj
+        proj = _live_project(p)
+        with self._map_lock:
+            self._open[proj.id] = proj
         self._touch_recent(proj)
         return proj
 
     def get(self, project_id: str) -> Project:
-        proj = self._open.get(project_id)
+        with self._map_lock:
+            proj = self._open.get(project_id)
         if proj is not None:
             return proj
         for entry in self.recents():
@@ -674,10 +731,13 @@ class Store:
         raise StoreError(f"Project '{project_id}' is not open. Open it by path first.")
 
     def close(self, project_id: str) -> None:
-        self._open.pop(project_id, None)
+        with self._map_lock:
+            self._open.pop(project_id, None)
 
     def open_projects(self) -> list[dict[str, Any]]:
-        return [p.summary() for p in self._open.values()]
+        with self._map_lock:
+            projects = list(self._open.values())
+        return [p.summary() for p in projects]
 
     # -- recents ----------------------------------------------------------
     def recents(self) -> list[dict[str, Any]]:
@@ -702,10 +762,11 @@ class Store:
         return available
 
     def _touch_recent(self, proj: Project) -> None:
-        SETTINGS.ensure_dirs()
-        entries = [e for e in self.recents() if e.get("path") != str(proj.path)]
-        entries.insert(0, {"id": proj.id, "name": proj.name, "path": str(proj.path), "opened": now_iso()})
-        _atomic_write(SETTINGS.recents_file, json.dumps(entries[:25], indent=2))
+        with _RECENTS_LOCK:
+            SETTINGS.ensure_dirs()
+            entries = [e for e in self.recents() if e.get("path") != str(proj.path)]
+            entries.insert(0, {"id": proj.id, "name": proj.name, "path": str(proj.path), "opened": now_iso()})
+            _atomic_write(SETTINGS.recents_file, json.dumps(entries[:25], indent=2))
 
 
 STORE = Store()

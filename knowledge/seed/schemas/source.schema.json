@@ -1,0 +1,34 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Source artifact or metadata link",
+  "allOf": [
+    {
+      "$ref": "node.schema.json"
+    },
+    {
+      "type": "object",
+      "required": [
+        "source_version",
+        "disposition"
+      ],
+      "properties": {
+        "kind": {
+          "const": "source"
+        },
+        "source_version": {
+          "type": "string",
+          "minLength": 1
+        },
+        "disposition": {
+          "type": "string"
+        },
+        "url": {
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      }
+    }
+  ]
+}

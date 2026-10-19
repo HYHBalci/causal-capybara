@@ -1,0 +1,45 @@
+{
+  "$id": "https://causalcapybara.dev/schemas/capy.assistant.proposal.request.v1.json",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "properties": {
+    "base_revision": {
+      "title": "Base Revision",
+      "type": "string"
+    },
+    "changes": {
+      "additionalProperties": true,
+      "title": "Changes",
+      "type": "object"
+    },
+    "project_id": {
+      "title": "Project Id",
+      "type": "string"
+    },
+    "reason": {
+      "anyOf": [
+        {
+          "maxLength": 1000,
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Reason"
+    },
+    "spec_id": {
+      "title": "Spec Id",
+      "type": "string"
+    }
+  },
+  "required": [
+    "project_id",
+    "spec_id",
+    "base_revision",
+    "changes"
+  ],
+  "title": "ProposalRequest",
+  "type": "object"
+}

@@ -1,0 +1,3140 @@
+{
+  "claims": [
+    {
+      "aliases": [
+        "causal identification",
+        "causal assumptions",
+        "unmeasured confounding"
+      ],
+      "conditions": [
+        "Well-defined intervention, consistency and appropriate noninterference.",
+        "Conditional exchangeability of the potential outcomes needed for the target.",
+        "Target-population positivity and pre-treatment adjustment covariates."
+      ],
+      "counterevidence": [
+        "Balance on measured covariates cannot establish exchangeability."
+      ],
+      "evidence_path": "evidence/aipw.md",
+      "gaps": [
+        "No empirical identification claim is made for a user's study."
+      ],
+      "id": "claim:aipw-identification",
+      "kind": "claim",
+      "locator": {
+        "end": 930,
+        "exact_text": "AIPW is an estimation strategy, not an identification argument. A causal ATE requires a well-defined intervention, consistency, appropriate noninterference, conditional exchangeability given pre-treatment covariates, and overlap in the target population. For ATT, the required counterfactual comparison concerns untreated potential outcomes among treated units. Double robustness does not remove unmeasured confounding or justify adjustment for a post-treatment variable.",
+        "start": 459
+      },
+      "method_ids": [
+        "obs.aipw"
+      ],
+      "review": {
+        "actor": "Codex agent",
+        "actor_type": "agent",
+        "basis": [
+          "engines/python/capy_py/observational.py",
+          "tests/python/test_observational.py",
+          "https://miguelhernan.org/whatifbook",
+          "https://doi.org/10.1111/j.1541-0420.2005.00377.x"
+        ],
+        "date": "2026-10-12",
+        "human_review": false,
+        "semantic": "agent_context_review",
+        "structural": "validated"
+      },
+      "rights": {
+        "attribution": "Causal Capybara contributors; Yusufhan Balci; VCESR",
+        "content_type": "original_project_content",
+        "license_id": "Apache-2.0",
+        "license_url": "https://www.apache.org/licenses/LICENSE-2.0",
+        "modified": true,
+        "permissions": {
+          "adapt": true,
+          "cache": true,
+          "display": true,
+          "model_context": true,
+          "public_export": true
+        },
+        "review_basis": "Original or imported Apache-2.0 project material; no third-party paper body included."
+      },
+      "source_ids": [
+        "hernan2020",
+        "bang2005"
+      ],
+      "summary": "AIPW estimates an effect only after the observational identification assumptions justify the target; double robustness does not remove unmeasured confounding.",
+      "title": "AIPW identification versus estimation"
+    },
+    {
+      "aliases": [
+        "doubly robust consistency",
+        "augmented inverse probability weighting",
+        "one nuisance correct",
+        "propensity model correctness",
+        "outcome model correctness"
+      ],
+      "conditions": [
+        "The target is identified.",
+        "Propensity or relevant outcome nuisance converges appropriately.",
+        "Clipping must not invalidate the claimed propensity branch; regularity and integrability remain necessary."
+      ],
+      "counterevidence": [
+        "Both nuisances may be wrong.",
+        "Consistency under one correct nuisance does not automatically justify the reported interval."
+      ],
+      "evidence_path": "evidence/aipw.md",
+      "gaps": [
+        "No finite-sample coverage guarantee is supplied."
+      ],
+      "id": "claim:aipw-double-robustness",
+      "kind": "claim",
+      "locator": {
+        "end": 1438,
+        "exact_text": "For an identified target, an unmodified AIPW score is consistent under suitable regularity when either the propensity nuisance or the relevant outcome nuisance is consistently estimated. ATE uses both outcome means; ATT uses the control outcome mean. This consistency statement assumes the score's weights remain valid. It does not guarantee finite-sample accuracy, valid standard errors under one misspecified nuisance, or robustness when both nuisances are wrong.",
+        "start": 973
+      },
+      "method_ids": [
+        "obs.aipw"
+      ],
+      "review": {
+        "actor": "Codex agent",
+        "actor_type": "agent",
+        "basis": [
+          "engines/python/capy_py/observational.py",
+          "tests/python/test_observational.py",
+          "https://doi.org/10.1111/j.1541-0420.2005.00377.x",
+          "https://arxiv.org/html/1608.00060v7"
+        ],
+        "date": "2026-10-12",
+        "human_review": false,
+        "semantic": "agent_context_review",
+        "structural": "validated"
+      },
+      "rights": {
+        "attribution": "Causal Capybara contributors; Yusufhan Balci; VCESR",
+        "content_type": "original_project_content",
+        "license_id": "Apache-2.0",
+        "license_url": "https://www.apache.org/licenses/LICENSE-2.0",
+        "modified": true,
+        "permissions": {
+          "adapt": true,
+          "cache": true,
+          "display": true,
+          "model_context": true,
+          "public_export": true
+        },
+        "review_basis": "Original or imported Apache-2.0 project material; no third-party paper body included."
+      },
+      "source_ids": [
+        "bang2005",
+        "chernozhukov2018"
+      ],
+      "summary": "For an identified target and valid score weights, AIPW consistency can survive one consistently estimated nuisance branch; inference needs additional conditions.",
+      "title": "AIPW double robustness and its scope"
+    },
+    {
+      "aliases": [
+        "ATT overlap",
+        "treated support",
+        "asymmetric positivity",
+        "zero propensity"
+      ],
+      "conditions": [
+        "ATT is the declared target.",
+        "Untreated counterfactual outcomes are exchangeable conditional on the adjustment set.",
+        "Controls have positive probability on treated support."
+      ],
+      "counterevidence": [
+        "Stable estimation and inference can require stronger bounds or moment conditions than minimal identification.",
+        "ATE has a different support requirement."
+      ],
+      "evidence_path": "evidence/aipw.md",
+      "gaps": [
+        "The fitted propensity plot cannot certify population support."
+      ],
+      "id": "claim:aipw-att-positivity",
+      "kind": "claim",
+      "locator": {
+        "end": 1990,
+        "exact_text": "ATT targets people who were treated. Identification therefore requires controls with the covariate profiles represented among treated people: P(T=0 | X=x) must be positive on treated support. A control-only stratum with P(T=1 | X=x)=0 does not itself violate ATT identification. Uniform bounds away from one, adequate effective control sample size, and moment restrictions may still be needed for stable estimation and inference. ATE generally needs both treatment arms throughout its target support.",
+        "start": 1490
+      },
+      "method_ids": [
+        "obs.aipw"
+      ],
+      "review": {
+        "actor": "Codex agent",
+        "actor_type": "agent",
+        "basis": [
+          "engines/python/capy_py/observational.py",
+          "tests/python/test_observational.py",
+          "https://miguelhernan.org/whatifbook",
+          "https://arxiv.org/html/1608.00060v7"
+        ],
+        "date": "2026-10-12",
+        "human_review": false,
+        "semantic": "agent_context_review",
+        "structural": "validated"
+      },
+      "rights": {
+        "attribution": "Causal Capybara contributors; Yusufhan Balci; VCESR",
+        "content_type": "original_project_content",
+        "license_id": "Apache-2.0",
+        "license_url": "https://www.apache.org/licenses/LICENSE-2.0",
+        "modified": true,
+        "permissions": {
+          "adapt": true,
+          "cache": true,
+          "display": true,
+          "model_context": true,
+          "public_export": true
+        },
+        "review_basis": "Original or imported Apache-2.0 project material; no third-party paper body included."
+      },
+      "source_ids": [
+        "hernan2020",
+        "chernozhukov2018"
+      ],
+      "summary": "ATT positivity is asymmetric: controls are needed on treated covariate support; control-only zero-treatment strata are not themselves an ATT identification failure.",
+      "title": "ATT asymmetric positivity and treated support"
+    },
+    {
+      "aliases": [
+        "control outcome regression",
+        "m0",
+        "ATTE nuisance",
+        "treated outcome model m1"
+      ],
+      "conditions": [
+        "Binary treatment and nonzero treated population probability.",
+        "The described ATT score, not the ATE score.",
+        "Relevant ATT identification and support assumptions."
+      ],
+      "counterevidence": [
+        "ATE normally needs both treatment-arm outcome means.",
+        "Fitting both models in shared engine code does not make m1 an ATT score input."
+      ],
+      "evidence_path": "evidence/aipw.md",
+      "gaps": [
+        "This describes the inspected public Python engine, not every estimator called doubly robust."
+      ],
+      "id": "claim:aipw-att-control-nuisance",
+      "kind": "claim",
+      "locator": {
+        "end": 2464,
+        "exact_text": "Let e(X)=P(T=1|X), p=P(T=1), and m0(X)=E[Y|T=0,X]. The ATT augmented score combines treated residuals Y-m0(X) with control residuals weighted by e(X)/(1-e(X)), divided by p. It needs the control outcome nuisance m0, not the treated outcome nuisance m1. The public engine fits both outcome models for shared code, but its ATT estimate uses m0 alone. This distinction matters when explaining the outcome-model branch of double robustness.",
+        "start": 2028
+      },
+      "method_ids": [
+        "obs.aipw"
+      ],
+      "review": {
+        "actor": "Codex agent",
+        "actor_type": "agent",
+        "basis": [
+          "engines/python/capy_py/observational.py",
+          "tests/python/test_observational.py",
+          "https://arxiv.org/html/1608.00060v7",
+          "https://doi.org/10.1111/j.1541-0420.2005.00377.x"
+        ],
+        "date": "2026-10-12",
+        "human_review": false,
+        "semantic": "agent_context_review",
+        "structural": "validated"
+      },
+      "rights": {
+        "attribution": "Causal Capybara contributors; Yusufhan Balci; VCESR",
+        "content_type": "original_project_content",
+        "license_id": "Apache-2.0",
+        "license_url": "https://www.apache.org/licenses/LICENSE-2.0",
+        "modified": true,
+        "permissions": {
+          "adapt": true,
+          "cache": true,
+          "display": true,
+          "model_context": true,
+          "public_export": true
+        },
+        "review_basis": "Original or imported Apache-2.0 project material; no third-party paper body included."
+      },
+      "source_ids": [
+        "chernozhukov2018",
+        "bang2005"
+      ],
+      "summary": "The ATT AIPW score uses the control outcome nuisance m0 and propensity odds for controls; it does not require a treated outcome nuisance m1 in that score.",
+      "title": "ATT control outcome nuisance m0"
+    },
+    {
+      "aliases": [
+        "propensity score clipping",
+        "truncated propensity",
+        "clipped weights",
+        "bias variance tradeoff"
+      ],
+      "conditions": [
+        "Clipping binds in the limiting propensity function.",
+        "The outcome nuisance is misspecified for the propensity-only failure example.",
+        "The bias expression describes the stated ATT score."
+      ],
+      "counterevidence": [
+        "A correct ATT control outcome nuisance makes the stated clipping-bias term zero.",
+        "If clipping never binds asymptotically, this particular consistency objection disappears.",
+        "Trimming observations changes the target population; clipping propensities does not automatically define that target."
+      ],
+      "evidence_path": "evidence/aipw.md",
+      "gaps": [
+        "No universally optimal clipping threshold is asserted.",
+        "The engine reports clipping but its short double-robustness wording requires this qualification."
+      ],
+      "id": "claim:aipw-clipping",
+      "kind": "claim",
+      "locator": {
+        "end": 3127,
+        "exact_text": "Fixed propensity clipping changes the weighting calculation wherever it binds. It does not manufacture missing controls or generally preserve the correct-propensity branch of consistency when the outcome nuisance is misspecified. For ATT, with true propensity e, clipped limit c, and limiting control regression g0, the score bias is E[((e-c)/(1-c))*(m0-g0)]/p. A correct m0 makes this term zero; a correct raw e does not when c differs from e. If clipping never binds asymptotically, that particular objection disappears. Clipping is distinct from trimming units, which changes the analyzed population.",
+        "start": 2524
+      },
+      "method_ids": [
+        "obs.aipw"
+      ],
+      "review": {
+        "actor": "Codex agent",
+        "actor_type": "agent",
+        "basis": [
+          "engines/python/capy_py/observational.py",
+          "tests/python/test_observational.py",
+          "https://doi.org/10.1111/j.1541-0420.2005.00377.x",
+          "https://arxiv.org/html/1608.00060v7",
+          "https://pmc.ncbi.nlm.nih.gov/articles/PMC2732954/"
+        ],
+        "date": "2026-10-12",
+        "human_review": false,
+        "semantic": "agent_context_review",
+        "structural": "validated"
+      },
+      "rights": {
+        "attribution": "Causal Capybara contributors; Yusufhan Balci; VCESR",
+        "content_type": "original_project_content",
+        "license_id": "Apache-2.0",
+        "license_url": "https://www.apache.org/licenses/LICENSE-2.0",
+        "modified": true,
+        "permissions": {
+          "adapt": true,
+          "cache": true,
+          "display": true,
+          "model_context": true,
+          "public_export": true
+        },
+        "review_basis": "Original or imported Apache-2.0 project material; no third-party paper body included."
+      },
+      "source_ids": [
+        "bang2005",
+        "chernozhukov2018",
+        "10.1093/aje/kwn164"
+      ],
+      "summary": "Finite fixed propensity clipping changes weights and can destroy propensity-only consistency with a misspecified outcome nuisance; bounded weights do not repair missing support.",
+      "title": "Finite propensity clipping, weighting and consistency"
+    },
+    {
+      "aliases": [
+        "cross-fitting",
+        "sample splitting",
+        "product rate",
+        "influence function inference",
+        "confidence interval coverage"
+      ],
+      "conditions": [
+        "Identification and support hold.",
+        "Inference respects the sampling or dependence structure.",
+        "Suitable nuisance convergence and regularity hold; a standard sufficient error-product rate is o(n^(-1/2))."
+      ],
+      "counterevidence": [
+        "Double-robust consistency is weaker than valid double-robust inference.",
+        "Cross-fitting is not a universal coverage guarantee."
+      ],
+      "evidence_path": "evidence/aipw.md",
+      "gaps": [
+        "Independent-unit cross-fitting theory does not automatically cover serial or clustered designs.",
+        "No statistical adapter was run during this knowledge review."
+      ],
+      "id": "claim:aipw-cross-fitting-inference",
+      "kind": "claim",
+      "locator": {
+        "end": 3775,
+        "exact_text": "Cross-fitting trains nuisance models on one fold and evaluates scores on another to reduce reuse and overfitting. Valid influence-function inference also requires identification, support, moments, suitable sampling or dependence assumptions, and nuisance estimation conditions. A common sufficient condition is that both nuisance errors converge and their product is o(n^(-1/2)). Cross-fitting alone does not guarantee confidence-interval coverage, and double-robust consistency alone does not establish double-robust inference. Clustered or serial data require an appropriate dependence-aware analysis.",
+        "start": 3172
+      },
+      "method_ids": [
+        "obs.aipw"
+      ],
+      "review": {
+        "actor": "Codex agent",
+        "actor_type": "agent",
+        "basis": [
+          "engines/python/capy_py/observational.py",
+          "tests/python/test_observational.py",
+          "https://arxiv.org/html/1608.00060v7"
+        ],
+        "date": "2026-10-12",
+        "human_review": false,
+        "semantic": "agent_context_review",
+        "structural": "validated"
+      },
+      "rights": {
+        "attribution": "Causal Capybara contributors; Yusufhan Balci; VCESR",
+        "content_type": "original_project_content",
+        "license_id": "Apache-2.0",
+        "license_url": "https://www.apache.org/licenses/LICENSE-2.0",
+        "modified": true,
+        "permissions": {
+          "adapt": true,
+          "cache": true,
+          "display": true,
+          "model_context": true,
+          "public_export": true
+        },
+        "review_basis": "Original or imported Apache-2.0 project material; no third-party paper body included."
+      },
+      "source_ids": [
+        "chernozhukov2018"
+      ],
+      "summary": "Cross-fitting limits score reuse; valid inference still needs support, sampling, moments and nuisance convergence or rate conditions, not just a split into folds.",
+      "title": "Cross-fitting and inference conditions"
+    },
+    {
+      "aliases": [
+        "covariate balance",
+        "overlap diagnostics",
+        "effective sample size",
+        "ESS",
+        "exchangeability diagnostics"
+      ],
+      "conditions": [
+        "Diagnostics concern the fitted analysis and measured variables.",
+        "Scientific identification assumptions are assessed separately."
+      ],
+      "counterevidence": [
+        "Good measured balance can coexist with unmeasured confounding.",
+        "A stable fitted estimate can remain causally unidentified."
+      ],
+      "evidence_path": "evidence/aipw.md",
+      "gaps": [
+        "Diagnostic thresholds in the public engine are conventions, not scientific confidence probabilities."
+      ],
+      "id": "claim:aipw-diagnostics",
+      "kind": "claim",
+      "locator": {
+        "end": 4339,
+        "exact_text": "Overlap plots, balance statistics, effective sample size, weight concentration, clipping counts, held-out nuisance prediction errors, and fold stability describe weaknesses in the fitted analysis. They cannot verify absence of unmeasured confounding or identify a causal effect by themselves. Good balance on measured covariates is useful evidence about adjustment, not a certificate of conditional exchangeability. Poor overlap should trigger target-population and design review as well as sensitivity analysis.",
+        "start": 3827
+      },
+      "method_ids": [
+        "obs.aipw"
+      ],
+      "review": {
+        "actor": "Codex agent",
+        "actor_type": "agent",
+        "basis": [
+          "engines/python/capy_py/observational.py",
+          "tests/python/test_observational.py",
+          "https://miguelhernan.org/whatifbook",
+          "https://pmc.ncbi.nlm.nih.gov/articles/PMC2732954/"
+        ],
+        "date": "2026-10-12",
+        "human_review": false,
+        "semantic": "agent_context_review",
+        "structural": "validated"
+      },
+      "rights": {
+        "attribution": "Causal Capybara contributors; Yusufhan Balci; VCESR",
+        "content_type": "original_project_content",
+        "license_id": "Apache-2.0",
+        "license_url": "https://www.apache.org/licenses/LICENSE-2.0",
+        "modified": true,
+        "permissions": {
+          "adapt": true,
+          "cache": true,
+          "display": true,
+          "model_context": true,
+          "public_export": true
+        },
+        "review_basis": "Original or imported Apache-2.0 project material; no third-party paper body included."
+      },
+      "source_ids": [
+        "hernan2020",
+        "10.1093/aje/kwn164"
+      ],
+      "summary": "Balance, overlap, effective sample size, clipping and nuisance diagnostics help find weak adjustment; they cannot prove unmeasured exchangeability or causal identification.",
+      "title": "AIPW diagnostics do not prove exchangeability"
+    },
+    {
+      "aliases": [
+        "ATT(g,t)",
+        "group time average treatment effect",
+        "Callaway SantAnna",
+        "adoption cohort"
+      ],
+      "conditions": [
+        "Absorbing treatment adoption.",
+        "Chosen control-group and parallel-trends assumptions.",
+        "Suitable baseline, support and no-anticipation or declared anticipation conditions."
+      ],
+      "counterevidence": [
+        "An aggregate's interpretation depends on which cells and weights contribute."
+      ],
+      "evidence_path": "evidence/did.md",
+      "gaps": [
+        "The card supplies no empirical effect for an absent study dataset."
+      ],
+      "id": "claim:did-group-time-att",
+      "kind": "claim",
+      "locator": {
+        "end": 946,
+        "exact_text": "In staggered adoption, ATT(g,t) is the average effect at calendar time t for units first treated in cohort g. Callaway-Sant'Anna estimates eligible cohort-time comparisons using never-treated or not-yet-treated controls under the chosen identification conditions. These cells are distinct from an overall ATT, a cohort average, or a dynamic event-time average. The public engine records estimable cells and reports skipped cells instead of filling unsupported comparisons.",
+        "start": 474
+      },
+      "method_ids": [
+        "did.callaway_santanna"
+      ],
+      "review": {
+        "actor": "Codex agent",
+        "actor_type": "agent",
+        "basis": [
+          "engines/python/capy_py/did_modern.py",
+          "tests/python/test_did_modern.py",
+          "https://arxiv.org/html/1803.09015v4"
+        ],
+        "date": "2026-10-12",
+        "human_review": false,
+        "semantic": "agent_context_review",
+        "structural": "validated"
+      },
+      "rights": {
+        "attribution": "Causal Capybara contributors; Yusufhan Balci; VCESR",
+        "content_type": "original_project_content",
+        "license_id": "Apache-2.0",
+        "license_url": "https://www.apache.org/licenses/LICENSE-2.0",
+        "modified": true,
+        "permissions": {
+          "adapt": true,
+          "cache": true,
+          "display": true,
+          "model_context": true,
+          "public_export": true
+        },
+        "review_basis": "Original or imported Apache-2.0 project material; no third-party paper body included."
+      },
+      "source_ids": [
+        "callaway2021"
+      ],
+      "summary": "Staggered-adoption DiD separates cohort-time ATT(g,t) from overall, cohort and dynamic averages and uses eligible untreated comparisons for each cell.",
+      "title": "Staggered DiD cohort-time ATT"
+    },
+    {
+      "aliases": [
+        "two way fixed effects",
+        "TWFE",
+        "already treated controls",
+        "Sun Abraham",
+        "lead lag contamination"
+      ],
+      "conditions": [
+        "Staggered adoption with the described two-way fixed-effects comparisons.",
+        "Heterogeneous or time-varying treatment effects can affect interpretation."
+      ],
+      "counterevidence": [
+        "TWFE can be appropriate under additional restrictions; it is not universally invalid.",
+        "Adding unit and period fixed effects alone does not establish the desired causal average."
+      ],
+      "evidence_path": "evidence/did.md",
+      "gaps": [
+        "A specific regression's weights and comparison structure require study-level inspection."
+      ],
+      "id": "claim:did-twfe-heterogeneity",
+      "kind": "claim",
+      "locator": {
+        "end": 1571,
+        "exact_text": "With staggered adoption, a two-way fixed-effects regression can compare later-treated units with units already treated. Changes in those controls may include evolving treatment effects. Under heterogeneous or dynamic effects, its coefficient need not equal the desired treated-population average. Conventional lead-lag event studies can also mix effects from other relative periods, producing misleading apparent pretrends. TWFE is not universally invalid, but its causal interpretation needs restrictions on effects and comparisons beyond merely including fixed effects.",
+        "start": 1000
+      },
+      "method_ids": [
+        "did.twfe",
+        "did.event_study",
+        "did.sun_abraham",
+        "did.goodman_bacon"
+      ],
+      "review": {
+        "actor": "Codex agent",
+        "actor_type": "agent",
+        "basis": [
+          "engines/python/capy_py/did_modern.py",
+          "tests/python/test_did_modern.py",
+          "https://doi.org/10.1016/j.jeconom.2021.03.014",
+          "https://arxiv.org/html/1804.05785v2"
+        ],
+        "date": "2026-10-12",
+        "human_review": false,
+        "semantic": "agent_context_review",
+        "structural": "validated"
+      },
+      "rights": {
+        "attribution": "Causal Capybara contributors; Yusufhan Balci; VCESR",
+        "content_type": "original_project_content",
+        "license_id": "Apache-2.0",
+        "license_url": "https://www.apache.org/licenses/LICENSE-2.0",
+        "modified": true,
+        "permissions": {
+          "adapt": true,
+          "cache": true,
+          "display": true,
+          "model_context": true,
+          "public_export": true
+        },
+        "review_basis": "Original or imported Apache-2.0 project material; no third-party paper body included."
+      },
+      "source_ids": [
+        "bacon2021",
+        "sun2021"
+      ],
+      "summary": "Staggered TWFE can use already-treated controls; heterogeneous dynamic effects can distort the intended average and contaminate event-study leads and lags.",
+      "title": "TWFE heterogeneity and already-treated controls"
+    },
+    {
+      "aliases": [
+        "anticipation window",
+        "not yet treated",
+        "no anticipation"
+      ],
+      "conditions": [
+        "The adoption date and intervention are well defined.",
+        "Controls remain unaffected over the comparison periods.",
+        "Any anticipation horizon is declared and implemented."
+      ],
+      "counterevidence": [
+        "Non-significant leads do not prove no anticipation.",
+        "Not-yet-treated status alone need not imply no treatment-related response."
+      ],
+      "evidence_path": "evidence/did.md",
+      "gaps": [
+        "The ordinary public engine adoption-date path does not establish support for every anticipation-window design."
+      ],
+      "id": "claim:did-no-anticipation",
+      "kind": "claim",
+      "locator": {
+        "end": 2145,
+        "exact_text": "No anticipation means outcomes do not respond to a future treatment before the assigned adoption date. If behavior changes earlier, a declared anticipation window and earlier baseline or revised control eligibility may be necessary. A not-yet-treated unit is a usable control only while it remains unaffected over the comparison periods. A quiet pre-adoption plot does not prove no anticipation, and the public engine's ordinary adoption-date implementation does not automatically implement every anticipation-window design.",
+        "start": 1621
+      },
+      "method_ids": [
+        "did.callaway_santanna"
+      ],
+      "review": {
+        "actor": "Codex agent",
+        "actor_type": "agent",
+        "basis": [
+          "engines/python/capy_py/did_modern.py",
+          "tests/python/test_did_modern.py",
+          "https://arxiv.org/html/1803.09015v4"
+        ],
+        "date": "2026-10-12",
+        "human_review": false,
+        "semantic": "agent_context_review",
+        "structural": "validated"
+      },
+      "rights": {
+        "attribution": "Causal Capybara contributors; Yusufhan Balci; VCESR",
+        "content_type": "original_project_content",
+        "license_id": "Apache-2.0",
+        "license_url": "https://www.apache.org/licenses/LICENSE-2.0",
+        "modified": true,
+        "permissions": {
+          "adapt": true,
+          "cache": true,
+          "display": true,
+          "model_context": true,
+          "public_export": true
+        },
+        "review_basis": "Original or imported Apache-2.0 project material; no third-party paper body included."
+      },
+      "source_ids": [
+        "callaway2021"
+      ],
+      "summary": "DiD no anticipation concerns pre-adoption response; an anticipation window can change the baseline and eligibility of not-yet-treated controls.",
+      "title": "DiD no anticipation and control eligibility"
+    },
+    {
+      "aliases": [
+        "conditional parallel trends",
+        "pretrend test",
+        "pre-trends",
+        "untreated potential outcomes"
+      ],
+      "conditions": [
+        "Eligible comparison group and declared outcome scale.",
+        "Conditional or unconditional trends restriction matches the estimator.",
+        "Pre-treatment covariates and no-anticipation policy are explicit."
+      ],
+      "counterevidence": [
+        "Low-power tests may fail to reveal important divergence.",
+        "TWFE lead contamination can create apparent pretrends under effect heterogeneity.",
+        "Equal observed levels are not required by parallel trends."
+      ],
+      "evidence_path": "evidence/did.md",
+      "gaps": [
+        "Roth et al. (2023) is metadata/link-only further reading; Roth (2022) was reviewed through its published abstract, with no copied full text.",
+        "Observed pre-period evidence does not verify the missing post-adoption counterfactual."
+      ],
+      "id": "claim:did-parallel-trends",
+      "kind": "claim",
+      "locator": {
+        "end": 2731,
+        "exact_text": "Parallel trends restricts changes in untreated potential outcomes for a treated cohort and the eligible comparison group, possibly conditional on pre-treatment covariates. It concerns the missing counterfactual trend after adoption, not equality of observed outcome levels. Pretrend evidence can challenge the assumption, but a test that fails to reject cannot prove it; low power and selection after pretesting remain concerns. Heterogeneous-effect contamination in a conventional TWFE event study can further complicate interpreting leads.",
+        "start": 2190
+      },
+      "method_ids": [
+        "did.callaway_santanna"
+      ],
+      "review": {
+        "actor": "Codex agent",
+        "actor_type": "agent",
+        "basis": [
+          "engines/python/capy_py/did_modern.py",
+          "tests/python/test_did_modern.py",
+          "https://arxiv.org/html/1803.09015v4",
+          "https://arxiv.org/html/1804.05785v2",
+          "https://doi.org/10.1016/j.jeconom.2023.03.008",
+          "https://www.aeaweb.org/articles?id=10.1257%2Faeri.20210236"
+        ],
+        "date": "2026-10-12",
+        "human_review": false,
+        "semantic": "agent_context_review",
+        "structural": "validated"
+      },
+      "rights": {
+        "attribution": "Causal Capybara contributors; Yusufhan Balci; VCESR",
+        "content_type": "original_project_content",
+        "license_id": "Apache-2.0",
+        "license_url": "https://www.apache.org/licenses/LICENSE-2.0",
+        "modified": true,
+        "permissions": {
+          "adapt": true,
+          "cache": true,
+          "display": true,
+          "model_context": true,
+          "public_export": true
+        },
+        "review_basis": "Original or imported Apache-2.0 project material; no third-party paper body included."
+      },
+      "source_ids": [
+        "callaway2021",
+        "sun2021",
+        "roth2023",
+        "10.1257/aeri.20210236"
+      ],
+      "summary": "Parallel trends concerns untreated counterfactual changes, possibly conditional on covariates; an insignificant pretrend test cannot prove the identifying restriction.",
+      "title": "DiD parallel trends and pretrend tests"
+    },
+    {
+      "aliases": [
+        "panel attrition",
+        "changing panel composition",
+        "units enter leave",
+        "missing outcomes"
+      ],
+      "conditions": [
+        "Target units and missing-data scope are declared.",
+        "Changes in the units contributing to each comparison are inspected."
+      ],
+      "counterevidence": [
+        "A balanced observed panel can still be selectively observed.",
+        "A complete-pair sample can differ from the intended target population."
+      ],
+      "evidence_path": "evidence/did.md",
+      "gaps": [
+        "The missing-data mechanism remains a study-level assumption.",
+        "The attrition explanation is an original reading of public engine behavior, not a claim of a general missingness theorem in the referenced paper."
+      ],
+      "id": "claim:did-composition",
+      "kind": "claim",
+      "locator": {
+        "end": 3352,
+        "exact_text": "Changing panel composition can move observed cohort means even without a treatment effect. Attrition, entry, missing outcomes, and changes in the units contributing to a comparison need explicit assessment. Requiring observations in both comparison periods changes the contributing sample and may change its interpretation; a balanced observed panel does not prove ignorable selection. The public engine reports panel balance and builds cohort-time blocks from units observed in both periods. Population and missing-data assumptions remain separate scientific judgments.",
+        "start": 2782
+      },
+      "method_ids": [
+        "did.callaway_santanna"
+      ],
+      "review": {
+        "actor": "Codex agent",
+        "actor_type": "agent",
+        "basis": [
+          "engines/python/capy_py/did_modern.py",
+          "tests/python/test_did_modern.py",
+          "https://arxiv.org/html/1803.09015v4"
+        ],
+        "date": "2026-10-12",
+        "human_review": false,
+        "semantic": "agent_context_review",
+        "structural": "validated"
+      },
+      "rights": {
+        "attribution": "Causal Capybara contributors; Yusufhan Balci; VCESR",
+        "content_type": "original_project_content",
+        "license_id": "Apache-2.0",
+        "license_url": "https://www.apache.org/licenses/LICENSE-2.0",
+        "modified": true,
+        "permissions": {
+          "adapt": true,
+          "cache": true,
+          "display": true,
+          "model_context": true,
+          "public_export": true
+        },
+        "review_basis": "Original or imported Apache-2.0 project material; no third-party paper body included."
+      },
+      "source_ids": [
+        "callaway2021"
+      ],
+      "summary": "Attrition, entry and missing outcomes can change observed DiD composition; complete-pair comparison and panel-balance diagnostics do not prove ignorable selection.",
+      "title": "DiD attrition and changing panel composition"
+    },
+    {
+      "aliases": [
+        "event time",
+        "dynamic aggregation",
+        "aggregation weights",
+        "balanced event time cohorts",
+        "cohort composition"
+      ],
+      "conditions": [
+        "Eligible cohort-time cells are declared.",
+        "Aggregation weights and exposure window are reported.",
+        "Any fixed-cohort restriction is reflected in the target population."
+      ],
+      "counterevidence": [
+        "Changing event-time composition can mimic changes in effects.",
+        "Holding cohort composition fixed reduces the available cohorts and may reduce precision."
+      ],
+      "evidence_path": "evidence/did.md",
+      "gaps": [
+        "A single overall average does not reveal all cohort heterogeneity."
+      ],
+      "id": "claim:did-aggregation",
+      "kind": "claim",
+      "locator": {
+        "end": 3903,
+        "exact_text": "An overall or event-time DiD estimate is defined by its eligible cohort-time cells and aggregation weights. At longer exposure durations, later cohorts may no longer contribute, so changes along a dynamic curve can reflect different cohort composition as well as effect dynamics. Holding the cohort set fixed across an event window improves that comparison but changes the target population and can reduce precision. Report the contributing cohorts, exposure window, weights, and omitted cells.",
+        "start": 3409
+      },
+      "method_ids": [
+        "did.callaway_santanna"
+      ],
+      "review": {
+        "actor": "Codex agent",
+        "actor_type": "agent",
+        "basis": [
+          "engines/python/capy_py/did_modern.py",
+          "tests/python/test_did_modern.py",
+          "https://arxiv.org/html/1803.09015v4"
+        ],
+        "date": "2026-10-12",
+        "human_review": false,
+        "semantic": "agent_context_review",
+        "structural": "validated"
+      },
+      "rights": {
+        "attribution": "Causal Capybara contributors; Yusufhan Balci; VCESR",
+        "content_type": "original_project_content",
+        "license_id": "Apache-2.0",
+        "license_url": "https://www.apache.org/licenses/LICENSE-2.0",
+        "modified": true,
+        "permissions": {
+          "adapt": true,
+          "cache": true,
+          "display": true,
+          "model_context": true,
+          "public_export": true
+        },
+        "review_basis": "Original or imported Apache-2.0 project material; no third-party paper body included."
+      },
+      "source_ids": [
+        "callaway2021"
+      ],
+      "summary": "Event-time DiD curves may combine different cohorts at different exposure durations; aggregation weights and a fixed cohort window make the target explicit.",
+      "title": "DiD aggregation weights and event-time composition"
+    },
+    {
+      "aliases": [
+        "no untreated comparison",
+        "comparison support",
+        "skipped cells",
+        "not yet treated controls"
+      ],
+      "conditions": [
+        "Comparison units are unaffected over relevant periods.",
+        "Baseline and target outcomes are observed for the chosen comparison.",
+        "Conditional adjustment has relevant overlap."
+      ],
+      "counterevidence": [
+        "Changing labels cannot supply an absent comparison.",
+        "A fallback to not-yet-treated controls changes the comparison contract and must be disclosed."
+      ],
+      "evidence_path": "evidence/did.md",
+      "gaps": [
+        "Aggregates cover supported cells rather than an invented complete panel of effects."
+      ],
+      "id": "claim:did-support",
+      "kind": "claim",
+      "locator": {
+        "end": 4483,
+        "exact_text": "A cohort-time effect requires an admissible untreated comparison and the relevant baseline and outcome observations; conditional adjustment also requires overlap. If no comparison survives, the effect is not supplied by choosing a different label or by extrapolating an empty cell. The public engine excludes ineligible or unestimable cells, discloses skipped cells, and reports when a never-treated control choice falls back to not-yet-treated controls. Each resulting aggregate must be interpreted for the cells actually supported.",
+        "start": 3950
+      },
+      "method_ids": [
+        "did.callaway_santanna"
+      ],
+      "review": {
+        "actor": "Codex agent",
+        "actor_type": "agent",
+        "basis": [
+          "engines/python/capy_py/did_modern.py",
+          "tests/python/test_did_modern.py",
+          "https://arxiv.org/html/1803.09015v4"
+        ],
+        "date": "2026-10-12",
+        "human_review": false,
+        "semantic": "agent_context_review",
+        "structural": "validated"
+      },
+      "rights": {
+        "attribution": "Causal Capybara contributors; Yusufhan Balci; VCESR",
+        "content_type": "original_project_content",
+        "license_id": "Apache-2.0",
+        "license_url": "https://www.apache.org/licenses/LICENSE-2.0",
+        "modified": true,
+        "permissions": {
+          "adapt": true,
+          "cache": true,
+          "display": true,
+          "model_context": true,
+          "public_export": true
+        },
+        "review_basis": "Original or imported Apache-2.0 project material; no third-party paper body included."
+      },
+      "source_ids": [
+        "callaway2021"
+      ],
+      "summary": "A staggered DiD cell needs an eligible untreated comparison, baseline and outcome observations and conditional overlap; unsupported cells must remain omitted.",
+      "title": "DiD comparison support and omitted cells"
+    },
+    {
+      "id": "claim:causal-framing",
+      "kind": "claim",
+      "title": "Causal framing requires an identification argument",
+      "summary": "A regression coefficient, balanced covariates, a fitted graph or an accurately predicted outcome is not by itself an identified causal effect. Name the intervention, target population, endpoint and contrast, then state which design and assumptions connect them to an observed-data functional. When that argument is unavailable, report an association or model prediction. Computational verification and source links do not establish a study’s exchangeability.",
+      "aliases": [
+        "causal framing",
+        "causal identification",
+        "association prediction",
+        "regression balance fitted model intervention"
+      ],
+      "method_ids": [],
+      "source_ids": [
+        "source:ontology:pearl2009",
+        "source:ontology:ich2019",
+        "source:ontology:rubin2008"
+      ],
+      "evidence_path": "evidence/causal-framing.md",
+      "locator": {
+        "start": 206,
+        "end": 664,
+        "exact_text": "A regression coefficient, balanced covariates, a fitted graph or an accurately predicted outcome is not by itself an identified causal effect. Name the intervention, target population, endpoint and contrast, then state which design and assumptions connect them to an observed-data functional. When that argument is unavailable, report an association or model prediction. Computational verification and source links do not establish a study’s exchangeability."
+      },
+      "conditions": [
+        "A defensible design and identification argument are needed for causal interpretation."
+      ],
+      "counterevidence": [
+        "The related diagnostic, fitted model or software check cannot establish all causal assumptions."
+      ],
+      "gaps": [
+        "Independent human review and empirical study-specific identification evidence are absent."
+      ],
+      "scope": "Scoped original methodological explanation; no whole-method or study audit is implied.",
+      "rights": {
+        "license_id": "Apache-2.0",
+        "license_url": "https://www.apache.org/licenses/LICENSE-2.0",
+        "attribution": "Causal Capybara contributors; Yusufhan Balci; VCESR",
+        "modified": true,
+        "content_type": "original_project_content",
+        "review_basis": "Original or imported Apache-2.0 project material; no third-party paper body included.",
+        "permissions": {
+          "cache": true,
+          "display": true,
+          "adapt": true,
+          "model_context": true,
+          "public_export": true
+        }
+      },
+      "review": {
+        "actor": "Codex agent",
+        "actor_type": "agent",
+        "structural": "validated",
+        "semantic": "agent_context_review",
+        "human_review": false,
+        "date": "2026-10-13",
+        "basis": [
+          "Original note reviewed against linked primary context; no external full text redistributed."
+        ],
+        "sources": [
+          "source:ontology:pearl2009",
+          "source:ontology:ich2019",
+          "source:ontology:rubin2008"
+        ]
+      }
+    },
+    {
+      "id": "claim:target-time",
+      "kind": "claim",
+      "title": "Eligibility and follow-up must share a defensible time zero",
+      "summary": "An exposure label constructed from events after eligibility can require units to survive until they receive that label. Counting that guaranteed event-free period as exposed follow-up introduces immortal-time bias. Specify eligibility, assignment or strategy classification, and start of follow-up together; inspect joins and exclusion rules for future information. The appropriate emulation depends on the intended strategy, not only on available timestamps.",
+      "aliases": [
+        "target time",
+        "immortal time bias",
+        "time zero eligibility assignment follow-up",
+        "future exposure labels"
+      ],
+      "method_ids": [],
+      "source_ids": [
+        "source:ontology:hernan2016"
+      ],
+      "evidence_path": "evidence/target-time.md",
+      "locator": {
+        "start": 215,
+        "end": 674,
+        "exact_text": "An exposure label constructed from events after eligibility can require units to survive until they receive that label. Counting that guaranteed event-free period as exposed follow-up introduces immortal-time bias. Specify eligibility, assignment or strategy classification, and start of follow-up together; inspect joins and exclusion rules for future information. The appropriate emulation depends on the intended strategy, not only on available timestamps."
+      },
+      "conditions": [
+        "Eligibility, assignment and follow-up are aligned for the defined target trial."
+      ],
+      "counterevidence": [
+        "The related diagnostic, fitted model or software check cannot establish all causal assumptions."
+      ],
+      "gaps": [
+        "Independent human review and empirical study-specific identification evidence are absent."
+      ],
+      "scope": "Scoped original methodological explanation; no whole-method or study audit is implied.",
+      "rights": {
+        "license_id": "Apache-2.0",
+        "license_url": "https://www.apache.org/licenses/LICENSE-2.0",
+        "attribution": "Causal Capybara contributors; Yusufhan Balci; VCESR",
+        "modified": true,
+        "content_type": "original_project_content",
+        "review_basis": "Original or imported Apache-2.0 project material; no third-party paper body included.",
+        "permissions": {
+          "cache": true,
+          "display": true,
+          "adapt": true,
+          "model_context": true,
+          "public_export": true
+        }
+      },
+      "review": {
+        "actor": "Codex agent",
+        "actor_type": "agent",
+        "structural": "validated",
+        "semantic": "agent_context_review",
+        "human_review": false,
+        "date": "2026-10-13",
+        "basis": [
+          "Original note reviewed against linked primary context; no external full text redistributed."
+        ],
+        "sources": [
+          "source:ontology:hernan2016"
+        ]
+      }
+    },
+    {
+      "id": "claim:adjustment-design",
+      "kind": "claim",
+      "title": "Adjustment depends on causal role and timing",
+      "summary": "A variable can predict outcomes and still be inappropriate for adjustment. Conditioning on a mediator can remove part of a total effect; conditioning on a collider can open a noncausal path. Choose the adjustment set using the stated causal graph and pre-treatment measurement timing. Complete-case restrictions and missing-data procedures also need explicit assumptions and may change which population the comparison represents.",
+      "aliases": [
+        "adjustment design",
+        "adjustment adjusting post-treatment controls",
+        "mediator mediators collider colliders total effects",
+        "confounding missingness"
+      ],
+      "method_ids": [],
+      "source_ids": [
+        "source:ontology:pearl2009",
+        "source:ontology:imai2010",
+        "bang2005"
+      ],
+      "evidence_path": "evidence/adjustment-design.md",
+      "locator": {
+        "start": 200,
+        "end": 629,
+        "exact_text": "A variable can predict outcomes and still be inappropriate for adjustment. Conditioning on a mediator can remove part of a total effect; conditioning on a collider can open a noncausal path. Choose the adjustment set using the stated causal graph and pre-treatment measurement timing. Complete-case restrictions and missing-data procedures also need explicit assumptions and may change which population the comparison represents."
+      },
+      "conditions": [
+        "Variable roles and observation selection are justified for the intended contrast."
+      ],
+      "counterevidence": [
+        "The related diagnostic, fitted model or software check cannot establish all causal assumptions."
+      ],
+      "gaps": [
+        "Independent human review and empirical study-specific identification evidence are absent."
+      ],
+      "scope": "Scoped original methodological explanation; no whole-method or study audit is implied.",
+      "rights": {
+        "license_id": "Apache-2.0",
+        "license_url": "https://www.apache.org/licenses/LICENSE-2.0",
+        "attribution": "Causal Capybara contributors; Yusufhan Balci; VCESR",
+        "modified": true,
+        "content_type": "original_project_content",
+        "review_basis": "Original or imported Apache-2.0 project material; no third-party paper body included.",
+        "permissions": {
+          "cache": true,
+          "display": true,
+          "adapt": true,
+          "model_context": true,
+          "public_export": true
+        }
+      },
+      "review": {
+        "actor": "Codex agent",
+        "actor_type": "agent",
+        "structural": "validated",
+        "semantic": "agent_context_review",
+        "human_review": false,
+        "date": "2026-10-13",
+        "basis": [
+          "Original note reviewed against linked primary context; no external full text redistributed."
+        ],
+        "sources": [
+          "source:ontology:pearl2009",
+          "source:ontology:imai2010",
+          "bang2005"
+        ]
+      }
+    },
+    {
+      "id": "claim:weight-target",
+      "kind": "claim",
+      "title": "Weighting and support are target-specific",
+      "summary": "ATE, ATT and overlap-population targets use different treatment weighting rules. Record the target before fitting assignment models, and examine support, weight concentration and balance after weighting. Clipping probabilities changes the estimator; discarding units can change the eligible target. Neither stable weights nor measured balance proves exchangeability, and no probability model repairs absent treatment support for the required comparison.",
+      "aliases": [
+        "weight target",
+        "ATE ATT overlap weighting weights",
+        "propensity clipping trimming support"
+      ],
+      "method_ids": [
+        "obs.weighting.ipw",
+        "obs.weighting.cbps",
+        "obs.weighting.entropy",
+        "obs.weighting.twang",
+        "obs.aipw"
+      ],
+      "source_ids": [
+        "rosenbaum1983",
+        "bang2005"
+      ],
+      "evidence_path": "evidence/weight-target.md",
+      "locator": {
+        "start": 197,
+        "end": 650,
+        "exact_text": "ATE, ATT and overlap-population targets use different treatment weighting rules. Record the target before fitting assignment models, and examine support, weight concentration and balance after weighting. Clipping probabilities changes the estimator; discarding units can change the eligible target. Neither stable weights nor measured balance proves exchangeability, and no probability model repairs absent treatment support for the required comparison."
+      },
+      "conditions": [
+        "Target-specific weight equations and positivity are justified."
+      ],
+      "counterevidence": [
+        "The related diagnostic, fitted model or software check cannot establish all causal assumptions."
+      ],
+      "gaps": [
+        "Independent human review and empirical study-specific identification evidence are absent."
+      ],
+      "scope": "Scoped original methodological explanation; no whole-method or study audit is implied.",
+      "rights": {
+        "license_id": "Apache-2.0",
+        "license_url": "https://www.apache.org/licenses/LICENSE-2.0",
+        "attribution": "Causal Capybara contributors; Yusufhan Balci; VCESR",
+        "modified": true,
+        "content_type": "original_project_content",
+        "review_basis": "Original or imported Apache-2.0 project material; no third-party paper body included.",
+        "permissions": {
+          "cache": true,
+          "display": true,
+          "adapt": true,
+          "model_context": true,
+          "public_export": true
+        }
+      },
+      "review": {
+        "actor": "Codex agent",
+        "actor_type": "agent",
+        "structural": "validated",
+        "semantic": "agent_context_review",
+        "human_review": false,
+        "date": "2026-10-13",
+        "basis": [
+          "Original note reviewed against linked primary context; no external full text redistributed."
+        ],
+        "sources": [
+          "rosenbaum1983",
+          "bang2005"
+        ]
+      }
+    },
+    {
+      "id": "claim:nuisance-learning",
+      "kind": "claim",
+      "title": "Orthogonal learning retains identification and inference conditions",
+      "summary": "An orthogonal score can reduce first-order sensitivity to nuisance estimation errors; it does not remove confounding. Fit nuisance models on training folds and evaluate target-specific scores on held-out observations, keeping dependent units or clusters in valid split units. ATE and ATT scores are not interchangeable. Valid uncertainty also requires the stated rate, sampling and dependence conditions, even when one nuisance component gives a doubly robust consistency property.",
+      "aliases": [
+        "nuisance learning",
+        "orthogonal scores",
+        "cross-fitting cross fitting",
+        "double robustness nuisance estimation causal assumptions"
+      ],
+      "method_ids": [
+        "obs.aipw",
+        "obs.tmle",
+        "ml.dml_irm",
+        "ml.dml_plr",
+        "ml.causal_forest",
+        "ml.metalearner"
+      ],
+      "source_ids": [
+        "bang2005",
+        "chernozhukov2018"
+      ],
+      "evidence_path": "evidence/nuisance-learning.md",
+      "locator": {
+        "start": 223,
+        "end": 704,
+        "exact_text": "An orthogonal score can reduce first-order sensitivity to nuisance estimation errors; it does not remove confounding. Fit nuisance models on training folds and evaluate target-specific scores on held-out observations, keeping dependent units or clusters in valid split units. ATE and ATT scores are not interchangeable. Valid uncertainty also requires the stated rate, sampling and dependence conditions, even when one nuisance component gives a doubly robust consistency property."
+      },
+      "conditions": [
+        "Score, target, fold unit and inference conditions match the procedure."
+      ],
+      "counterevidence": [
+        "The related diagnostic, fitted model or software check cannot establish all causal assumptions."
+      ],
+      "gaps": [
+        "Independent human review and empirical study-specific identification evidence are absent."
+      ],
+      "scope": "Scoped original methodological explanation; no whole-method or study audit is implied.",
+      "rights": {
+        "license_id": "Apache-2.0",
+        "license_url": "https://www.apache.org/licenses/LICENSE-2.0",
+        "attribution": "Causal Capybara contributors; Yusufhan Balci; VCESR",
+        "modified": true,
+        "content_type": "original_project_content",
+        "review_basis": "Original or imported Apache-2.0 project material; no third-party paper body included.",
+        "permissions": {
+          "cache": true,
+          "display": true,
+          "adapt": true,
+          "model_context": true,
+          "public_export": true
+        }
+      },
+      "review": {
+        "actor": "Codex agent",
+        "actor_type": "agent",
+        "structural": "validated",
+        "semantic": "agent_context_review",
+        "human_review": false,
+        "date": "2026-10-13",
+        "basis": [
+          "Original note reviewed against linked primary context; no external full text redistributed."
+        ],
+        "sources": [
+          "bang2005",
+          "chernozhukov2018"
+        ]
+      }
+    },
+    {
+      "id": "claim:iv-local",
+      "kind": "claim",
+      "title": "IV interpretation is a compliance-specific identification statement",
+      "summary": "A relevant instrument is not automatically a valid instrument. Exclusion, independence and the applicable compliance restrictions connect an instrument-induced comparison to a local effect. Under the usual binary monotonicity setup, that target concerns compliers rather than necessarily every eligible unit. Report the instrument construction, first-stage information and weak-identification-aware uncertainty; a different estimator such as LIML does not establish exclusion.",
+      "aliases": [
+        "iv local",
+        "instrument instrumental variables",
+        "first stage instrument relevance",
+        "local average treatment effect LATE compliers ATE exclusion"
+      ],
+      "method_ids": [
+        "iv.2sls",
+        "iv.liml",
+        "iv.gmm",
+        "iv.weak_robust",
+        "rct.cace"
+      ],
+      "source_ids": [
+        "angrist1996"
+      ],
+      "evidence_path": "evidence/iv-local.md",
+      "locator": {
+        "start": 223,
+        "end": 699,
+        "exact_text": "A relevant instrument is not automatically a valid instrument. Exclusion, independence and the applicable compliance restrictions connect an instrument-induced comparison to a local effect. Under the usual binary monotonicity setup, that target concerns compliers rather than necessarily every eligible unit. Report the instrument construction, first-stage information and weak-identification-aware uncertainty; a different estimator such as LIML does not establish exclusion."
+      },
+      "conditions": [
+        "Instrument and compliance assumptions hold for the stated local target."
+      ],
+      "counterevidence": [
+        "The related diagnostic, fitted model or software check cannot establish all causal assumptions."
+      ],
+      "gaps": [
+        "Independent human review and empirical study-specific identification evidence are absent."
+      ],
+      "scope": "Scoped original methodological explanation; no whole-method or study audit is implied.",
+      "rights": {
+        "license_id": "Apache-2.0",
+        "license_url": "https://www.apache.org/licenses/LICENSE-2.0",
+        "attribution": "Causal Capybara contributors; Yusufhan Balci; VCESR",
+        "modified": true,
+        "content_type": "original_project_content",
+        "review_basis": "Original or imported Apache-2.0 project material; no third-party paper body included.",
+        "permissions": {
+          "cache": true,
+          "display": true,
+          "adapt": true,
+          "model_context": true,
+          "public_export": true
+        }
+      },
+      "review": {
+        "actor": "Codex agent",
+        "actor_type": "agent",
+        "structural": "validated",
+        "semantic": "agent_context_review",
+        "human_review": false,
+        "date": "2026-10-13",
+        "basis": [
+          "Original note reviewed against linked primary context; no external full text redistributed."
+        ],
+        "sources": [
+          "angrist1996"
+        ]
+      }
+    },
+    {
+      "id": "claim:rd-local",
+      "kind": "claim",
+      "title": "RD targets depend on the cutoff design and estimator",
+      "summary": "Regression discontinuity is a local design. Continuity-based, local-randomization, fuzzy and kink analyses rely on different conditions and targets. Inspect the running variable, threshold rule, treatment discontinuity, bandwidth and uncertainty procedure. Density and covariate-balance diagnostics can reveal problems, but a failure to reject cannot establish all required smoothness or assignment conditions. Extrapolation away from the cutoff needs an additional argument.",
+      "aliases": [
+        "rd local",
+        "regression discontinuity RD",
+        "local randomization fuzzy kink cutoff bandwidth"
+      ],
+      "method_ids": [
+        "rd.local_linear",
+        "rd.fuzzy",
+        "rd.kink",
+        "rd.local_randomization",
+        "rd.multi_cutoff"
+      ],
+      "source_ids": [
+        "source:ontology:cattaneo2022"
+      ],
+      "evidence_path": "evidence/rd-local.md",
+      "locator": {
+        "start": 208,
+        "end": 683,
+        "exact_text": "Regression discontinuity is a local design. Continuity-based, local-randomization, fuzzy and kink analyses rely on different conditions and targets. Inspect the running variable, threshold rule, treatment discontinuity, bandwidth and uncertainty procedure. Density and covariate-balance diagnostics can reveal problems, but a failure to reject cannot establish all required smoothness or assignment conditions. Extrapolation away from the cutoff needs an additional argument."
+      },
+      "conditions": [
+        "The stated cutoff design and local target conditions apply."
+      ],
+      "counterevidence": [
+        "The related diagnostic, fitted model or software check cannot establish all causal assumptions."
+      ],
+      "gaps": [
+        "Independent human review and empirical study-specific identification evidence are absent."
+      ],
+      "scope": "Scoped original methodological explanation; no whole-method or study audit is implied.",
+      "rights": {
+        "license_id": "Apache-2.0",
+        "license_url": "https://www.apache.org/licenses/LICENSE-2.0",
+        "attribution": "Causal Capybara contributors; Yusufhan Balci; VCESR",
+        "modified": true,
+        "content_type": "original_project_content",
+        "review_basis": "Original or imported Apache-2.0 project material; no third-party paper body included.",
+        "permissions": {
+          "cache": true,
+          "display": true,
+          "adapt": true,
+          "model_context": true,
+          "public_export": true
+        }
+      },
+      "review": {
+        "actor": "Codex agent",
+        "actor_type": "agent",
+        "structural": "validated",
+        "semantic": "agent_context_review",
+        "human_review": false,
+        "date": "2026-10-13",
+        "basis": [
+          "Original note reviewed against linked primary context; no external full text redistributed."
+        ],
+        "sources": [
+          "source:ontology:cattaneo2022"
+        ]
+      }
+    },
+    {
+      "id": "claim:longitudinal-feedback",
+      "kind": "claim",
+      "title": "Treatment-confounder feedback requires sequential reasoning",
+      "summary": "When a measured covariate is affected by earlier treatment and predicts later treatment and outcome, ordinary covariate adjustment can fail to target the intended treatment-history effect. Define the intervention history and order its measurements. Marginal structural models, longitudinal g-computation and structural-model approaches use different estimation constructions, but all require their applicable sequential exchangeability, consistency and support conditions; fitted histories do not verify those assumptions.",
+      "aliases": [
+        "longitudinal feedback",
+        "treatment-confounder feedback",
+        "sequential exchangeability histories",
+        "longitudinal g-formula marginal structural models"
+      ],
+      "method_ids": [
+        "long.msm_iptw",
+        "long.gformula",
+        "long.g_estimation",
+        "long.ltmle",
+        "long.lmtp",
+        "long.ltmle_survival"
+      ],
+      "source_ids": [
+        "source:ontology:robins2000"
+      ],
+      "evidence_path": "evidence/longitudinal-feedback.md",
+      "locator": {
+        "start": 215,
+        "end": 737,
+        "exact_text": "When a measured covariate is affected by earlier treatment and predicts later treatment and outcome, ordinary covariate adjustment can fail to target the intended treatment-history effect. Define the intervention history and order its measurements. Marginal structural models, longitudinal g-computation and structural-model approaches use different estimation constructions, but all require their applicable sequential exchangeability, consistency and support conditions; fitted histories do not verify those assumptions."
+      },
+      "conditions": [
+        "The intended longitudinal strategy and sequential identification conditions are stated."
+      ],
+      "counterevidence": [
+        "The related diagnostic, fitted model or software check cannot establish all causal assumptions."
+      ],
+      "gaps": [
+        "Independent human review and empirical study-specific identification evidence are absent."
+      ],
+      "scope": "Scoped original methodological explanation; no whole-method or study audit is implied.",
+      "rights": {
+        "license_id": "Apache-2.0",
+        "license_url": "https://www.apache.org/licenses/LICENSE-2.0",
+        "attribution": "Causal Capybara contributors; Yusufhan Balci; VCESR",
+        "modified": true,
+        "content_type": "original_project_content",
+        "review_basis": "Original or imported Apache-2.0 project material; no third-party paper body included.",
+        "permissions": {
+          "cache": true,
+          "display": true,
+          "adapt": true,
+          "model_context": true,
+          "public_export": true
+        }
+      },
+      "review": {
+        "actor": "Codex agent",
+        "actor_type": "agent",
+        "structural": "validated",
+        "semantic": "agent_context_review",
+        "human_review": false,
+        "date": "2026-10-13",
+        "basis": [
+          "Original note reviewed against linked primary context; no external full text redistributed."
+        ],
+        "sources": [
+          "source:ontology:robins2000"
+        ]
+      }
+    },
+    {
+      "id": "claim:mediation-target",
+      "kind": "claim",
+      "title": "Mediation targets require additional assumptions",
+      "summary": "Randomized treatment does not automatically identify mediator effects. A controlled direct effect fixes a mediator intervention, while natural effects involve mediator potential outcomes and additional cross-world or equivalent structural conditions. Interventional mediation effects specify different stochastic mediator strategies. Identify the target explicitly, inspect mediator-outcome confounding and exposure-induced confounders, and avoid relabeling a mediator-adjusted treatment regression coefficient as any of these effects without its identification argument.",
+      "aliases": [
+        "mediation target",
+        "causal mediation mediator mediators",
+        "natural effects randomized treatment identification",
+        "controlled direct interventional effects cross-world"
+      ],
+      "method_ids": [
+        "med.controlled_direct",
+        "med.natural_effects",
+        "med.interventional"
+      ],
+      "source_ids": [
+        "source:ontology:imai2010",
+        "source:ontology:vansteelandt2017"
+      ],
+      "evidence_path": "evidence/mediation-target.md",
+      "locator": {
+        "start": 204,
+        "end": 775,
+        "exact_text": "Randomized treatment does not automatically identify mediator effects. A controlled direct effect fixes a mediator intervention, while natural effects involve mediator potential outcomes and additional cross-world or equivalent structural conditions. Interventional mediation effects specify different stochastic mediator strategies. Identify the target explicitly, inspect mediator-outcome confounding and exposure-induced confounders, and avoid relabeling a mediator-adjusted treatment regression coefficient as any of these effects without its identification argument."
+      },
+      "conditions": [
+        "The mediator intervention and target-specific identifying assumptions are justified."
+      ],
+      "counterevidence": [
+        "The related diagnostic, fitted model or software check cannot establish all causal assumptions."
+      ],
+      "gaps": [
+        "Independent human review and empirical study-specific identification evidence are absent."
+      ],
+      "scope": "Scoped original methodological explanation; no whole-method or study audit is implied.",
+      "rights": {
+        "license_id": "Apache-2.0",
+        "license_url": "https://www.apache.org/licenses/LICENSE-2.0",
+        "attribution": "Causal Capybara contributors; Yusufhan Balci; VCESR",
+        "modified": true,
+        "content_type": "original_project_content",
+        "review_basis": "Original or imported Apache-2.0 project material; no third-party paper body included.",
+        "permissions": {
+          "cache": true,
+          "display": true,
+          "adapt": true,
+          "model_context": true,
+          "public_export": true
+        }
+      },
+      "review": {
+        "actor": "Codex agent",
+        "actor_type": "agent",
+        "structural": "validated",
+        "semantic": "agent_context_review",
+        "human_review": false,
+        "date": "2026-10-13",
+        "basis": [
+          "Original note reviewed against linked primary context; no external full text redistributed."
+        ],
+        "sources": [
+          "source:ontology:imai2010",
+          "source:ontology:vansteelandt2017"
+        ]
+      }
+    },
+    {
+      "id": "claim:population-effects",
+      "kind": "claim",
+      "title": "Interference and transport alter the comparison",
+      "summary": "Cross-unit treatment effects require an exposure mapping or allocation strategy, so direct, spillover and overall effects can differ. Transport to another population additionally requires source and target definitions, relevant effect modifiers and support. A balancing weight or network summary alone does not establish the assumptions needed for either question. State which units, assignments and population distributions the reported effect averages over.",
+      "aliases": [
+        "population effects",
+        "interference exposure mappings spillovers",
+        "transportability target population source support"
+      ],
+      "method_ids": [
+        "interference.exposure",
+        "transport.generalize"
+      ],
+      "source_ids": [
+        "source:ontology:hudgens2008",
+        "source:ontology:bareinboim2016"
+      ],
+      "evidence_path": "evidence/population-effects.md",
+      "locator": {
+        "start": 203,
+        "end": 662,
+        "exact_text": "Cross-unit treatment effects require an exposure mapping or allocation strategy, so direct, spillover and overall effects can differ. Transport to another population additionally requires source and target definitions, relevant effect modifiers and support. A balancing weight or network summary alone does not establish the assumptions needed for either question. State which units, assignments and population distributions the reported effect averages over."
+      },
+      "conditions": [
+        "Exposure mapping or transport assumptions match the declared target."
+      ],
+      "counterevidence": [
+        "The related diagnostic, fitted model or software check cannot establish all causal assumptions."
+      ],
+      "gaps": [
+        "Independent human review and empirical study-specific identification evidence are absent."
+      ],
+      "scope": "Scoped original methodological explanation; no whole-method or study audit is implied.",
+      "rights": {
+        "license_id": "Apache-2.0",
+        "license_url": "https://www.apache.org/licenses/LICENSE-2.0",
+        "attribution": "Causal Capybara contributors; Yusufhan Balci; VCESR",
+        "modified": true,
+        "content_type": "original_project_content",
+        "review_basis": "Original or imported Apache-2.0 project material; no third-party paper body included.",
+        "permissions": {
+          "cache": true,
+          "display": true,
+          "adapt": true,
+          "model_context": true,
+          "public_export": true
+        }
+      },
+      "review": {
+        "actor": "Codex agent",
+        "actor_type": "agent",
+        "structural": "validated",
+        "semantic": "agent_context_review",
+        "human_review": false,
+        "date": "2026-10-13",
+        "basis": [
+          "Original note reviewed against linked primary context; no external full text redistributed."
+        ],
+        "sources": [
+          "source:ontology:hudgens2008",
+          "source:ontology:bareinboim2016"
+        ]
+      }
+    },
+    {
+      "id": "claim:survival-marginal",
+      "kind": "claim",
+      "title": "Survival and RMST contrasts are horizon-specific population targets",
+      "summary": "The survival contrast S^1(tau) minus S^0(tau) compares event-free probabilities at a declared horizon. RMST is the integral of survival from zero through tau, so an RMST difference has duration units and requires the same horizon in both strategies. A conditional hazard ratio or AFT coefficient is a different summary. Standardized survival predictions average strategy-specific curves over the declared target covariate distribution under the needed treatment, censoring and model conditions.",
+      "aliases": [
+        "survival marginal",
+        "survival probability difference",
+        "restricted mean survival time RMST horizon",
+        "standardized marginal survival curves"
+      ],
+      "method_ids": [
+        "survival.aft",
+        "survival.rmst"
+      ],
+      "source_ids": [
+        "source:ontology:cole2004",
+        "source:ontology:uno2014",
+        "source:ontology:hernan2010"
+      ],
+      "evidence_path": "evidence/survival-marginal.md",
+      "locator": {
+        "start": 223,
+        "end": 717,
+        "exact_text": "The survival contrast S^1(tau) minus S^0(tau) compares event-free probabilities at a declared horizon. RMST is the integral of survival from zero through tau, so an RMST difference has duration units and requires the same horizon in both strategies. A conditional hazard ratio or AFT coefficient is a different summary. Standardized survival predictions average strategy-specific curves over the declared target covariate distribution under the needed treatment, censoring and model conditions."
+      },
+      "conditions": [
+        "Target population, shared horizon, treatment/censoring identification and model conditions are justified."
+      ],
+      "counterevidence": [
+        "The related diagnostic, fitted model or software check cannot establish all causal assumptions."
+      ],
+      "gaps": [
+        "Independent human review and empirical study-specific identification evidence are absent."
+      ],
+      "scope": "Scoped original methodological explanation; no whole-method or study audit is implied.",
+      "rights": {
+        "license_id": "Apache-2.0",
+        "license_url": "https://www.apache.org/licenses/LICENSE-2.0",
+        "attribution": "Causal Capybara contributors; Yusufhan Balci; VCESR",
+        "modified": true,
+        "content_type": "original_project_content",
+        "review_basis": "Original or imported Apache-2.0 project material; no third-party paper body included.",
+        "permissions": {
+          "cache": true,
+          "display": true,
+          "adapt": true,
+          "model_context": true,
+          "public_export": true
+        }
+      },
+      "review": {
+        "actor": "Codex agent",
+        "actor_type": "agent",
+        "structural": "validated",
+        "semantic": "agent_context_review",
+        "human_review": false,
+        "date": "2026-10-13",
+        "basis": [
+          "Original note reviewed against linked primary context; no external full text redistributed."
+        ],
+        "sources": [
+          "source:ontology:cole2004",
+          "source:ontology:uno2014",
+          "source:ontology:hernan2010"
+        ]
+      }
+    },
+    {
+      "id": "claim:survival-censoring",
+      "kind": "claim",
+      "title": "Conditional censoring assumptions must match the procedure",
+      "summary": "A right-censored record says the event occurs after the observed duration; it contributes a survival-tail term rather than an event density to a parametric likelihood. Raw treatment-arm Kaplan–Meier and its RMST summary need within-arm independent censoring and supported risk sets for their associational distributions. Conditional independence of censoring given additional measured covariates does not automatically justify raw arm curves when both censoring and event time depend on those covariates. A causal treatment contrast additionally needs a separate identification argument. Delayed entry, interval censoring and competing events require explicitly supported procedures.",
+      "aliases": [
+        "survival censoring",
+        "conditional independent censoring",
+        "Kaplan-Meier Kaplan–Meier curves",
+        "right censoring likelihood tail"
+      ],
+      "method_ids": [
+        "survival.kaplan_meier",
+        "survival.rmst",
+        "survival.aft"
+      ],
+      "source_ids": [
+        "source:ontology:cole2004",
+        "source:ontology:wei1992",
+        "source:ontology:r-survreg"
+      ],
+      "evidence_path": "evidence/survival-censoring.md",
+      "locator": {
+        "start": 214,
+        "end": 897,
+        "exact_text": "A right-censored record says the event occurs after the observed duration; it contributes a survival-tail term rather than an event density to a parametric likelihood. Raw treatment-arm Kaplan–Meier and its RMST summary need within-arm independent censoring and supported risk sets for their associational distributions. Conditional independence of censoring given additional measured covariates does not automatically justify raw arm curves when both censoring and event time depend on those covariates. A causal treatment contrast additionally needs a separate identification argument. Delayed entry, interval censoring and competing events require explicitly supported procedures."
+      },
+      "conditions": [
+        "Observation and censoring conditions match the actually implemented estimator."
+      ],
+      "counterevidence": [
+        "The related diagnostic, fitted model or software check cannot establish all causal assumptions."
+      ],
+      "gaps": [
+        "Independent human review and empirical study-specific identification evidence are absent."
+      ],
+      "scope": "Scoped original methodological explanation; no whole-method or study audit is implied.",
+      "rights": {
+        "license_id": "Apache-2.0",
+        "license_url": "https://www.apache.org/licenses/LICENSE-2.0",
+        "attribution": "Causal Capybara contributors; Yusufhan Balci; VCESR",
+        "modified": true,
+        "content_type": "original_project_content",
+        "review_basis": "Original or imported Apache-2.0 project material; no third-party paper body included.",
+        "permissions": {
+          "cache": true,
+          "display": true,
+          "adapt": true,
+          "model_context": true,
+          "public_export": true
+        }
+      },
+      "review": {
+        "actor": "Codex agent",
+        "actor_type": "agent",
+        "structural": "validated",
+        "semantic": "agent_context_review",
+        "human_review": false,
+        "date": "2026-10-13",
+        "basis": [
+          "Original note reviewed against linked primary context; no external full text redistributed."
+        ],
+        "sources": [
+          "source:ontology:cole2004",
+          "source:ontology:wei1992",
+          "source:ontology:r-survreg"
+        ]
+      }
+    },
+    {
+      "id": "claim:aft-time-ratio",
+      "kind": "claim",
+      "title": "Ordinary AFT regression and structural failure-time models differ",
+      "summary": "A common-distribution AFT model relates log event time to covariates; exponentiating a treatment coefficient gives a conditional time factor under that specification. It is not automatically a causal parameter or a marginal RMST contrast. Declare the distribution, shape, scale and covariate parameterization, since software conventions differ. Structural failure-time and rank-preserving models encode separate counterfactual transformations and identifying conditions; an ordinary AFT fit does not implement them.",
+      "aliases": [
+        "aft time ratio",
+        "accelerated failure time AFT regression",
+        "conditional time ratio",
+        "structural failure-time rank preserving Weibull log-normal"
+      ],
+      "method_ids": [
+        "survival.aft"
+      ],
+      "source_ids": [
+        "source:ontology:wei1992",
+        "source:ontology:r-survreg",
+        "source:ontology:lifelines-aft",
+        "source:ontology:robins1991"
+      ],
+      "evidence_path": "evidence/aft-time-ratio.md",
+      "locator": {
+        "start": 221,
+        "end": 736,
+        "exact_text": "A common-distribution AFT model relates log event time to covariates; exponentiating a treatment coefficient gives a conditional time factor under that specification. It is not automatically a causal parameter or a marginal RMST contrast. Declare the distribution, shape, scale and covariate parameterization, since software conventions differ. Structural failure-time and rank-preserving models encode separate counterfactual transformations and identifying conditions; an ordinary AFT fit does not implement them."
+      },
+      "conditions": [
+        "Common-distribution AFT restrictions and any causal-identification argument are explicitly stated."
+      ],
+      "counterevidence": [
+        "The related diagnostic, fitted model or software check cannot establish all causal assumptions."
+      ],
+      "gaps": [
+        "Independent human review and empirical study-specific identification evidence are absent."
+      ],
+      "scope": "Scoped original methodological explanation; no whole-method or study audit is implied.",
+      "rights": {
+        "license_id": "Apache-2.0",
+        "license_url": "https://www.apache.org/licenses/LICENSE-2.0",
+        "attribution": "Causal Capybara contributors; Yusufhan Balci; VCESR",
+        "modified": true,
+        "content_type": "original_project_content",
+        "review_basis": "Original or imported Apache-2.0 project material; no third-party paper body included.",
+        "permissions": {
+          "cache": true,
+          "display": true,
+          "adapt": true,
+          "model_context": true,
+          "public_export": true
+        }
+      },
+      "review": {
+        "actor": "Codex agent",
+        "actor_type": "agent",
+        "structural": "validated",
+        "semantic": "agent_context_review",
+        "human_review": false,
+        "date": "2026-10-13",
+        "basis": [
+          "Original note reviewed against linked primary context; no external full text redistributed."
+        ],
+        "sources": [
+          "source:ontology:wei1992",
+          "source:ontology:r-survreg",
+          "source:ontology:lifelines-aft",
+          "source:ontology:robins1991"
+        ]
+      }
+    },
+    {
+      "id": "claim:competing-target",
+      "kind": "claim",
+      "title": "Competing-event handling changes the causal question",
+      "summary": "A competing event prevents the focal event. A contrast of focal-event cumulative incidence with competitors present differs from a hypothetical contrast eliminating those events. Treating a competing death as ordinary censoring can silently change the question. Separable-effect targets require meaningful treatment-component interventions and additional identification conditions. A one-event adapter must reject incompatible event coding instead of presenting an unsupported competing-event analysis.",
+      "aliases": [
+        "competing target",
+        "competing events competing death censoring",
+        "cumulative incidence separable effects"
+      ],
+      "method_ids": [],
+      "source_ids": [
+        "source:ontology:young2019",
+        "source:ontology:stensrud2020"
+      ],
+      "evidence_path": "evidence/competing-target.md",
+      "locator": {
+        "start": 208,
+        "end": 710,
+        "exact_text": "A competing event prevents the focal event. A contrast of focal-event cumulative incidence with competitors present differs from a hypothetical contrast eliminating those events. Treating a competing death as ordinary censoring can silently change the question. Separable-effect targets require meaningful treatment-component interventions and additional identification conditions. A one-event adapter must reject incompatible event coding instead of presenting an unsupported competing-event analysis."
+      },
+      "conditions": [
+        "Competing-event strategy and its distinct identifying conditions are explicit."
+      ],
+      "counterevidence": [
+        "The related diagnostic, fitted model or software check cannot establish all causal assumptions."
+      ],
+      "gaps": [
+        "Independent human review and empirical study-specific identification evidence are absent."
+      ],
+      "scope": "Scoped original methodological explanation; no whole-method or study audit is implied.",
+      "rights": {
+        "license_id": "Apache-2.0",
+        "license_url": "https://www.apache.org/licenses/LICENSE-2.0",
+        "attribution": "Causal Capybara contributors; Yusufhan Balci; VCESR",
+        "modified": true,
+        "content_type": "original_project_content",
+        "review_basis": "Original or imported Apache-2.0 project material; no third-party paper body included.",
+        "permissions": {
+          "cache": true,
+          "display": true,
+          "adapt": true,
+          "model_context": true,
+          "public_export": true
+        }
+      },
+      "review": {
+        "actor": "Codex agent",
+        "actor_type": "agent",
+        "structural": "validated",
+        "semantic": "agent_context_review",
+        "human_review": false,
+        "date": "2026-10-13",
+        "basis": [
+          "Original note reviewed against linked primary context; no external full text redistributed."
+        ],
+        "sources": [
+          "source:ontology:young2019",
+          "source:ontology:stensrud2020"
+        ]
+      }
+    },
+    {
+      "id": "claim:audit-reproducibility",
+      "kind": "claim",
+      "title": "Implementation audits require traceable evidence",
+      "summary": "An implementation audit records the authorized revision, code location and observed behavior for each finding, explains the threatened estimand or assumption, and proposes a correction and verification method. Preserve exact data transformations, input hashes, options, randomness and dependency versions. Independent numerical examples, full uncertainty refits and adversarial inputs assess computation. Agreement with a reference calculation or passing software tests does not establish causal identification for the study.",
+      "aliases": [
+        "audit reproducibility",
+        "implementation audit code review",
+        "reproducibility input hashes numerical tests identification"
+      ],
+      "method_ids": [],
+      "source_ids": [
+        "source:ontology:wilson2017",
+        "source:ontology:sandve2013"
+      ],
+      "evidence_path": "evidence/audit-reproducibility.md",
+      "locator": {
+        "start": 204,
+        "end": 729,
+        "exact_text": "An implementation audit records the authorized revision, code location and observed behavior for each finding, explains the threatened estimand or assumption, and proposes a correction and verification method. Preserve exact data transformations, input hashes, options, randomness and dependency versions. Independent numerical examples, full uncertainty refits and adversarial inputs assess computation. Agreement with a reference calculation or passing software tests does not establish causal identification for the study."
+      },
+      "conditions": [
+        "File inspection and execution are authorized separately; evidence is actually observed."
+      ],
+      "counterevidence": [
+        "The related diagnostic, fitted model or software check cannot establish all causal assumptions."
+      ],
+      "gaps": [
+        "Independent human review and empirical study-specific identification evidence are absent."
+      ],
+      "scope": "Scoped original methodological explanation; no whole-method or study audit is implied.",
+      "rights": {
+        "license_id": "Apache-2.0",
+        "license_url": "https://www.apache.org/licenses/LICENSE-2.0",
+        "attribution": "Causal Capybara contributors; Yusufhan Balci; VCESR",
+        "modified": true,
+        "content_type": "original_project_content",
+        "review_basis": "Original or imported Apache-2.0 project material; no third-party paper body included.",
+        "permissions": {
+          "cache": true,
+          "display": true,
+          "adapt": true,
+          "model_context": true,
+          "public_export": true
+        }
+      },
+      "review": {
+        "actor": "Codex agent",
+        "actor_type": "agent",
+        "structural": "validated",
+        "semantic": "agent_context_review",
+        "human_review": false,
+        "date": "2026-10-13",
+        "basis": [
+          "Original note reviewed against linked primary context; no external full text redistributed."
+        ],
+        "sources": [
+          "source:ontology:wilson2017",
+          "source:ontology:sandve2013"
+        ]
+      }
+    },
+    {
+      "id": "claim:heterogeneity-direct",
+      "kind": "claim",
+      "title": "Heterogeneity requires a direct comparison on a declared scale",
+      "summary": "Compare subgroup treatment contrasts directly; do not compare their separate significance labels. A joint Wald test needs an estimable contrast vector and covariance of full rank. Its null is equality on the stated effect scale, for the stated population and horizon. Failure to reject is not an equivalence result, and rejecting the null does not establish causal identification.",
+      "aliases": [
+        "heterogeneity",
+        "interaction test",
+        "subgroup significance",
+        "omnibus Wald"
+      ],
+      "method_ids": [
+        "survival.kaplan_meier",
+        "survival.rmst",
+        "survival.aft",
+        "ml.dml_plr",
+        "ml.dml_irm",
+        "ml.causal_forest",
+        "ml.metalearner",
+        "ml.policy_tree",
+        "obs.tmle",
+        "heterogeneity.continuous",
+        "heterogeneity.binary",
+        "heterogeneity.count",
+        "heterogeneity.categorical"
+      ],
+      "source_ids": [
+        "source:ontology:altman2003",
+        "source:ontology:statsmodels-wald"
+      ],
+      "evidence_path": "evidence/heterogeneity-direct.md",
+      "locator": {
+        "start": 218,
+        "end": 598,
+        "exact_text": "Compare subgroup treatment contrasts directly; do not compare their separate significance labels. A joint Wald test needs an estimable contrast vector and covariance of full rank. Its null is equality on the stated effect scale, for the stated population and horizon. Failure to reject is not an equivalence result, and rejecting the null does not establish causal identification."
+      },
+      "conditions": [
+        "Prespecified contrast and appropriate joint covariance.",
+        "Causal interpretation additionally requires design-specific identification."
+      ],
+      "counterevidence": [
+        "Significance of one subgroup and non-significance of another can occur without a statistically discernible difference."
+      ],
+      "gaps": [
+        "This scoped methodological note does not validate a particular study or certify the local statistical implementation."
+      ],
+      "rights": {
+        "license_id": "Apache-2.0",
+        "license_url": "https://www.apache.org/licenses/LICENSE-2.0",
+        "attribution": "Causal Capybara contributors; Yusufhan Balci; VCESR",
+        "modified": true,
+        "content_type": "original_project_content",
+        "review_basis": "Original or imported Apache-2.0 project material; no third-party paper body included.",
+        "permissions": {
+          "cache": true,
+          "display": true,
+          "adapt": true,
+          "model_context": true,
+          "public_export": true
+        }
+      },
+      "review": {
+        "actor": "Codex agent",
+        "actor_type": "agent",
+        "structural": "validated",
+        "semantic": "agent_context_review",
+        "human_review": false,
+        "date": "2026-10-14",
+        "basis": [
+          "Original methodological explanation checked against linked primary sources; no independent human review or study audit."
+        ]
+      }
+    },
+    {
+      "id": "claim:heterogeneity-prespecification",
+      "kind": "claim",
+      "title": "Subgroup discovery and confirmatory analysis have different evidence requirements",
+      "summary": "Define baseline modifiers and the family of hypotheses before looking for outcome patterns. Report all attempted modifiers, scales and horizons, with a multiplicity strategy or explicit exploratory status. Preserve main effects when adding treatment interactions. Baseline timing and prespecification declarations are study assertions to audit, not facts verified by a checkbox. Rejecting one omnibus null neither adjusts pointwise subgroup intervals nor establishes every subgroup difference.",
+      "aliases": [
+        "subgroup prespecification",
+        "baseline modifiers",
+        "multiple testing",
+        "multiplicity"
+      ],
+      "method_ids": [
+        "survival.kaplan_meier",
+        "survival.rmst",
+        "survival.aft",
+        "ml.dml_plr",
+        "ml.dml_irm",
+        "ml.causal_forest",
+        "ml.metalearner",
+        "ml.policy_tree",
+        "obs.tmle",
+        "heterogeneity.continuous",
+        "heterogeneity.binary",
+        "heterogeneity.count",
+        "heterogeneity.categorical"
+      ],
+      "source_ids": [
+        "source:ontology:sun2010",
+        "source:ontology:kent2020"
+      ],
+      "evidence_path": "evidence/heterogeneity-prespecification.md",
+      "locator": {
+        "start": 237,
+        "end": 730,
+        "exact_text": "Define baseline modifiers and the family of hypotheses before looking for outcome patterns. Report all attempted modifiers, scales and horizons, with a multiplicity strategy or explicit exploratory status. Preserve main effects when adding treatment interactions. Baseline timing and prespecification declarations are study assertions to audit, not facts verified by a checkbox. Rejecting one omnibus null neither adjusts pointwise subgroup intervals nor establishes every subgroup difference."
+      },
+      "conditions": [
+        "Observed modifier precedes treatment or has an explicitly justified alternative causal target."
+      ],
+      "counterevidence": [
+        "Post-treatment stratification can induce selection bias even in a randomized trial."
+      ],
+      "gaps": [
+        "This scoped methodological note does not validate a particular study or certify the local statistical implementation."
+      ],
+      "rights": {
+        "license_id": "Apache-2.0",
+        "license_url": "https://www.apache.org/licenses/LICENSE-2.0",
+        "attribution": "Causal Capybara contributors; Yusufhan Balci; VCESR",
+        "modified": true,
+        "content_type": "original_project_content",
+        "review_basis": "Original or imported Apache-2.0 project material; no third-party paper body included.",
+        "permissions": {
+          "cache": true,
+          "display": true,
+          "adapt": true,
+          "model_context": true,
+          "public_export": true
+        }
+      },
+      "review": {
+        "actor": "Codex agent",
+        "actor_type": "agent",
+        "structural": "validated",
+        "semantic": "agent_context_review",
+        "human_review": false,
+        "date": "2026-10-14",
+        "basis": [
+          "Original methodological explanation checked against linked primary sources; no independent human review or study audit."
+        ]
+      }
+    },
+    {
+      "id": "claim:heterogeneity-outcome-scales",
+      "kind": "claim",
+      "title": "Outcome families require distinct interaction targets",
+      "summary": "An identity-link interaction concerns a conditional mean difference, a logit interaction concerns conditional log odds ratios, and a log-link interaction concerns conditional mean ratios. Standardized risk or mean differences are different functionals and require contrasts of their own predictions and covariance. A count-rate model additionally defines exposure and an offset; compare predictions at a stated exposure. Robust standard errors cannot repair a wrong mean model, inadequate overlap or unmeasured confounding.",
+      "aliases": [
+        "continuous binary count heterogeneity",
+        "logistic interaction",
+        "Poisson interaction",
+        "risk difference",
+        "exposure offset"
+      ],
+      "method_ids": [
+        "heterogeneity.continuous",
+        "heterogeneity.binary",
+        "heterogeneity.count",
+        "heterogeneity.categorical"
+      ],
+      "source_ids": [
+        "source:ontology:knol2012",
+        "source:ontology:statsmodels-glm",
+        "hernan2020"
+      ],
+      "evidence_path": "evidence/heterogeneity-outcome-scales.md",
+      "locator": {
+        "start": 209,
+        "end": 732,
+        "exact_text": "An identity-link interaction concerns a conditional mean difference, a logit interaction concerns conditional log odds ratios, and a log-link interaction concerns conditional mean ratios. Standardized risk or mean differences are different functionals and require contrasts of their own predictions and covariance. A count-rate model additionally defines exposure and an offset; compare predictions at a stated exposure. Robust standard errors cannot repair a wrong mean model, inadequate overlap or unmeasured confounding."
+      },
+      "conditions": [
+        "Outcome encoding, link, target covariate distribution and exposure are declared.",
+        "Main effects and treatment interactions use a full-rank design."
+      ],
+      "counterevidence": [
+        "A null multiplicative interaction does not imply equal additive effects."
+      ],
+      "gaps": [
+        "This scoped methodological note does not validate a particular study or certify the local statistical implementation."
+      ],
+      "rights": {
+        "license_id": "Apache-2.0",
+        "license_url": "https://www.apache.org/licenses/LICENSE-2.0",
+        "attribution": "Causal Capybara contributors; Yusufhan Balci; VCESR",
+        "modified": true,
+        "content_type": "original_project_content",
+        "review_basis": "Original or imported Apache-2.0 project material; no third-party paper body included.",
+        "permissions": {
+          "cache": true,
+          "display": true,
+          "adapt": true,
+          "model_context": true,
+          "public_export": true
+        }
+      },
+      "review": {
+        "actor": "Codex agent",
+        "actor_type": "agent",
+        "structural": "validated",
+        "semantic": "agent_context_review",
+        "human_review": false,
+        "date": "2026-10-14",
+        "basis": [
+          "Original methodological explanation checked against linked primary sources; no independent human review or study audit."
+        ]
+      }
+    },
+    {
+      "id": "claim:survival-heterogeneity",
+      "kind": "claim",
+      "title": "KM and RMST heterogeneity depend on common horizons and subgroup support",
+      "summary": "Compare KM survival differences at a fixed horizon or RMST differences integrated through the same horizon across baseline subgroups. Raw within-cell KM requires a defensible censoring assumption within each treatment-by-subgroup cell; conditioning only in a later interpretation does not adjust that estimator. Estimate the joint covariance of the subgroup contrasts, preserve the sampling unit when resampling, and disclose failed replicates. A log-rank test is not a test of equality of those fixed-horizon treatment contrasts.",
+      "aliases": [
+        "survival heterogeneity",
+        "KM subgroup test",
+        "RMST interaction",
+        "Kaplan Meier heterogeneity"
+      ],
+      "method_ids": [
+        "survival.kaplan_meier",
+        "survival.rmst",
+        "survival.aft"
+      ],
+      "source_ids": [
+        "source:ontology:cole2004",
+        "source:ontology:uno2014",
+        "source:ontology:altman2003"
+      ],
+      "evidence_path": "evidence/survival-heterogeneity.md",
+      "locator": {
+        "start": 228,
+        "end": 758,
+        "exact_text": "Compare KM survival differences at a fixed horizon or RMST differences integrated through the same horizon across baseline subgroups. Raw within-cell KM requires a defensible censoring assumption within each treatment-by-subgroup cell; conditioning only in a later interpretation does not adjust that estimator. Estimate the joint covariance of the subgroup contrasts, preserve the sampling unit when resampling, and disclose failed replicates. A log-rank test is not a test of equality of those fixed-horizon treatment contrasts."
+      },
+      "conditions": [
+        "The same time units and horizon are supported in each required treatment-by-subgroup cell.",
+        "Both treatment arms occur in every target subgroup."
+      ],
+      "counterevidence": [
+        "Large total sample size does not guarantee within-subgroup treatment or censoring support."
+      ],
+      "gaps": [
+        "This scoped methodological note does not validate a particular study or certify the local statistical implementation."
+      ],
+      "rights": {
+        "license_id": "Apache-2.0",
+        "license_url": "https://www.apache.org/licenses/LICENSE-2.0",
+        "attribution": "Causal Capybara contributors; Yusufhan Balci; VCESR",
+        "modified": true,
+        "content_type": "original_project_content",
+        "review_basis": "Original or imported Apache-2.0 project material; no third-party paper body included.",
+        "permissions": {
+          "cache": true,
+          "display": true,
+          "adapt": true,
+          "model_context": true,
+          "public_export": true
+        }
+      },
+      "review": {
+        "actor": "Codex agent",
+        "actor_type": "agent",
+        "structural": "validated",
+        "semantic": "agent_context_review",
+        "human_review": false,
+        "date": "2026-10-14",
+        "basis": [
+          "Original methodological explanation checked against linked primary sources; no independent human review or study audit."
+        ]
+      }
+    },
+    {
+      "id": "claim:aft-heterogeneity",
+      "kind": "claim",
+      "title": "AFT interactions and marginal effect modification are different tests",
+      "summary": "For log T = alpha + beta A + gamma Z + delta A Z + other baseline terms + sigma epsilon with a shared residual distribution, the conditional time factor at Z=z is exp(beta + delta z). Retain modifier main effects and define the reference level. A pooled fit can standardize both treatment predictions over each subgroup target population. Test equality of those survival or RMST differences using their joint uncertainty if that is the question: a zero delta is not the null of equal marginal additive effects. Refit the censored model and recompute standardization in each model-bootstrap replicate.",
+      "aliases": [
+        "AFT interaction",
+        "AFT heterogeneity",
+        "time factor heterogeneity",
+        "accelerated failure time subgroup"
+      ],
+      "method_ids": [
+        "survival.aft"
+      ],
+      "source_ids": [
+        "source:ontology:r-survreg",
+        "source:ontology:wei1992",
+        "source:ontology:kent2020"
+      ],
+      "evidence_path": "evidence/aft-heterogeneity.md",
+      "locator": {
+        "start": 225,
+        "end": 825,
+        "exact_text": "For log T = alpha + beta A + gamma Z + delta A Z + other baseline terms + sigma epsilon with a shared residual distribution, the conditional time factor at Z=z is exp(beta + delta z). Retain modifier main effects and define the reference level. A pooled fit can standardize both treatment predictions over each subgroup target population. Test equality of those survival or RMST differences using their joint uncertainty if that is the question: a zero delta is not the null of equal marginal additive effects. Refit the censored model and recompute standardization in each model-bootstrap replicate."
+      },
+      "conditions": [
+        "Common residual scale and distribution, correct likelihood and appropriate observation conditions.",
+        "Treatment and modifier coding and target subgroup population are explicit."
+      ],
+      "counterevidence": [
+        "The algebraic conditional time factor is not an individual causal effect or a finite-horizon RMST ratio."
+      ],
+      "gaps": [
+        "This scoped methodological note does not validate a particular study or certify the local statistical implementation."
+      ],
+      "rights": {
+        "license_id": "Apache-2.0",
+        "license_url": "https://www.apache.org/licenses/LICENSE-2.0",
+        "attribution": "Causal Capybara contributors; Yusufhan Balci; VCESR",
+        "modified": true,
+        "content_type": "original_project_content",
+        "review_basis": "Original or imported Apache-2.0 project material; no third-party paper body included.",
+        "permissions": {
+          "cache": true,
+          "display": true,
+          "adapt": true,
+          "model_context": true,
+          "public_export": true
+        }
+      },
+      "review": {
+        "actor": "Codex agent",
+        "actor_type": "agent",
+        "structural": "validated",
+        "semantic": "agent_context_review",
+        "human_review": false,
+        "date": "2026-10-14",
+        "basis": [
+          "Original methodological explanation checked against linked primary sources; no independent human review or study audit."
+        ]
+      }
+    },
+    {
+      "id": "claim:cate-heterogeneity-evaluation",
+      "kind": "claim",
+      "title": "CATE projection, calibration and GATES require honest evaluation",
+      "summary": "A CATE is a conditional average contrast, not an observed individual treatment effect. BLP summarizes it through specified features, calibration evaluates learned predictions, and GATES summarizes groups induced by a learned score. Keep their estimands and nulls distinct. Formal guarantees require the stated score construction, independence or sample-splitting and covariance procedure; plotting bins or regressing fitted predictions does not by itself implement the published estimator. Report simplifications of the local adapter and distinguish exploratory diagnostics from validated inference.",
+      "aliases": [
+        "CATE heterogeneity",
+        "BLP",
+        "GATES",
+        "calibration",
+        "causal forest"
+      ],
+      "method_ids": [
+        "ml.dml_plr",
+        "ml.dml_irm",
+        "ml.causal_forest",
+        "ml.metalearner",
+        "ml.policy_tree",
+        "obs.tmle"
+      ],
+      "source_ids": [
+        "source:ontology:genericml",
+        "source:ontology:grf-blp",
+        "source:ontology:grf-calibration"
+      ],
+      "evidence_path": "evidence/cate-heterogeneity-evaluation.md",
+      "locator": {
+        "start": 220,
+        "end": 819,
+        "exact_text": "A CATE is a conditional average contrast, not an observed individual treatment effect. BLP summarizes it through specified features, calibration evaluates learned predictions, and GATES summarizes groups induced by a learned score. Keep their estimands and nulls distinct. Formal guarantees require the stated score construction, independence or sample-splitting and covariance procedure; plotting bins or regressing fitted predictions does not by itself implement the published estimator. Report simplifications of the local adapter and distinguish exploratory diagnostics from validated inference."
+      },
+      "conditions": [
+        "Learning/evaluation separation, suitable target scores and overlap.",
+        "Evidence matches the implemented score and inference, not only the method label."
+      ],
+      "counterevidence": [
+        "Dispersion of estimated CATEs can reflect estimation noise."
+      ],
+      "gaps": [
+        "This scoped methodological note does not validate a particular study or certify the local statistical implementation."
+      ],
+      "rights": {
+        "license_id": "Apache-2.0",
+        "license_url": "https://www.apache.org/licenses/LICENSE-2.0",
+        "attribution": "Causal Capybara contributors; Yusufhan Balci; VCESR",
+        "modified": true,
+        "content_type": "original_project_content",
+        "review_basis": "Original or imported Apache-2.0 project material; no third-party paper body included.",
+        "permissions": {
+          "cache": true,
+          "display": true,
+          "adapt": true,
+          "model_context": true,
+          "public_export": true
+        }
+      },
+      "review": {
+        "actor": "Codex agent",
+        "actor_type": "agent",
+        "structural": "validated",
+        "semantic": "agent_context_review",
+        "human_review": false,
+        "date": "2026-10-14",
+        "basis": [
+          "Original methodological explanation checked against linked primary sources; no independent human review or study audit."
+        ]
+      }
+    },
+    {
+      "id": "claim:rate-evaluation",
+      "kind": "claim",
+      "title": "Ranking tests assess a rule with a specified evaluation design",
+      "summary": "RATE and its AUTOC or Qini weighting summarize treatment-effect differences along a prioritization rule. A valid evaluation design separates construction of the ranking from its evaluation outcomes. Holding an estimated ranking fixed during row bootstrap omits learning uncertainty unless the inferential target is explicitly conditional on an independently learned rule. A non-significant ranking test can mean limited power or a poor rule, even when true effects vary. Do not equate it with evidence of no heterogeneity.",
+      "aliases": [
+        "RATE",
+        "AUTOC",
+        "Qini",
+        "rank heterogeneity"
+      ],
+      "method_ids": [
+        "ml.dml_plr",
+        "ml.dml_irm",
+        "ml.causal_forest",
+        "ml.metalearner",
+        "ml.policy_tree",
+        "obs.tmle"
+      ],
+      "source_ids": [
+        "source:ontology:grf-rate",
+        "source:ontology:genericml"
+      ],
+      "evidence_path": "evidence/rate-evaluation.md",
+      "locator": {
+        "start": 218,
+        "end": 740,
+        "exact_text": "RATE and its AUTOC or Qini weighting summarize treatment-effect differences along a prioritization rule. A valid evaluation design separates construction of the ranking from its evaluation outcomes. Holding an estimated ranking fixed during row bootstrap omits learning uncertainty unless the inferential target is explicitly conditional on an independently learned rule. A non-significant ranking test can mean limited power or a poor rule, even when true effects vary. Do not equate it with evidence of no heterogeneity."
+      },
+      "conditions": [
+        "Ranking independence or an explicitly justified cross-fitting design.",
+        "Resampling respects the actual unit of independence."
+      ],
+      "counterevidence": [
+        "A useful CATE ranking need not be numerically calibrated and a calibrated average need not identify a useful ranking."
+      ],
+      "gaps": [
+        "This scoped methodological note does not validate a particular study or certify the local statistical implementation."
+      ],
+      "rights": {
+        "license_id": "Apache-2.0",
+        "license_url": "https://www.apache.org/licenses/LICENSE-2.0",
+        "attribution": "Causal Capybara contributors; Yusufhan Balci; VCESR",
+        "modified": true,
+        "content_type": "original_project_content",
+        "review_basis": "Original or imported Apache-2.0 project material; no third-party paper body included.",
+        "permissions": {
+          "cache": true,
+          "display": true,
+          "adapt": true,
+          "model_context": true,
+          "public_export": true
+        }
+      },
+      "review": {
+        "actor": "Codex agent",
+        "actor_type": "agent",
+        "structural": "validated",
+        "semantic": "agent_context_review",
+        "human_review": false,
+        "date": "2026-10-14",
+        "basis": [
+          "Original methodological explanation checked against linked primary sources; no independent human review or study audit."
+        ]
+      }
+    },
+    {
+      "id": "claim:categorical-outcome-interaction",
+      "kind": "claim",
+      "title": "Categorical-outcome probability heterogeneity",
+      "summary": "A multinomial model represents a probability for each outcome category. Nominal labels are not numerical scores; applying this model to ordered labels does not impose proportional odds or estimate a common ordinal shift. Category probabilities sum to one, so joint tests must account for their dependent contrasts.",
+      "aliases": [
+        "categorical heterogeneity",
+        "nominal outcome",
+        "ordinal outcome",
+        "multinomial interaction"
+      ],
+      "method_ids": [
+        "heterogeneity.categorical"
+      ],
+      "source_ids": [
+        "source:ontology:statsmodels-mnlogit",
+        "source:ontology:statsmodels-wald"
+      ],
+      "evidence_path": "evidence/categorical-outcome-interaction.md",
+      "locator": {
+        "start": 154,
+        "end": 468,
+        "exact_text": "A multinomial model represents a probability for each outcome category. Nominal labels are not numerical scores; applying this model to ordered labels does not impose proportional odds or estimate a common ordinal shift. Category probabilities sum to one, so joint tests must account for their dependent contrasts."
+      },
+      "conditions": [
+        "Sampling covariance and prediction target must match the declared null."
+      ],
+      "counterevidence": [
+        "A conditional coefficient test does not automatically answer a different marginal probability or population target."
+      ],
+      "gaps": [
+        "This scoped methodological note does not validate a particular study or certify the local statistical implementation."
+      ],
+      "rights": {
+        "license_id": "Apache-2.0",
+        "license_url": "https://www.apache.org/licenses/LICENSE-2.0",
+        "attribution": "Causal Capybara contributors; Yusufhan Balci; VCESR",
+        "modified": true,
+        "content_type": "original_project_content",
+        "review_basis": "Original or imported Apache-2.0 project material; no third-party paper body included.",
+        "permissions": {
+          "cache": true,
+          "display": true,
+          "adapt": true,
+          "model_context": true,
+          "public_export": true
+        }
+      },
+      "review": {
+        "actor": "Codex agent",
+        "actor_type": "agent",
+        "structural": "validated",
+        "semantic": "agent_context_review",
+        "human_review": false,
+        "date": "2026-10-14",
+        "basis": [
+          "Original methodological explanation checked against linked primary sources; no independent human review or study audit."
+        ]
+      }
+    },
+    {
+      "id": "claim:fixed-profile-inference",
+      "kind": "claim",
+      "title": "Fixed-profile standardization inference",
+      "summary": "A delta-method contrast based on fitted-parameter covariance conditions on the empirical profiles used for standardization. Inference for a superpopulation target additionally needs the relevant uncertainty from estimating its covariate distribution. Explicitly distinguish subgroup-restricted averages from controlled comparisons setting a continuous modifier to chosen values.",
+      "aliases": [
+        "delta method standardization",
+        "fixed empirical profiles",
+        "continuous moderator"
+      ],
+      "method_ids": [
+        "heterogeneity.continuous",
+        "heterogeneity.binary",
+        "heterogeneity.count",
+        "heterogeneity.categorical"
+      ],
+      "source_ids": [
+        "hernan2020",
+        "source:ontology:statsmodels-wald"
+      ],
+      "evidence_path": "evidence/fixed-profile-inference.md",
+      "locator": {
+        "start": 148,
+        "end": 526,
+        "exact_text": "A delta-method contrast based on fitted-parameter covariance conditions on the empirical profiles used for standardization. Inference for a superpopulation target additionally needs the relevant uncertainty from estimating its covariate distribution. Explicitly distinguish subgroup-restricted averages from controlled comparisons setting a continuous modifier to chosen values."
+      },
+      "conditions": [
+        "Sampling covariance and prediction target must match the declared null."
+      ],
+      "counterevidence": [
+        "A conditional coefficient test does not automatically answer a different marginal probability or population target."
+      ],
+      "gaps": [
+        "This scoped methodological note does not validate a particular study or certify the local statistical implementation."
+      ],
+      "rights": {
+        "license_id": "Apache-2.0",
+        "license_url": "https://www.apache.org/licenses/LICENSE-2.0",
+        "attribution": "Causal Capybara contributors; Yusufhan Balci; VCESR",
+        "modified": true,
+        "content_type": "original_project_content",
+        "review_basis": "Original or imported Apache-2.0 project material; no third-party paper body included.",
+        "permissions": {
+          "cache": true,
+          "display": true,
+          "adapt": true,
+          "model_context": true,
+          "public_export": true
+        }
+      },
+      "review": {
+        "actor": "Codex agent",
+        "actor_type": "agent",
+        "structural": "validated",
+        "semantic": "agent_context_review",
+        "human_review": false,
+        "date": "2026-10-14",
+        "basis": [
+          "Original methodological explanation checked against linked primary sources; no independent human review or study audit."
+        ]
+      }
+    }
+  ],
+  "notes": [
+    {
+      "authorship": {
+        "actor": "Codex agent",
+        "actor_type": "agent",
+        "human_review": false
+      },
+      "path": "evidence/aipw.md",
+      "rights": {
+        "attribution": "Causal Capybara contributors; Yusufhan Balci; VCESR",
+        "content_type": "original_project_content",
+        "license_id": "Apache-2.0",
+        "license_url": "https://www.apache.org/licenses/LICENSE-2.0",
+        "modified": true,
+        "permissions": {
+          "adapt": true,
+          "cache": true,
+          "display": true,
+          "model_context": true,
+          "public_export": true
+        },
+        "review_basis": "Original or imported Apache-2.0 project material; no third-party paper body included."
+      },
+      "title": "Original AIPW explanation and public review basis"
+    },
+    {
+      "authorship": {
+        "actor": "Codex agent",
+        "actor_type": "agent",
+        "human_review": false
+      },
+      "path": "evidence/did.md",
+      "rights": {
+        "attribution": "Causal Capybara contributors; Yusufhan Balci; VCESR",
+        "content_type": "original_project_content",
+        "license_id": "Apache-2.0",
+        "license_url": "https://www.apache.org/licenses/LICENSE-2.0",
+        "modified": true,
+        "permissions": {
+          "adapt": true,
+          "cache": true,
+          "display": true,
+          "model_context": true,
+          "public_export": true
+        },
+        "review_basis": "Original or imported Apache-2.0 project material; no third-party paper body included."
+      },
+      "title": "Original staggered-adoption DiD explanation and public review basis"
+    },
+    {
+      "path": "evidence/causal-framing.md",
+      "title": "Causal framing requires an identification argument",
+      "rights": {
+        "license_id": "Apache-2.0",
+        "license_url": "https://www.apache.org/licenses/LICENSE-2.0",
+        "attribution": "Causal Capybara contributors; Yusufhan Balci; VCESR",
+        "modified": true,
+        "content_type": "original_project_content",
+        "review_basis": "Original or imported Apache-2.0 project material; no third-party paper body included.",
+        "permissions": {
+          "cache": true,
+          "display": true,
+          "adapt": true,
+          "model_context": true,
+          "public_export": true
+        }
+      },
+      "authorship": {
+        "actor": "Codex agent",
+        "actor_type": "agent",
+        "human_review": false
+      }
+    },
+    {
+      "path": "evidence/target-time.md",
+      "title": "Eligibility and follow-up must share a defensible time zero",
+      "rights": {
+        "license_id": "Apache-2.0",
+        "license_url": "https://www.apache.org/licenses/LICENSE-2.0",
+        "attribution": "Causal Capybara contributors; Yusufhan Balci; VCESR",
+        "modified": true,
+        "content_type": "original_project_content",
+        "review_basis": "Original or imported Apache-2.0 project material; no third-party paper body included.",
+        "permissions": {
+          "cache": true,
+          "display": true,
+          "adapt": true,
+          "model_context": true,
+          "public_export": true
+        }
+      },
+      "authorship": {
+        "actor": "Codex agent",
+        "actor_type": "agent",
+        "human_review": false
+      }
+    },
+    {
+      "path": "evidence/adjustment-design.md",
+      "title": "Adjustment depends on causal role and timing",
+      "rights": {
+        "license_id": "Apache-2.0",
+        "license_url": "https://www.apache.org/licenses/LICENSE-2.0",
+        "attribution": "Causal Capybara contributors; Yusufhan Balci; VCESR",
+        "modified": true,
+        "content_type": "original_project_content",
+        "review_basis": "Original or imported Apache-2.0 project material; no third-party paper body included.",
+        "permissions": {
+          "cache": true,
+          "display": true,
+          "adapt": true,
+          "model_context": true,
+          "public_export": true
+        }
+      },
+      "authorship": {
+        "actor": "Codex agent",
+        "actor_type": "agent",
+        "human_review": false
+      }
+    },
+    {
+      "path": "evidence/weight-target.md",
+      "title": "Weighting and support are target-specific",
+      "rights": {
+        "license_id": "Apache-2.0",
+        "license_url": "https://www.apache.org/licenses/LICENSE-2.0",
+        "attribution": "Causal Capybara contributors; Yusufhan Balci; VCESR",
+        "modified": true,
+        "content_type": "original_project_content",
+        "review_basis": "Original or imported Apache-2.0 project material; no third-party paper body included.",
+        "permissions": {
+          "cache": true,
+          "display": true,
+          "adapt": true,
+          "model_context": true,
+          "public_export": true
+        }
+      },
+      "authorship": {
+        "actor": "Codex agent",
+        "actor_type": "agent",
+        "human_review": false
+      }
+    },
+    {
+      "path": "evidence/nuisance-learning.md",
+      "title": "Orthogonal learning retains identification and inference conditions",
+      "rights": {
+        "license_id": "Apache-2.0",
+        "license_url": "https://www.apache.org/licenses/LICENSE-2.0",
+        "attribution": "Causal Capybara contributors; Yusufhan Balci; VCESR",
+        "modified": true,
+        "content_type": "original_project_content",
+        "review_basis": "Original or imported Apache-2.0 project material; no third-party paper body included.",
+        "permissions": {
+          "cache": true,
+          "display": true,
+          "adapt": true,
+          "model_context": true,
+          "public_export": true
+        }
+      },
+      "authorship": {
+        "actor": "Codex agent",
+        "actor_type": "agent",
+        "human_review": false
+      }
+    },
+    {
+      "path": "evidence/iv-local.md",
+      "title": "IV interpretation is a compliance-specific identification statement",
+      "rights": {
+        "license_id": "Apache-2.0",
+        "license_url": "https://www.apache.org/licenses/LICENSE-2.0",
+        "attribution": "Causal Capybara contributors; Yusufhan Balci; VCESR",
+        "modified": true,
+        "content_type": "original_project_content",
+        "review_basis": "Original or imported Apache-2.0 project material; no third-party paper body included.",
+        "permissions": {
+          "cache": true,
+          "display": true,
+          "adapt": true,
+          "model_context": true,
+          "public_export": true
+        }
+      },
+      "authorship": {
+        "actor": "Codex agent",
+        "actor_type": "agent",
+        "human_review": false
+      }
+    },
+    {
+      "path": "evidence/rd-local.md",
+      "title": "RD targets depend on the cutoff design and estimator",
+      "rights": {
+        "license_id": "Apache-2.0",
+        "license_url": "https://www.apache.org/licenses/LICENSE-2.0",
+        "attribution": "Causal Capybara contributors; Yusufhan Balci; VCESR",
+        "modified": true,
+        "content_type": "original_project_content",
+        "review_basis": "Original or imported Apache-2.0 project material; no third-party paper body included.",
+        "permissions": {
+          "cache": true,
+          "display": true,
+          "adapt": true,
+          "model_context": true,
+          "public_export": true
+        }
+      },
+      "authorship": {
+        "actor": "Codex agent",
+        "actor_type": "agent",
+        "human_review": false
+      }
+    },
+    {
+      "path": "evidence/longitudinal-feedback.md",
+      "title": "Treatment-confounder feedback requires sequential reasoning",
+      "rights": {
+        "license_id": "Apache-2.0",
+        "license_url": "https://www.apache.org/licenses/LICENSE-2.0",
+        "attribution": "Causal Capybara contributors; Yusufhan Balci; VCESR",
+        "modified": true,
+        "content_type": "original_project_content",
+        "review_basis": "Original or imported Apache-2.0 project material; no third-party paper body included.",
+        "permissions": {
+          "cache": true,
+          "display": true,
+          "adapt": true,
+          "model_context": true,
+          "public_export": true
+        }
+      },
+      "authorship": {
+        "actor": "Codex agent",
+        "actor_type": "agent",
+        "human_review": false
+      }
+    },
+    {
+      "path": "evidence/mediation-target.md",
+      "title": "Mediation targets require additional assumptions",
+      "rights": {
+        "license_id": "Apache-2.0",
+        "license_url": "https://www.apache.org/licenses/LICENSE-2.0",
+        "attribution": "Causal Capybara contributors; Yusufhan Balci; VCESR",
+        "modified": true,
+        "content_type": "original_project_content",
+        "review_basis": "Original or imported Apache-2.0 project material; no third-party paper body included.",
+        "permissions": {
+          "cache": true,
+          "display": true,
+          "adapt": true,
+          "model_context": true,
+          "public_export": true
+        }
+      },
+      "authorship": {
+        "actor": "Codex agent",
+        "actor_type": "agent",
+        "human_review": false
+      }
+    },
+    {
+      "path": "evidence/population-effects.md",
+      "title": "Interference and transport alter the comparison",
+      "rights": {
+        "license_id": "Apache-2.0",
+        "license_url": "https://www.apache.org/licenses/LICENSE-2.0",
+        "attribution": "Causal Capybara contributors; Yusufhan Balci; VCESR",
+        "modified": true,
+        "content_type": "original_project_content",
+        "review_basis": "Original or imported Apache-2.0 project material; no third-party paper body included.",
+        "permissions": {
+          "cache": true,
+          "display": true,
+          "adapt": true,
+          "model_context": true,
+          "public_export": true
+        }
+      },
+      "authorship": {
+        "actor": "Codex agent",
+        "actor_type": "agent",
+        "human_review": false
+      }
+    },
+    {
+      "path": "evidence/survival-marginal.md",
+      "title": "Survival and RMST contrasts are horizon-specific population targets",
+      "rights": {
+        "license_id": "Apache-2.0",
+        "license_url": "https://www.apache.org/licenses/LICENSE-2.0",
+        "attribution": "Causal Capybara contributors; Yusufhan Balci; VCESR",
+        "modified": true,
+        "content_type": "original_project_content",
+        "review_basis": "Original or imported Apache-2.0 project material; no third-party paper body included.",
+        "permissions": {
+          "cache": true,
+          "display": true,
+          "adapt": true,
+          "model_context": true,
+          "public_export": true
+        }
+      },
+      "authorship": {
+        "actor": "Codex agent",
+        "actor_type": "agent",
+        "human_review": false
+      }
+    },
+    {
+      "path": "evidence/survival-censoring.md",
+      "title": "Conditional censoring assumptions must match the procedure",
+      "rights": {
+        "license_id": "Apache-2.0",
+        "license_url": "https://www.apache.org/licenses/LICENSE-2.0",
+        "attribution": "Causal Capybara contributors; Yusufhan Balci; VCESR",
+        "modified": true,
+        "content_type": "original_project_content",
+        "review_basis": "Original or imported Apache-2.0 project material; no third-party paper body included.",
+        "permissions": {
+          "cache": true,
+          "display": true,
+          "adapt": true,
+          "model_context": true,
+          "public_export": true
+        }
+      },
+      "authorship": {
+        "actor": "Codex agent",
+        "actor_type": "agent",
+        "human_review": false
+      }
+    },
+    {
+      "path": "evidence/aft-time-ratio.md",
+      "title": "Ordinary AFT regression and structural failure-time models differ",
+      "rights": {
+        "license_id": "Apache-2.0",
+        "license_url": "https://www.apache.org/licenses/LICENSE-2.0",
+        "attribution": "Causal Capybara contributors; Yusufhan Balci; VCESR",
+        "modified": true,
+        "content_type": "original_project_content",
+        "review_basis": "Original or imported Apache-2.0 project material; no third-party paper body included.",
+        "permissions": {
+          "cache": true,
+          "display": true,
+          "adapt": true,
+          "model_context": true,
+          "public_export": true
+        }
+      },
+      "authorship": {
+        "actor": "Codex agent",
+        "actor_type": "agent",
+        "human_review": false
+      }
+    },
+    {
+      "path": "evidence/competing-target.md",
+      "title": "Competing-event handling changes the causal question",
+      "rights": {
+        "license_id": "Apache-2.0",
+        "license_url": "https://www.apache.org/licenses/LICENSE-2.0",
+        "attribution": "Causal Capybara contributors; Yusufhan Balci; VCESR",
+        "modified": true,
+        "content_type": "original_project_content",
+        "review_basis": "Original or imported Apache-2.0 project material; no third-party paper body included.",
+        "permissions": {
+          "cache": true,
+          "display": true,
+          "adapt": true,
+          "model_context": true,
+          "public_export": true
+        }
+      },
+      "authorship": {
+        "actor": "Codex agent",
+        "actor_type": "agent",
+        "human_review": false
+      }
+    },
+    {
+      "path": "evidence/audit-reproducibility.md",
+      "title": "Implementation audits require traceable evidence",
+      "rights": {
+        "license_id": "Apache-2.0",
+        "license_url": "https://www.apache.org/licenses/LICENSE-2.0",
+        "attribution": "Causal Capybara contributors; Yusufhan Balci; VCESR",
+        "modified": true,
+        "content_type": "original_project_content",
+        "review_basis": "Original or imported Apache-2.0 project material; no third-party paper body included.",
+        "permissions": {
+          "cache": true,
+          "display": true,
+          "adapt": true,
+          "model_context": true,
+          "public_export": true
+        }
+      },
+      "authorship": {
+        "actor": "Codex agent",
+        "actor_type": "agent",
+        "human_review": false
+      }
+    },
+    {
+      "path": "evidence/heterogeneity-direct.md",
+      "title": "Heterogeneity requires a direct comparison on a declared scale",
+      "rights": {
+        "license_id": "Apache-2.0",
+        "license_url": "https://www.apache.org/licenses/LICENSE-2.0",
+        "attribution": "Causal Capybara contributors; Yusufhan Balci; VCESR",
+        "modified": true,
+        "content_type": "original_project_content",
+        "review_basis": "Original or imported Apache-2.0 project material; no third-party paper body included.",
+        "permissions": {
+          "cache": true,
+          "display": true,
+          "adapt": true,
+          "model_context": true,
+          "public_export": true
+        }
+      },
+      "authorship": {
+        "actor": "Codex agent",
+        "actor_type": "agent",
+        "human_review": false
+      }
+    },
+    {
+      "path": "evidence/heterogeneity-prespecification.md",
+      "title": "Subgroup discovery and confirmatory analysis have different evidence requirements",
+      "rights": {
+        "license_id": "Apache-2.0",
+        "license_url": "https://www.apache.org/licenses/LICENSE-2.0",
+        "attribution": "Causal Capybara contributors; Yusufhan Balci; VCESR",
+        "modified": true,
+        "content_type": "original_project_content",
+        "review_basis": "Original or imported Apache-2.0 project material; no third-party paper body included.",
+        "permissions": {
+          "cache": true,
+          "display": true,
+          "adapt": true,
+          "model_context": true,
+          "public_export": true
+        }
+      },
+      "authorship": {
+        "actor": "Codex agent",
+        "actor_type": "agent",
+        "human_review": false
+      }
+    },
+    {
+      "path": "evidence/heterogeneity-outcome-scales.md",
+      "title": "Outcome families require distinct interaction targets",
+      "rights": {
+        "license_id": "Apache-2.0",
+        "license_url": "https://www.apache.org/licenses/LICENSE-2.0",
+        "attribution": "Causal Capybara contributors; Yusufhan Balci; VCESR",
+        "modified": true,
+        "content_type": "original_project_content",
+        "review_basis": "Original or imported Apache-2.0 project material; no third-party paper body included.",
+        "permissions": {
+          "cache": true,
+          "display": true,
+          "adapt": true,
+          "model_context": true,
+          "public_export": true
+        }
+      },
+      "authorship": {
+        "actor": "Codex agent",
+        "actor_type": "agent",
+        "human_review": false
+      }
+    },
+    {
+      "path": "evidence/survival-heterogeneity.md",
+      "title": "KM and RMST heterogeneity depend on common horizons and subgroup support",
+      "rights": {
+        "license_id": "Apache-2.0",
+        "license_url": "https://www.apache.org/licenses/LICENSE-2.0",
+        "attribution": "Causal Capybara contributors; Yusufhan Balci; VCESR",
+        "modified": true,
+        "content_type": "original_project_content",
+        "review_basis": "Original or imported Apache-2.0 project material; no third-party paper body included.",
+        "permissions": {
+          "cache": true,
+          "display": true,
+          "adapt": true,
+          "model_context": true,
+          "public_export": true
+        }
+      },
+      "authorship": {
+        "actor": "Codex agent",
+        "actor_type": "agent",
+        "human_review": false
+      }
+    },
+    {
+      "path": "evidence/aft-heterogeneity.md",
+      "title": "AFT interactions and marginal effect modification are different tests",
+      "rights": {
+        "license_id": "Apache-2.0",
+        "license_url": "https://www.apache.org/licenses/LICENSE-2.0",
+        "attribution": "Causal Capybara contributors; Yusufhan Balci; VCESR",
+        "modified": true,
+        "content_type": "original_project_content",
+        "review_basis": "Original or imported Apache-2.0 project material; no third-party paper body included.",
+        "permissions": {
+          "cache": true,
+          "display": true,
+          "adapt": true,
+          "model_context": true,
+          "public_export": true
+        }
+      },
+      "authorship": {
+        "actor": "Codex agent",
+        "actor_type": "agent",
+        "human_review": false
+      }
+    },
+    {
+      "path": "evidence/cate-heterogeneity-evaluation.md",
+      "title": "CATE projection, calibration and GATES require honest evaluation",
+      "rights": {
+        "license_id": "Apache-2.0",
+        "license_url": "https://www.apache.org/licenses/LICENSE-2.0",
+        "attribution": "Causal Capybara contributors; Yusufhan Balci; VCESR",
+        "modified": true,
+        "content_type": "original_project_content",
+        "review_basis": "Original or imported Apache-2.0 project material; no third-party paper body included.",
+        "permissions": {
+          "cache": true,
+          "display": true,
+          "adapt": true,
+          "model_context": true,
+          "public_export": true
+        }
+      },
+      "authorship": {
+        "actor": "Codex agent",
+        "actor_type": "agent",
+        "human_review": false
+      }
+    },
+    {
+      "path": "evidence/rate-evaluation.md",
+      "title": "Ranking tests assess a rule with a specified evaluation design",
+      "rights": {
+        "license_id": "Apache-2.0",
+        "license_url": "https://www.apache.org/licenses/LICENSE-2.0",
+        "attribution": "Causal Capybara contributors; Yusufhan Balci; VCESR",
+        "modified": true,
+        "content_type": "original_project_content",
+        "review_basis": "Original or imported Apache-2.0 project material; no third-party paper body included.",
+        "permissions": {
+          "cache": true,
+          "display": true,
+          "adapt": true,
+          "model_context": true,
+          "public_export": true
+        }
+      },
+      "authorship": {
+        "actor": "Codex agent",
+        "actor_type": "agent",
+        "human_review": false
+      }
+    },
+    {
+      "path": "evidence/categorical-outcome-interaction.md",
+      "title": "Categorical-outcome probability heterogeneity",
+      "rights": {
+        "license_id": "Apache-2.0",
+        "license_url": "https://www.apache.org/licenses/LICENSE-2.0",
+        "attribution": "Causal Capybara contributors; Yusufhan Balci; VCESR",
+        "modified": true,
+        "content_type": "original_project_content",
+        "review_basis": "Original or imported Apache-2.0 project material; no third-party paper body included.",
+        "permissions": {
+          "cache": true,
+          "display": true,
+          "adapt": true,
+          "model_context": true,
+          "public_export": true
+        }
+      },
+      "authorship": {
+        "actor": "Codex agent",
+        "actor_type": "agent",
+        "human_review": false
+      }
+    },
+    {
+      "path": "evidence/fixed-profile-inference.md",
+      "title": "Fixed-profile standardization inference",
+      "rights": {
+        "license_id": "Apache-2.0",
+        "license_url": "https://www.apache.org/licenses/LICENSE-2.0",
+        "attribution": "Causal Capybara contributors; Yusufhan Balci; VCESR",
+        "modified": true,
+        "content_type": "original_project_content",
+        "review_basis": "Original or imported Apache-2.0 project material; no third-party paper body included.",
+        "permissions": {
+          "cache": true,
+          "display": true,
+          "adapt": true,
+          "model_context": true,
+          "public_export": true
+        }
+      },
+      "authorship": {
+        "actor": "Codex agent",
+        "actor_type": "agent",
+        "human_review": false
+      }
+    }
+  ]
+}

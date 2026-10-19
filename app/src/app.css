@@ -416,6 +416,14 @@
 /* -------------------------------------------------------- data sheet */
 
 .datasheet { min-height: 0; }
+.column-selection-bar { display: flex; align-items: center; flex-wrap: wrap; gap: 8px 18px; padding: 10px 14px; border-bottom: 1px solid var(--rule); background: var(--paper-raised); }
+.column-selection-summary { display: flex; flex: 1 1 210px; flex-direction: column; gap: 2px; }
+.column-selection-actions { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; }
+.column-selection-message { flex-basis: 100%; margin: 0; }
+.var-choice { display: flex; align-items: center; padding-left: 10px; min-width: 0; }
+.var-choice > input[type="checkbox"] { flex: none; width: 16px; height: 16px; margin: 0; accent-color: var(--teal); }
+.var-choice > .var-item { flex: 1; width: 0; min-width: 0; margin-left: 2px; padding-left: 5px; }
+.var-choice.excluded > .var-item { font-style: italic; }
 /* Both rails are draggable and so carry an inline width, and both were
    `flex: none` -- unable to give a pixel back. Around a 566px canvas that left
    the data itself 34px: a column and a half of a spreadsheet. The share is
@@ -444,6 +452,8 @@
   border-left: 1px solid var(--rule); background: var(--paper-raised);
 }
 .var-title { margin: 0 0 8px; font-size: var(--t-section); font-weight: 680; display: flex; align-items: center; gap: 8px; }
+.var-detail-head { display: flex; align-items: center; justify-content: space-between; gap: 8px; padding: 8px 12px; border-bottom: 1px solid var(--rule); }
+.sheet-col[aria-pressed="true"] { color: var(--teal-text); background: var(--teal-soft); }
 
 .sheet { min-height: 0; }
 .sheet-head { padding: 8px 14px; gap: 10px; border-bottom: 1px solid var(--rule); background: var(--paper-raised); }
@@ -820,8 +830,8 @@
    the graph is the thing being read. */
 .dag-split { position: relative; display: grid; grid-template-columns: minmax(0, 1fr) minmax(240px, 0.35fr); height: 100%; min-height: 0; }
 @media (max-width: 1100px) { .dag-split { grid-template-columns: 1fr; } }
-.dag-canvas-wrap { padding: 18px 20px; min-height: 0; }
-.dag-toolbar { gap: 6px; margin-bottom: 8px; }
+.dag-canvas-wrap { padding: 18px 20px; min-width: 0; min-height: 0; }
+.dag-toolbar { gap: 6px; margin-bottom: 8px; flex-wrap: wrap; }
 .dag-canvas { position: relative; flex: 1; min-height: 0; overflow: hidden; }
 .dag-svg { width: 100%; height: 100%; display: block; }
 /* The graph takes keyboard focus now that it can be panned and zoomed
@@ -978,6 +988,7 @@ button.status-provisional:hover { color: var(--ink); }
 .provisional-action .btn { flex: none; }
 .provisional-also { font-weight: 600; }
 .provisional-review-cta { margin-top: 2px; }
+.provisional-review-cta .btn { max-width: 100%; white-space: normal; text-align: left; }
 .provisional-review-cta.compact .btn { font-size: 11.5px; padding: 3px 9px; }
 .provisional-reviewed { gap: 7px; flex-wrap: wrap; }
 
@@ -1127,3 +1138,22 @@ button.status-provisional:hover { color: var(--ink); }
   .nav-item.active, .minimap-step.current, .tabbtn.on { outline: 1px solid var(--teal); outline-offset: -1px; }
   .starter, .example-tile, .design-card, .method-card { border-color: var(--rule-strong); }
 }
+
+.context-presets { margin-bottom: 14px; }
+.assistant-result-choices { max-height: 200px; overflow: auto; margin: 12px 0; }
+.assistant-result-choices label { align-items: flex-start; padding: 6px 0; }
+.assistant-cli > .row, .assistant-cli > label { margin-block: 12px; }
+.assistant-cli .research-filter-pair { grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); }
+.assistant-cli details > textarea { width: 100%; margin-top: 10px; font-family: var(--font-mono); }
+.markdown-answer { line-height: 1.65; overflow-wrap: anywhere; }
+.markdown-answer > :first-child { margin-top: 0; }
+.markdown-answer h3, .markdown-answer h4, .markdown-answer h5, .markdown-answer h6 { margin: 1.3em 0 .5em; }
+.markdown-answer p, .markdown-answer ul, .markdown-answer ol, .markdown-answer blockquote { margin: .75em 0; }
+.markdown-answer p, .markdown-answer blockquote { white-space: pre-wrap; }
+.markdown-answer ul, .markdown-answer ol { padding-left: 1.6em; }
+.markdown-answer blockquote { border-left: 3px solid var(--teal); padding-left: 16px; color: var(--muted); }
+.markdown-answer pre { max-height: 360px; overflow: auto; background: var(--paper); border: 1px solid var(--rule); border-radius: 8px; padding: 14px; }
+.markdown-answer code { font-size: .9em; }
+.markdown-table { overflow: auto; margin-block: 16px; }
+.markdown-table table { border-collapse: collapse; min-width: 100%; }
+.markdown-table th, .markdown-table td { padding: 8px 12px; border-bottom: 1px solid var(--rule); text-align: left; }

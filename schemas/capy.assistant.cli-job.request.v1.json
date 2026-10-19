@@ -1,0 +1,82 @@
+{
+  "$id": "https://causalcapybara.dev/schemas/capy.assistant.cli-job.request.v1.json",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "properties": {
+    "client": {
+      "enum": [
+        "codex",
+        "claude",
+        "grok"
+      ],
+      "title": "Client",
+      "type": "string"
+    },
+    "cloud_consent": {
+      "default": false,
+      "title": "Cloud Consent",
+      "type": "boolean"
+    },
+    "context_hash": {
+      "maxLength": 100,
+      "title": "Context Hash",
+      "type": "string"
+    },
+    "context_id": {
+      "maxLength": 200,
+      "title": "Context Id",
+      "type": "string"
+    },
+    "effort": {
+      "anyOf": [
+        {
+          "enum": [
+            "low",
+            "medium",
+            "high",
+            "xhigh",
+            "max"
+          ],
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Effort"
+    },
+    "model": {
+      "anyOf": [
+        {
+          "maxLength": 150,
+          "pattern": "^[A-Za-z0-9][A-Za-z0-9._:/-]{0,149}$",
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Model"
+    },
+    "native_config_consent": {
+      "default": false,
+      "title": "Native Config Consent",
+      "type": "boolean"
+    },
+    "request_id": {
+      "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+      "title": "Request Id",
+      "type": "string"
+    }
+  },
+  "required": [
+    "context_id",
+    "context_hash",
+    "client",
+    "request_id"
+  ],
+  "title": "CLIJobRequest",
+  "type": "object"
+}

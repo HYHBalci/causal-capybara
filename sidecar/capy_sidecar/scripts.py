@@ -50,6 +50,11 @@ def _r_formula(outcome: str, terms: list[str]) -> str:
     return f"{outcome} ~ {rhs}"
 
 
+def _r_name(value: str) -> str:
+    """Quote a column identifier separately from an R character literal."""
+    return "`" + str(value).replace("\\", "\\\\").replace("`", "\\`") + "`"
+
+
 # ---------------------------------------------------------------------------
 # Python projection -- runs through the same adapters the GUI runs
 # ---------------------------------------------------------------------------
@@ -107,6 +112,9 @@ def r_script(spec: dict[str, Any], *, method_id: str | None = None, version: str
     methods = _methods_of(spec, method_id)
     lines = [
         HEADER.format(version=version).replace("#", "#", 1),
+        '# R reference calculations use the packages and inference stated below.',
+        '# Use the Python projection for exact replay of a Python-engine run, including',
+        '# its sample handling, diagnostics, resampling and method options.',
         'library(arrow)',
         "",
         f'data_path <- {json.dumps(data_path or "data/analysis.parquet")}',
@@ -224,21 +232,83 @@ def _s_aipw(roles, opts, spec) -> str:
     )
 
 
+def _did_r_data(roles) -> str:
+    """A common complete-case panel for the two base-R reference regressions."""
+    columns = list(dict.fromkeys([roles.get("outcome"), roles.get("treatment"),
+        roles.get("unit"), roles.get("time"), roles.get("cluster") or roles.get("unit"),
+        *_confounders(roles)]))
+    return (
+        f"capy_columns <- {_r_str(columns)}\n"
+        "capy_data <- d[complete.cases(d[, capy_columns, drop = FALSE]), , drop = FALSE]\n"
+        "# This reference expects the recorded treatment to use numeric 0/1 coding.\n"
+        f"capy_data$.capy_active <- as.numeric(capy_data[[{_r_str(roles.get('treatment'))}]])\n"
+        "stopifnot(all(capy_data$.capy_active %in% c(0, 1)))\n"
+        f"capy_data$.capy_unit <- factor(capy_data[[{_r_str(roles.get('unit'))}]])\n"
+        f"capy_data$.capy_time <- capy_data[[{_r_str(roles.get('time'))}]]\n"
+        "if (is.character(capy_data$.capy_time) || is.factor(capy_data$.capy_time)) {\n"
+        "  capy_numeric_time <- suppressWarnings(as.numeric(as.character(capy_data$.capy_time)))\n"
+        "  capy_data$.capy_time <- if (all(is.finite(capy_numeric_time))) capy_numeric_time else as.character(capy_data$.capy_time)\n"
+        "}\n"
+        f"capy_data$.capy_cluster <- capy_data[[{_r_str(roles.get('cluster') or roles.get('unit'))}]]\n"
+    )
+
+
+def _did_r_inference(target: str, opts) -> str:
+    """Explicit cluster sandwich with the same full-rank HC1 correction."""
+    level = float(opts.get("ci_level", 0.95))
+    return (
+        "# Cluster sandwich: G/(G-1) * (n-1)/(n-rank(X)); t critical value with G-1 df.\n"
+        "capy_X <- model.matrix(capy_fit)\n"
+        "capy_X <- capy_X[, !is.na(coef(capy_fit)), drop = FALSE]\n"
+        "capy_scores <- rowsum(capy_X * residuals(capy_fit), capy_data$.capy_cluster)\n"
+        "capy_n <- nrow(capy_X); capy_k <- ncol(capy_X); capy_G <- nrow(capy_scores)\n"
+        "stopifnot(capy_G > 1, capy_n > capy_k)\n"
+        "capy_bread <- solve(crossprod(capy_X))\n"
+        "capy_vcov <- capy_bread %*% crossprod(capy_scores) %*% capy_bread *\n"
+        "  (capy_G / (capy_G - 1)) * ((capy_n - 1) / (capy_n - capy_k))\n"
+        f"capy_target <- {_r_str(target)}\n"
+        "stopifnot(capy_target %in% colnames(capy_vcov))\n"
+        "capy_estimate <- unname(coef(capy_fit)[capy_target])\n"
+        "capy_se <- sqrt(capy_vcov[capy_target, capy_target])\n"
+        f"capy_critical <- qt((1 + {level}) / 2, df = capy_G - 1)\n"
+        "capy_result <- data.frame(estimate = capy_estimate, se = capy_se,\n"
+        "  ci_low = capy_estimate - capy_critical * capy_se,\n"
+        "  ci_high = capy_estimate + capy_critical * capy_se)\n"
+        "print(capy_result)"
+    )
+
+
 def _s_did_2x2(roles, opts, spec) -> str:
     y, d = roles.get("outcome"), roles.get("treatment")
-    unit, time = roles.get("unit"), roles.get("time")
-    cluster = roles.get("cluster") or unit
+    terms = [".capy_ever * .capy_post"] + [_r_name(x) for x in _confounders(roles)]
     return (
-        "library(fixest)\n"
-        f"feols({y} ~ {d} | {unit} + {time}, data = d, cluster = ~{cluster})"
+        "# Two-group/two-period interaction, with the assigned baseline adjustment.\n"
+        + _did_r_data(roles)
+        + "capy_periods <- sort(unique(capy_data$.capy_time))\n"
+        "stopifnot(length(capy_periods) == 2)\n"
+        "capy_always <- unique(capy_data$.capy_unit[capy_data$.capy_active == 1 &\n"
+        "  capy_data$.capy_time == capy_periods[1]])\n"
+        "capy_data <- capy_data[!capy_data$.capy_unit %in% capy_always, , drop = FALSE]\n"
+        "capy_data$.capy_ever <- ave(capy_data$.capy_active, capy_data$.capy_unit, FUN = max)\n"
+        "capy_data$.capy_post <- as.numeric(capy_data$.capy_time == capy_periods[2])\n"
+        f"capy_fit <- lm({_r_formula(_r_name(y), terms)}, data = capy_data)\n"
+        + _did_r_inference(".capy_ever:.capy_post", opts)
     )
 
 
 def _s_twfe(roles, opts, spec) -> str:
+    terms = [".capy_active"] + [_r_name(x) for x in _confounders(roles)]
+    terms += [".capy_unit", "factor(.capy_time)"]
     return (
-        _s_did_2x2(roles, opts, spec)
-        + "\n# Under staggered adoption with heterogeneous effects this coefficient is a\n"
-          "# weighted average of 2x2 comparisons whose weights can be negative\n"
+        "# Explicit unit and time indicators also handle unbalanced panels.\n"
+        + _did_r_data(roles)
+        + "capy_within <- residuals(lm(.capy_active ~ .capy_unit + factor(.capy_time), data = capy_data))\n"
+        "if (sqrt(sum(capy_within^2)) <= 1e-8 * max(sqrt(sum(capy_data$.capy_active^2)), 1e-12))\n"
+        "  stop(\"Treatment has no variation left after unit and time fixed effects.\")\n"
+        + f"capy_fit <- lm({_r_formula(_r_name(roles.get('outcome')), terms)}, data = capy_data)\n"
+        + _did_r_inference(".capy_active", opts)
+        + "\n# Under staggered adoption with heterogeneous effects this coefficient can place\n"
+          "# negative weights on treatment effects. Bacon's 2x2 comparison weights are nonnegative\n"
           "# (Goodman-Bacon 2021; de Chaisemartin & D'Haultfoeuille 2020).\n"
           "# Report it beside did.callaway_santanna or did.sun_abraham, not instead of them."
     )
@@ -260,34 +330,53 @@ def _s_event_study(roles, opts, spec) -> str:
 
 
 def _s_cs(roles, opts, spec) -> str:
+    if roles.get("weight"):
+        return 'stop("This R reference is unweighted. Use the Python projection to replay the assigned unit weights.")'
     y, d = roles.get("outcome"), roles.get("treatment")
     unit, time = roles.get("unit"), roles.get("time")
     x = _confounders(roles)
-    xf = (" + ".join(x)) if x else "1"
+    xf = (" + ".join(_r_name(c) for c in x)) if x else "1"
+    control = {"never_treated": "nevertreated", "not_yet_treated": "notyettreated"}.get(
+        opts.get("control_group", "never_treated"), opts.get("control_group"))
+    cluster = roles.get("cluster") or unit
     return (
         "library(did)\n"
-        f"d <- transform(d, .g = ave(ifelse({d} == 1, {time}, NA), {unit},\n"
+        "# Package reference: R's multiplier draws and influence-function conventions\n"
+        "# can differ from the Python adapter; compare the same sample and target.\n"
+        f"d <- transform(d, .g = ave(ifelse({_r_name(d)} == 1, {_r_name(time)}, NA), {_r_name(unit)},\n"
         f"                           FUN = function(v) suppressWarnings(min(v, na.rm = TRUE))))\n"
-        "d$.g[is.na(d$.g)] <- 0\n"
-        f"att <- att_gt(yname = {_r_str(y)}, tname = {_r_str(time)}, idname = {_r_str(unit)},\n"
+        "d$.g[!is.finite(d$.g)] <- 0\n"
+        f"d$.capy_id <- as.integer(factor(d[[{_r_str(unit)}]]))\n"
+        f"att <- att_gt(yname = {_r_str(y)}, tname = {_r_str(time)}, idname = \".capy_id\",\n"
         f"               gname = \".g\", xformla = ~ {xf}, data = d,\n"
-        f"               control_group = {_r_str(opts.get('control_group', 'nevertreated'))},\n"
-        f"               est_method = {_r_str(opts.get('est_method', 'dr'))})\n"
-        "summary(aggte(att, type = \"simple\"))\n"
+        f"               control_group = {_r_str(control)},\n"
+        f"               est_method = {_r_str(opts.get('est_method', 'dr'))},\n"
+        f"               base_period = {_r_str(opts.get('base_period', 'universal'))},\n"
+        f"               alp = {1 - float(opts.get('ci_level', .95)):.12g},\n"
+        f"               bstrap = TRUE, cband = {_r_str(bool(opts.get('cband', True)))},\n"
+        f"               biters = {int(opts.get('boot_reps', 1000))},\n"
+        f"               clustervars = {_r_str('.capy_id' if cluster == unit else cluster)})\n"
+        f"summary(aggte(att, type = {_r_str(opts.get('aggregation', 'simple'))}))\n"
         "ggdid(aggte(att, type = \"dynamic\"))"
     )
 
 
 def _s_sunab(roles, opts, spec) -> str:
+    if roles.get("weight"):
+        return 'stop("This R reference is unweighted. Use the Python projection to replay the assigned unit weights.")'
     y, d = roles.get("outcome"), roles.get("treatment")
     unit, time = roles.get("unit"), roles.get("time")
     cluster = roles.get("cluster") or unit
     return (
         "library(fixest)\n"
-        f"d <- transform(d, .g = ave(ifelse({d} == 1, {time}, NA), {unit},\n"
+        "# Full-range R package reference, without the app's event-time tail pooling.\n"
+        "# Package aggregation and finite-sample corrections can differ.\n"
+        f"d <- transform(d, .g = ave(ifelse({_r_name(d)} == 1, {_r_name(time)}, NA), {_r_name(unit)},\n"
         f"                           FUN = function(v) suppressWarnings(min(v, na.rm = TRUE))))\n"
-        "d$.g[is.na(d$.g)] <- 10000\n"
-        f"sa <- feols({y} ~ sunab(.g, {time}) | {unit} + {time}, data = d, cluster = ~{cluster})\n"
+        f"d$.g[!is.finite(d$.g)] <- max(d[[{_r_str(time)}]], na.rm = TRUE) + 1\n"
+        f"sa <- feols({_r_name(y)} ~ sunab(.g, {_r_name(time)})"
+        + (" + " + " + ".join(_r_name(c) for c in _confounders(roles)) if _confounders(roles) else "")
+        + f" | {_r_name(unit)} + {_r_name(time)}, data = d, cluster = ~{_r_name(cluster)})\n"
         "summary(sa, agg = \"att\"); iplot(sa)"
     )
 

@@ -9,11 +9,12 @@
  * The default button estimates the recommended SET, not the first card.
  */
 
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useId, useMemo, useState } from 'react'
 import { api } from '../api'
 import { useStore } from '../store'
+import { AskButton } from '../components/AskButton'
 import { References } from '../components/References'
-import type { MethodOption, RecoCard } from '../types'
+import type { ColumnMeta, MethodOption, RecoCard } from '../types'
 
 /** Which program does the arithmetic, said in words. "python" and "r" are the
  *  names of the engines, and the history list is read by people who chose
@@ -271,6 +272,7 @@ function MethodCardView({
 }) {
   const profile = useStore((s) => s.profile)
   const engines = useStore((s) => s.engines)
+  const columns = useStore((s) => s.columns)
   const health = useStore((s) => s.methodHealth[card.id])
   const setExplain = useStore((s) => s.setExplain)
   const [open, setOpen] = useState(false)
@@ -283,7 +285,7 @@ function MethodCardView({
   const rHealthy = !!health?.r?.available
   const pyAvailable = health?.python?.available ?? card.python_available
   const shownOptions = card.options.filter(
-    (o) => profile === 'advanced' || (profile === 'standard' && o.profile === 'standard'),
+    (o) => o.profile === 'beginner' || profile === 'advanced' || (profile === 'standard' && o.profile === 'standard'),
   )
 
   return (
@@ -334,7 +336,7 @@ function MethodCardView({
           <summary className="tiny">Settings for this method</summary>
           <div className="option-grid">
             {shownOptions.map((o) => (
-              <OptionField key={o.name} option={o} value={options[o.name]} onChange={(v) => onOption(o, v)} />
+              <OptionField key={o.name} option={o} value={options[o.name]} columns={columns} onChange={(v) => onOption(o, v)} />
             ))}
           </div>
         </details>
@@ -363,6 +365,7 @@ function MethodCardView({
 
       <div className="method-foot row">
         <button className="btn ghost sm" onClick={() => setExplain(card.explain_key)}>Explain</button>
+        <AskButton selection={{ kind: 'method', id: card.id, title: card.title }} />
         {card.references?.length ? (
           <details className="method-references"><summary>Literature · {card.references.length} sources</summary><References references={card.references} compact /></details>
         ) : null}
@@ -370,9 +373,10 @@ function MethodCardView({
         <button
           className={`btn sm${included ? '' : ' primary'}`}
           onClick={onToggle}
-          disabled={card.blocked || (!pyAvailable && !rHealthy)}
+          disabled={!included && (card.blocked || (!pyAvailable && !rHealthy))}
           title={
-            card.blocked ? 'Go back to the board and fill in the boxes marked “needed” first'
+            included ? 'Remove this method from the selected set'
+              : card.blocked ? 'Go back to the board and fill in the boxes marked “needed” first'
               : !pyAvailable && !rHealthy
                 ? (health?.r?.detail ?? 'Neither calculator can run this method yet')
                 : rHealthy && pyAvailable
@@ -424,6 +428,13 @@ const CHOICE_LABELS: Record<string, string> = {
   'step+ramp': 'A jump and then a change of slope',
   two_sided: 'Two-sided',
   'two-sided': 'Two-sided',
+  continuous: 'Continuous',
+  binary: 'Binary outcome (0 or 1)',
+  count: 'Count outcome (nonnegative integers)',
+  survival: 'Time-to-event outcome',
+  gaussian: 'Gaussian (continuous outcome)',
+  binomial: 'Binomial (binary outcome)',
+  poisson: 'Poisson (count outcome)',
 }
 
 function choiceLabel(choice: string): string {
@@ -433,11 +444,45 @@ function choiceLabel(choice: string): string {
   return choice.replace(/_/g, ' ').replace(/^./, (c) => c.toUpperCase())
 }
 
-function OptionField({
-  option, value, onChange,
-}: { option: MethodOption; value: unknown; onChange: (v: unknown) => void }) {
+export function OptionField({
+  option, value, columns = [], onChange,
+}: { option: MethodOption; value: unknown; columns?: ColumnMeta[]; onChange: (v: unknown) => void }) {
   const v = value === undefined ? option.default : value
-  const id = `opt-${option.name}`
+  const id = useId()
+  if (option.type === 'column') {
+    return <div className="field">
+      <label htmlFor={id}>{option.label}</label>
+      <select id={id} value={typeof v === 'string' ? v : ''} onChange={(event) => onChange(event.target.value)}>
+        <option value="">None</option>
+        {columns.map((column) => <option key={column.name} value={column.name}>{column.name}</option>)}
+      </select>
+      {option.help && <span className="hint">{option.help}</span>}
+    </div>
+  }
+  if (option.type === 'columns') {
+    // Keep the wire type an array. A free-text input used to turn selections
+    // into a comma-separated string that the engine could not interpret.
+    const selected = Array.isArray(v) ? v.filter((name): name is string => typeof name === 'string') : []
+    return (
+      <div className="field">
+        <label htmlFor={id}>{option.label}</label>
+        <div className="row wrap" style={{ gap: 4 }}>
+          {selected.map((name) => <button key={name} type="button" className="chip role"
+            aria-label={`Remove ${name} from ${option.label}`} onClick={() => onChange(selected.filter((item) => item !== name))}>
+            {name} ×
+          </button>)}
+        </div>
+        <select id={id} value="" disabled={option.max_items != null && selected.length >= option.max_items} aria-describedby={option.help ? `${id}-help` : undefined}
+          onChange={(event) => event.target.value && onChange([...new Set([...selected, event.target.value])])}>
+          <option value="">{option.max_items != null && selected.length >= option.max_items ? 'Remove a selection to change columns' : selected.length ? 'Add another column…' : 'Choose a column…'}</option>
+          {columns.filter((column) => !selected.includes(column.name)).map((column) =>
+            <option key={column.name} value={column.name}>{column.label ? `${column.name} — ${column.label}` : column.name}</option>)}
+        </select>
+        {option.help && <span id={`${id}-help`} className="hint">{option.help}</span>}
+        {!columns.length && <span className="hint">Open study data to choose columns.</span>}
+      </div>
+    )
+  }
   if (option.type === 'bool') {
     return (
       <label className="option-row" htmlFor={id}>
@@ -454,6 +499,7 @@ function OptionField({
       <div className="field">
         <label htmlFor={id}>{option.label}</label>
         <select id={id} value={String(v ?? '')} onChange={(e) => onChange(e.target.value)}>
+          {option.default == null && <option value="">Choose…</option>}
           {(option.choices ?? []).map((c) => <option key={c} value={c}>{choiceLabel(c)}</option>)}
         </select>
         {option.help && <span className="hint">{option.help}</span>}

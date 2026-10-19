@@ -1017,17 +1017,17 @@ def infer_kind(series: pd.Series) -> str:
     nun = int(series.nunique(dropna=True))
     if pd.api.types.is_datetime64_any_dtype(series):
         return "datetime"
-    if series.dtype == bool:
+    if pd.api.types.is_bool_dtype(series):
         return "binary"
     if pd.api.types.is_numeric_dtype(series):
-        if nun <= 2:
+        if nun == 2:
             return "binary"
         if pd.api.types.is_integer_dtype(series) and n > 20 and nun > 0.9 * n:
             return "id"
         if pd.api.types.is_integer_dtype(series) and nun <= 12:
             return "categorical"
         return "continuous"
-    if nun <= 2:
+    if nun == 2:
         return "binary"
     if n > 20 and nun > 0.5 * n:
         try:

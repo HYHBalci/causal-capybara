@@ -9,7 +9,7 @@ import { useEffect, useMemo, useRef, useState } from 'react'
 import { api } from '../api'
 import { isDesktop, onFilesDropped, pickFile } from '../desktop'
 import { useStore } from '../store'
-import type { ColumnMeta } from '../types'
+import type { ColumnMeta, DataColumnSelection } from '../types'
 import { VariableInspector } from '../components/Inspector'
 import { Resizer, useMeasured, usePanelSize } from '../components/Resizer'
 import { fmtCell, VegaChart } from '../components/VegaChart'
@@ -33,30 +33,105 @@ export function DataSheet() {
   const columns = useStore((s) => s.columns)
   const spec = useStore((s) => s.spec)
   const health = useStore((s) => s.health)
+  const busy = useStore((s) => s.busy)
+  const applyColumnSelection = useStore((s) => s.applyColumnSelection)
+  const [selection, setSelection] = useState<DataColumnSelection | null>(null)
+  const [included, setIncluded] = useState<string[]>([])
+  const [selectionLoading, setSelectionLoading] = useState(false)
+  const [selectionError, setSelectionError] = useState<string | null>(null)
+  const [applying, setApplying] = useState(false)
+  const [reloadSelection, setReloadSelection] = useState(0)
+  const selectionRef = useRef<DataColumnSelection | null>(null)
   const [selected, setSelected] = useState<string | null>(null)
   const [filter, setFilter] = useState('')
   const [sortBy, setSortBy] = useState<'name' | 'missing' | 'role'>('name')
   const [healthOpen, setHealthOpen] = useState(true)
   const rail = usePanelSize('data.rail', 236, 150, () => Math.round(window.innerWidth * 0.4))
   const detail = usePanelSize('data.detail', 296, 200, () => Math.round(window.innerWidth * 0.5))
+  const dataRevision = (project?.meta?.data as { revision?: string } | undefined)?.revision ?? ''
+  const questionReferences = JSON.stringify([spec?.roles, spec?.methods, spec?.sample, spec?.dag_id])
+
+  useEffect(() => {
+    if (!project?.has_data) return
+    let live = true
+    setSelectionLoading(true)
+    setSelectionError(null)
+    void useStore.getState().flushSpec().then(() => api.columnSelection(project.id)).then((next) => {
+      if (!live) return
+      const sameRevision = selectionRef.current?.project.id === project.id && selectionRef.current?.revision === next.revision
+      selectionRef.current = next
+      setSelection(next)
+      setIncluded((draft) => sameRevision
+        ? next.columns.map((column) => column.name).filter((name) => draft.includes(name) || next.required_columns.some((required) => required.name === name))
+        : next.included_columns)
+    }).catch((error) => { if (live) setSelectionError(error instanceof Error ? error.message : String(error)) })
+      .finally(() => { if (live) setSelectionLoading(false) })
+    return () => { live = false }
+  }, [project?.id, project?.has_data, dataRevision, questionReferences, reloadSelection])
+
+  const sourceColumns = selection && selection.project.id === project?.id ? selection.columns : columns
+  const requiredColumns = selection?.required_columns ?? []
+  const selectedNames = new Set(included)
+  const dirty = !!selection && JSON.stringify(selection.included_columns) !== JSON.stringify(included)
+  const selectionDisabled = selectionLoading || applying || !!busy || !selection || selection.project.id !== project?.id
 
   const roleOf = (name: string) => roleFor(spec?.roles as Record<string, unknown> | undefined, name)
   const shown = useMemo(() => {
-    const list = columns.filter((c) => !filter || c.name.toLowerCase().includes(filter.toLowerCase()))
+    const list = sourceColumns.filter((c) => !filter || c.name.toLowerCase().includes(filter.toLowerCase()))
     const copy = [...list]
     if (sortBy === 'name') copy.sort((a, b) => a.name.localeCompare(b.name, undefined, { numeric: true }))
     if (sortBy === 'missing') copy.sort((a, b) => b.pct_missing - a.pct_missing)
     if (sortBy === 'role') copy.sort((a, b) => (roleOf(b.name) ? 1 : 0) - (roleOf(a.name) ? 1 : 0))
     return copy
-  }, [columns, filter, sortBy, spec?.roles])
+  }, [sourceColumns, filter, sortBy, spec?.roles])
 
-  const selectedCol = columns.find((c) => c.name === selected) ?? null
+  const selectedCol = sourceColumns.find((c) => c.name === selected) ?? null
+  const selectVariable = (name: string) => setSelected((current) => current === name ? null : name)
+
+  useEffect(() => { setSelected(null); setApplying(false) }, [project?.id])
+
+  const applySelection = async () => {
+    if (!project || !selection || selectionDisabled || !included.length) return
+    const projectId = project.id
+    setApplying(true)
+    setSelectionError(null)
+    try {
+      const saved = await applyColumnSelection(included, selection.revision)
+      if (!saved || useStore.getState().project?.id !== projectId) return
+      selectionRef.current = saved
+      setSelection(saved)
+      setIncluded(saved.included_columns)
+    } catch (error) {
+      if (useStore.getState().project?.id === projectId) setSelectionError(error instanceof Error ? error.message : String(error))
+    } finally {
+      if (useStore.getState().project?.id === projectId) setApplying(false)
+    }
+  }
 
   if (!project) return null
   if (!project.has_data) return <ImportPane />
 
   return (
     <div className="datasheet col grow">
+      <div className="column-selection-bar" role="group" aria-label="Columns to include">
+        <div className="column-selection-summary">
+          <strong>Choose columns</strong>
+          <span className="tiny hint" role="status">{selectionLoading ? 'Loading column choices…' : `${included.length} of ${sourceColumns.length} columns selected`}</span>
+          <span className="tiny hint">The full import is kept. You can restore columns later.</span>
+        </div>
+        <div className="column-selection-actions">
+          <button className="btn sm" disabled={selectionDisabled} onClick={() => setIncluded(sourceColumns.map((column) => column.name))}>Select all</button>
+          <button className="btn ghost sm" disabled={selectionDisabled} onClick={() => setIncluded(sourceColumns.filter((column) => requiredColumns.some((required) => required.name === column.name)).map((column) => column.name))}>Clear selection</button>
+          {dirty && <button className="btn ghost sm" disabled={selectionDisabled} onClick={() => setIncluded(selection!.included_columns)}>Reset selection</button>}
+          <button className="btn primary sm" disabled={selectionDisabled || !dirty || !included.length} onClick={() => void applySelection()}>{applying ? 'Applying selection…' : 'Apply selection'}</button>
+        </div>
+        {selectionError && <div className="banner caution column-selection-message" role="alert">
+          <span>{selectionError}</span>
+          <button className="btn sm" disabled={applying} onClick={() => { selectionRef.current = null; setReloadSelection((value) => value + 1) }}>Reload choices</button>
+        </div>}
+        {!included.length && !selectionLoading && <p className="tiny hint column-selection-message">Select at least one column to apply. Your working data stays unchanged until you apply.</p>}
+        {!!requiredColumns.length && <p className="tiny hint column-selection-message">Columns used by saved questions stay included. Remove their assignments or references in those questions to exclude them.</p>}
+      </div>
       {/* Not `.row`: that centres its children vertically, and a sheet whose
           virtual height is sixty thousand pixels was being centred too --
           overflowing the window above and below instead of scrolling inside it. */}
@@ -84,16 +159,23 @@ export function DataSheet() {
           <div className="scroll grow">
             {shown.map((c) => {
               const role = roleOf(c.name)
+              const required = requiredColumns.find((column) => column.name === c.name)
+              const active = columns.some((column) => column.name === c.name)
               return (
+                <div className={`var-choice${active ? '' : ' excluded'}`} key={c.name}>
+                <input type="checkbox" aria-label={`Include ${c.name}`} checked={selectedNames.has(c.name)}
+                       disabled={selectionDisabled || !!required}
+                       title={required ? required.references.map((reference) => `${reference.title}: ${reference.reason}`).join('; ') : `Include ${c.name} in the working data`}
+                       onChange={(event) => setIncluded(sourceColumns.map((column) => column.name).filter((name) => name === c.name ? event.target.checked : selectedNames.has(name)))} />
                 <button
-                  key={c.name}
                   className={`var-item${selected === c.name ? ' active' : ''}`}
-                  draggable
+                  draggable={active}
                   onDragStart={(e) => {
                     e.dataTransfer.setData('text/capy-variable', c.name)
                     e.dataTransfer.effectAllowed = 'copy'
                   }}
-                  onClick={() => setSelected(c.name)}
+                  onClick={() => selectVariable(c.name)}
+                  aria-pressed={selectedCol?.name === c.name}
                   title={`${c.kind} · ${c.pct_missing}% missing · ${c.n_unique} distinct`}
                 >
                   <span className={`kind-icon ${c.kind}`} aria-hidden />
@@ -103,17 +185,20 @@ export function DataSheet() {
                     <span className={`tiny ${c.pct_missing > 20 ? 'warn' : 'hint'}`}>{c.pct_missing}%</span>
                   )}
                 </button>
+                </div>
               )
             })}
             {!shown.length && <p className="pad hint">No variable matches.</p>}
           </div>
           <div className="var-rail-foot tiny hint">
-            {columns.length} variables · drag one onto the question strip or the board
+            {columns.length} included variables. Check columns and apply to update the working data.
+            Click a name to inspect it; drag an included variable to assign a role.
           </div>
         </div>
 
         <div className="col grow" style={{ minWidth: 0, minHeight: 0 }}>
-          <Sheet key={project.id} columns={columns} projectId={project.id} total={project.n ?? 0} onSelect={setSelected} />
+          <Sheet key={`${project.id}:${dataRevision}:${JSON.stringify(columns.map((column) => column.name))}`} columns={columns} projectId={project.id} total={project.n ?? 0}
+                 selected={selectedCol?.name ?? null} onSelect={selectVariable} />
           {healthOpen && health && <HealthPanel onClose={() => setHealthOpen(false)} />}
           {!healthOpen && (
             <button className="btn ghost sm health-reopen" onClick={() => setHealthOpen(true)}>
@@ -123,14 +208,21 @@ export function DataSheet() {
         </div>
 
         {selectedCol && (
-          <div className="var-detail scroll" style={{ width: detail.size ?? undefined }}>
+          <section className="var-detail scroll" aria-label={`Variable details: ${selectedCol.name}`}
+                   style={{ width: detail.size ?? undefined }}>
             <Resizer
               axis="x" side="left" invert label="Variable details width"
               current={detail.size ?? 296} onChange={detail.setSize} onReset={detail.reset}
               min={200} max={() => Math.round(window.innerWidth * 0.5)}
             />
-            <VariableInspector column={selectedCol} />
-          </div>
+            <div className="var-detail-head">
+              <span className="panel-title">Variable details</span>
+              <button className="btn ghost sm" aria-label="Close variable details" onClick={() => setSelected(null)}>✕</button>
+            </div>
+            {columns.some((column) => column.name === selectedCol.name)
+              ? <VariableInspector column={selectedCol} />
+              : <div className="pad"><h3>{selectedCol.name}</h3><p>Not included in the working data. Select this column and apply to restore its values and make it available for questions.</p></div>}
+          </section>
         )}
       </div>
     </div>
@@ -138,8 +230,8 @@ export function DataSheet() {
 }
 
 function Sheet({
-  columns, projectId, total, onSelect,
-}: { columns: ColumnMeta[]; projectId: string; total: number; onSelect: (n: string) => void }) {
+  columns, projectId, total, selected, onSelect,
+}: { columns: ColumnMeta[]; projectId: string; total: number; selected: string | null; onSelect: (n: string) => void }) {
   const [page, setPage] = useState<{ dataKey: string; rows: unknown[][]; offset: number } | null>(null)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -204,7 +296,7 @@ function Sheet({
           {count(total)} rows · rows load as you scroll
           {sort ? ` · sorted by ${sort.col}${sort.desc ? ', descending' : ''}` : ''}
         </span>
-        {loading && <span className="spinner" aria-label="Loading rows" />}
+        {loading && <span className="spinner" role="status" aria-label="Loading rows" />}
       </div>
       {error && <div className="banner caution" role="alert">
         <span className="grow">These rows could not be loaded. {error}</span>
@@ -226,6 +318,7 @@ function Sheet({
                   <th key={c.name} aria-sort={sort?.col === c.name ? (sort.desc ? 'descending' : 'ascending') : 'none'}>
                     <span className="sheet-col-wrap">
                       <button className="sheet-col" onClick={() => onSelect(c.name)}
+                              aria-pressed={selected === c.name}
                               title={`${c.kind} · ${c.pct_missing}% missing · ${c.n_unique} distinct — click for details`}>
                         <span className={`kind-icon ${c.kind}`} aria-hidden />
                         {c.name}
@@ -368,21 +461,13 @@ function Stat({ label, value, tone }: { label: string; value: string; tone?: 'ok
   )
 }
 
-/** Getting a dataset in.
- *
- * This was one text box under the words "Type the path of a data file", which
- * asked a person who may never have used a terminal to know what an absolute
- * path is and to retype it without a typo -- and answered a mistake with
- * "There is no file at ...". The desktop shell has had the file dialog
- * registered and permitted since the first build, and the window has had
- * dragDropEnabled set the whole time; neither was ever reachable, because the
- * JavaScript half of the Tauri API was not a dependency. Both work now, and
- * the typed path stays as the third way in rather than the only one.
- */
+/** Desktop selection supplies a native path; browser selection supplies File
+ * bytes to the local engine. Both retain the optional typed-path workflow. */
 function ImportPane() {
   const importData = useStore((s) => s.importData)
   const project = useStore((s) => s.project)!
-  const toast = useStore((s) => s.toast)
+  const importing = useStore((s) => s.busy) === 'Reading the file'
+  const fileInput = useRef<HTMLInputElement>(null)
   const [path, setPath] = useState('')
   const [formats, setFormats] = useState<Record<string, string>>({})
   const [hovering, setHovering] = useState(false)
@@ -403,14 +488,11 @@ function ImportPane() {
   const extensions = Object.keys(formats).map((e) => e.replace(/^\./, '')).filter(Boolean)
 
   const browse = async () => {
+    if (!isDesktop()) { fileInput.current?.click(); return }
     const picked = await pickFile(
       extensions.length ? [{ name: 'Data files', extensions }] : undefined,
     )
     if (picked) void importData(picked)
-    else if (!isDesktop()) {
-      toast('info', 'Choosing a file needs the installed app.',
-        'In a browser tab, paste the full path of the file instead.')
-    }
   }
 
   return (
@@ -418,7 +500,10 @@ function ImportPane() {
       className={`empty-state import-drop${hovering ? ' over' : ''}`}
       onDragOver={(e) => { e.preventDefault(); setHovering(true) }}
       onDragLeave={() => setHovering(false)}
-      onDrop={(e) => { e.preventDefault(); setHovering(false) }}
+      onDrop={(e) => {
+        e.preventDefault(); setHovering(false)
+        if (!isDesktop() && e.dataTransfer.files[0]) void importData(e.dataTransfer.files[0])
+      }}
     >
       <div className="empty-art" aria-hidden>
         <svg width="64" height="64" viewBox="0 0 24 24">
@@ -435,7 +520,14 @@ function ImportPane() {
         keeps working even if the original moves.
       </p>
 
-      <button className="btn primary lg" onClick={() => void browse()}>Choose a file…</button>
+      {!isDesktop() && <input ref={fileInput} type="file" hidden aria-label="Choose a data file"
+        accept={extensions.length ? extensions.map((extension) => `.${extension}`).join(',') : undefined}
+        onChange={(event) => {
+          const file = event.currentTarget.files?.[0]
+          event.currentTarget.value = ''
+          if (file) void importData(file)
+        }} />}
+      <button className="btn primary lg" disabled={importing} onClick={() => void browse()}>Choose a file…</button>
 
       <details className="import-typed">
         <summary className="tiny hint">Or paste the full path of the file</summary>
@@ -448,7 +540,7 @@ function ImportPane() {
             onChange={(e) => setPath(e.target.value)}
             onKeyDown={(e) => { if (e.key === 'Enter' && path.trim()) void importData(path.trim()) }}
           />
-          <button className="btn" disabled={!path.trim()} onClick={() => void importData(path.trim())}>
+          <button className="btn" disabled={importing || !path.trim()} onClick={() => void importData(path.trim())}>
             Import
           </button>
         </div>
@@ -457,7 +549,8 @@ function ImportPane() {
       <p className="tiny hint" style={{ marginTop: 12, maxWidth: 560 }}>
         Reads {Object.values(formats).filter((v, i, a) => a.indexOf(v) === i).join(', ') ||
           'CSV, Parquet, Stata, SPSS, SAS, Excel, Arrow and Gretl workfiles'}.
-        Value labels and dates survive the round trip. Nothing is uploaded anywhere.
+        Value labels and dates survive the round trip. Files stay on this machine.
+        {!isDesktop() && ' Browser imports send the selected file to the local analysis engine (up to 256 MiB).'}
       </p>
     </div>
   )

@@ -1,0 +1,7 @@
+# Inventories hash exact source bytes; keep these inputs identical across hosts.
+/app/src/generated/catalogue.json text eol=lf
+/app/src/generated/knowledge.json text eol=lf
+/skills/** text eol=lf
+/docs/explain/literature.json text eol=lf
+/engines/python/capy_py/*.py text eol=lf
+/engines/registry/*.yaml text eol=lf

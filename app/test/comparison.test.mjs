@@ -125,7 +125,65 @@ test('changing a question role invalidates the diagnostic acknowledgment before 
   await tick()
   assert.equal(writes.length, 1)
   assert.equal(writes[0].roles.outcome, 'new_outcome')
+  assert.equal(writes[0].question.outcome, 'new_outcome')
+  assert.match(writes[0].question.text, /on new_outcome/)
   assert.deepEqual(writes[0].diagnostics_viewed, [])
+})
+
+test('switching outcomes synchronizes an automatic question label and its saved sentence', async () => {
+  reset()
+  const previous = { ...makeSpec(), question: { treatment: 'treatment', outcome: 'outcome', population: 'adults' } }
+  useStore.setState({ spec: previous })
+  const writes = []
+  api.saveSpec = async (_project, value) => { writes.push(value); return value }
+  useStore.getState().setRole('outcome', 'binary_outcome')
+  assert.equal(useStore.getState().spec.question.text, 'Effect of treatment on binary_outcome for adults')
+  assert.equal(previous.question.outcome, 'outcome', 'The previous revision must not be mutated')
+  await useStore.getState().flushSpec()
+  await tick()
+  assert.equal(writes.length, 1)
+  assert.equal(writes[0].roles.outcome, 'binary_outcome')
+  assert.equal(writes[0].question.outcome, 'binary_outcome')
+  assert.deepEqual(writes[0].diagnostics_viewed, [])
+})
+
+test('switching and clearing treatment updates its automatic question label through the same save', async () => {
+  reset()
+  useStore.setState({ spec: { ...makeSpec(), question: { treatment: 'treatment', outcome: 'outcome' } } })
+  const writes = []
+  api.saveSpec = async (_project, value) => { writes.push(value); return value }
+  useStore.getState().setRole('treatment', 'offer')
+  assert.equal(useStore.getState().spec.question.text, 'Effect of offer on outcome')
+  await useStore.getState().flushSpec()
+  await tick()
+  useStore.getState().setRole('treatment', null)
+  assert.equal(useStore.getState().spec.question.treatment, null)
+  assert.equal(useStore.getState().spec.question.text, 'Effect of a treatment on outcome')
+  await useStore.getState().flushSpec()
+  await tick()
+  assert.equal(writes.length, 2)
+  assert.equal(writes[0].question.treatment, 'offer')
+  assert.equal(writes[1].roles.treatment, null)
+  assert.equal(writes[1].question.treatment, null)
+})
+
+test('role changes preserve customized treatment and outcome descriptions', async () => {
+  reset()
+  useStore.setState({ spec: { ...makeSpec(), question: { treatment: 'the offer of care', outcome: 'recovery after one year' } } })
+  const writes = []
+  api.saveSpec = async (_project, value) => { writes.push(value); return value }
+  useStore.getState().setRole('treatment', 'offer')
+  useStore.getState().setRole('outcome', 'recovered')
+  assert.equal(useStore.getState().spec.question.text, 'Effect of the offer of care on recovery after one year')
+  await useStore.getState().flushSpec()
+  await tick()
+  assert.equal(writes.at(-1).roles.outcome, 'recovered')
+  assert.equal(writes.at(-1).question.outcome, 'recovery after one year')
+  useStore.getState().setRole('treatment', null)
+  await useStore.getState().flushSpec()
+  await tick()
+  assert.equal(writes.at(-1).roles.treatment, null)
+  assert.equal(writes.at(-1).question.treatment, 'the offer of care')
 })
 
 test('a title-only edit retains the diagnostic acknowledgment in memory and in the saved question', async () => {

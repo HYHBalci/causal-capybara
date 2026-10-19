@@ -9,6 +9,7 @@
 import { useMemo, useState } from 'react'
 import { useStore } from '../store'
 import type { ColumnMeta } from '../types'
+import { canAssignColumn, roleColumnOptions, roleColumnSelection } from '../roleColumns'
 
 interface Slot {
   role: string
@@ -30,6 +31,8 @@ const BASE_SLOTS: Slot[] = [
     help: 'What you think it changed.' },
 ]
 
+const TARGET_LABELS: Record<string, string> = { survival_difference: 'Survival probability difference', RMST_difference: 'Restricted mean time difference', time_ratio: 'AFT time factor' }
+
 const POPULATION_SLOT: Slot = {
   role: 'population', prefix: 'for', placeholder: 'everyone in the data', kind: 'text',
   noun: 'who the answer is about',
@@ -37,6 +40,14 @@ const POPULATION_SLOT: Slot = {
 }
 
 const DESIGN_SLOTS: Record<string, Slot[]> = {
+  survival: [
+    { role: 'treatment', prefix: 'Compare baseline', placeholder: 'treatment (0/1)', kind: 'column',
+      noun: 'the baseline treatment', help: 'Treatment assigned at the common time zero. An observed group contrast is not automatically causal.' },
+    { role: 'duration', prefix: 'with follow-up', placeholder: 'duration', kind: 'column',
+      noun: 'the elapsed follow-up duration', help: 'Positive elapsed time from a common time zero to the event or right censoring, in one unit.' },
+    { role: 'event', prefix: 'and event', placeholder: 'event (1 event, 0 censored)', kind: 'column',
+      noun: 'the single-event indicator', help: 'One event coded 1, right censoring coded 0. Competing events need a different analysis.' },
+  ],
   rd: [
     { role: 'running', prefix: 'at a cutoff on', placeholder: 'running variable', kind: 'column',
       noun: 'the score that decided eligibility',
@@ -111,12 +122,15 @@ export function QuestionStrip() {
   const savingSpec = useStore((s) => s.savingSpec)
   const setExplain = useStore((s) => s.setExplain)
   const newSpec = useStore((s) => s.newSpec)
+  const creatingSpec = useStore((s) => s.creatingSpec)
+  const createSpecError = useStore((s) => s.createSpecError)
 
   const slots = useMemo(() => {
     if (!spec) return BASE_SLOTS
     const design = spec.design
     const extra = DESIGN_SLOTS[design] ?? []
     const cmp = COMPARISON_SLOT[design]
+    if (design === 'survival') return [...extra, POPULATION_SLOT]
     if (design === 'rd') return [BASE_SLOTS[1], ...extra, POPULATION_SLOT]
     if (design === 'its') return [BASE_SLOTS[1], ...extra, POPULATION_SLOT]
     return [...BASE_SLOTS, ...extra, POPULATION_SLOT, ...(cmp ? [cmp] : [])]
@@ -128,11 +142,14 @@ export function QuestionStrip() {
   if (!spec) {
     return (
       <div className="qstrip empty row" style={{ gap: 8 }}>
-        <span className="hint grow">
-          This bar holds your question — the effect of what, on what, for whom. Filling it in is how an
-          analysis starts.
-        </span>
-        <button className="btn primary sm" onClick={() => void newSpec()}>Start a question</button>
+        <div className="grow">
+          <span className="hint">
+            This bar holds your question — the effect of what, on what, for whom. Filling it in is how an
+            analysis starts.
+          </span>
+          {createSpecError && <p className="banner error" role="alert">Could not start a question: {createSpecError}. Try again.</p>}
+        </div>
+        <button className="btn primary sm" disabled={creatingSpec} aria-busy={creatingSpec} onClick={() => void newSpec()}>{creatingSpec ? 'Starting question…' : 'Start a question'}</button>
       </div>
     )
   }
@@ -145,14 +162,15 @@ export function QuestionStrip() {
         ))}
       </div>
       <div className="qstrip-meta">
-        {savingSpec && <span className="spinner" aria-label="Saving" />}
+        {createSpecError && <span role="alert" className="tiny hint">Could not start another question: {createSpecError}</span>}
+        {savingSpec && <span className="spinner" role="status" aria-label="Saving" />}
         {spec.estimand && (
           <button
             className="chip teal"
-            title={`Read what “${spec.estimand}” means — which people this number averages over`}
+            title={`Read what “${spec.estimand}” means — the target quantity and population`}
             onClick={() => setExplain(`estimand.${spec.estimand!.toLowerCase()}`)}
           >
-            {spec.estimand}
+            {TARGET_LABELS[spec.estimand] ?? spec.estimand}
           </button>
         )}
       </div>
@@ -165,6 +183,8 @@ function QuestionSlot({ slot, columns }: { slot: Slot; columns: ColumnMeta[] }) 
   const updateSpec = useStore((s) => s.updateSpec)
   const setRole = useStore((s) => s.setRole)
   const setView = useStore((s) => s.setView)
+  const designs = useStore((s) => s.designs)
+  const toast = useStore((s) => s.toast)
   const [open, setOpen] = useState(false)
   const [filter, setFilter] = useState('')
   const [over, setOver] = useState(false)
@@ -246,8 +266,10 @@ function QuestionSlot({ slot, columns }: { slot: Slot; columns: ColumnMeta[] }) 
   }
 
   const multiple = slot.kind === 'columns'
-  const selected = multiple ? ((raw as string[]) ?? []) : []
-  const options = columns.filter(
+  const selected = roleColumnSelection(raw)
+  const accepts = designs.find((design) => design.id === spec.design)?.zones.find((zone) => zone.role === slot.role)?.accepts
+  const choices = roleColumnOptions(columns, accepts, raw)
+  const options = choices.filter(
     (c) => !filter || c.name.toLowerCase().includes(filter.toLowerCase()),
   )
 
@@ -268,6 +290,11 @@ function QuestionSlot({ slot, columns }: { slot: Slot; columns: ColumnMeta[] }) 
           setOver(false)
           const name = e.dataTransfer.getData('text/capy-variable')
           if (!name) return
+          const column = columns.find((candidate) => candidate.name === name)
+          if (!column || !canAssignColumn(column, accepts)) {
+            toast('info', `Choose a compatible column for ${slot.noun}.`)
+            return
+          }
           commit(multiple ? [...new Set([...selected, name])] : name)
         }}
       >
@@ -283,7 +310,7 @@ function QuestionSlot({ slot, columns }: { slot: Slot; columns: ColumnMeta[] }) 
           <span className="qslot-caret" aria-hidden>▾</span>
         </button>
         {open && (
-          <div className="qslot-menu card" role="listbox">
+          <div className="qslot-menu card" role="listbox" aria-label={`Choose ${slot.noun}`} aria-multiselectable={multiple || undefined}>
             <input
               autoFocus
               className="qslot-filter"
@@ -292,7 +319,7 @@ function QuestionSlot({ slot, columns }: { slot: Slot; columns: ColumnMeta[] }) 
               onChange={(e) => setFilter(e.target.value)}
               onKeyDown={(e) => {
                 if (e.key === 'Escape') setOpen(false)
-                if (e.key === 'Enter' && options[0]) {
+                if (e.key === 'Enter' && options[0] && canAssignColumn(options[0], accepts)) {
                   commit(multiple ? [...new Set([...selected, options[0].name])] : options[0].name)
                 }
               }}
@@ -312,13 +339,14 @@ function QuestionSlot({ slot, columns }: { slot: Slot; columns: ColumnMeta[] }) 
                   className={`qslot-option${selected.includes(c.name) ? ' on' : ''}`}
                   role="option"
                   aria-selected={selected.includes(c.name)}
+                  disabled={!selected.includes(c.name) && !canAssignColumn(c, accepts)}
                   onClick={() =>
                     commit(
                       multiple
                         ? selected.includes(c.name)
                           ? selected.filter((s) => s !== c.name)
                           : [...selected, c.name]
-                        : c.name,
+                        : selected.includes(c.name) ? null : c.name,
                     )
                   }
                 >
@@ -328,7 +356,7 @@ function QuestionSlot({ slot, columns }: { slot: Slot; columns: ColumnMeta[] }) 
                 </button>
               ))}
               {columns.length > 0 && !options.length && (
-                <div className="hint tiny pad">No column here is called “{filter}”.</div>
+                <div className="hint tiny pad">{filter ? `No matching column here is called “${filter}”.` : 'No column currently matches this role. Check its type on the Data screen.'}</div>
               )}
             </div>
             {filled && (

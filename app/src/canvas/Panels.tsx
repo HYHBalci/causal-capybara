@@ -5,19 +5,12 @@ import { useEffect, useMemo, useRef, useState } from 'react'
 import { api } from '../api'
 import { isDesktop, openExternal, saveFile } from '../desktop'
 import { useStore } from '../store'
-import type { Report, ReportSection, Stack } from '../types'
+import type { InstallationPlan as InstallPlan, ManualPackage, Report, ReportSection, Stack } from '../types'
+import { installationActive, installationBusy, useInstallations } from '../installations'
 import { ArtifactView, fmtNum } from '../components/VegaChart'
 import { useSplitPane } from '../components/SplitPane'
 
 /* ------------------------------------------------------------- engines */
-
-/** A package the Install button cannot fetch, and the line that adds it by hand. */
-type ManualPackage = {
-  package: string
-  source: string
-  command: string
-  note?: string
-}
 
 /** What `/engines/stacks` answers with now. The shared `Stack` in types.ts predates
  *  the sentence the engine writes for each group, so the extras are declared here
@@ -26,36 +19,6 @@ type MethodPack = Stack & {
   detail?: string
   installable?: string[]
   needs_manual_install?: ManualPackage[]
-}
-
-/** The engine's answer to "what would pressing Install actually do". */
-type InstallPlan = {
-  stack?: string
-  engine?: string
-  title?: string
-  packages?: string[]
-  already_installed?: string[]
-  library?: string | null
-  library_will_be_created?: boolean
-  can_run?: boolean
-  blocked_reason?: string | null
-  size_guide?: string
-  command?: string | null
-  note?: string
-  needs_manual_install?: ManualPackage[]
-}
-
-/** What came back once it had run. `message` is a finished sentence written by the
- *  engine, which knows what is on disk afterwards; the exit code does not. */
-type InstallResult = {
-  status: string
-  plan: Record<string, unknown>
-  message?: string
-  installed?: string[]
-  still_missing?: string[]
-  needs_manual_install?: ManualPackage[]
-  log?: string
-  elapsed_s?: number
 }
 
 /** What happened to the last install, kept on screen until it is dismissed. */
@@ -90,32 +53,50 @@ export function Engines() {
   const toast = useStore((s) => s.toast)
   const [packs, setPacks] = useState<MethodPack[]>([])
   const [plan, setPlan] = useState<{ pack: MethodPack; plan: InstallPlan } | null>(null)
-  const [installing, setInstalling] = useState<MethodPack | null>(null)
+  const installation = useInstallations((state) => state)
+  const busy = installationBusy(installation)
+  const installing = installation.pending
+    ? { id: installation.pending.stack, title: installation.pending.title }
+    : installationActive(installation.job) && installation.job
+      ? { id: installation.job.stack, title: installation.job.plan.title ?? installation.job.stack } : null
   const [elapsed, setElapsed] = useState(0)
   const [outcome, setOutcome] = useState<InstallOutcome | null>(null)
   const [checking, setChecking] = useState(false)
+  const [planning, setPlanning] = useState(false)
+  const completedJob = useRef<string | null>(null)
 
   const load = () => { api.stacks().then(setPacks).catch(() => setPacks([])) }
   useEffect(() => { if (!engineDown) load() }, [engineDown])
+  useEffect(() => { void installation.recover() }, [installation.recover])
 
-  // An install blocks until the process it started has finished, so there is nothing
-  // to report while it runs. A clock that is visibly moving is the honest minimum:
-  // it is the difference between "still working" and "the app has frozen".
+  // The server clock and durable job identity survive navigation and reloads.
   useEffect(() => {
     if (!installing) return
-    setElapsed(0)
-    const started = Date.now()
-    const timer = window.setInterval(
-      () => setElapsed(Math.round((Date.now() - started) / 1000)),
-      1000,
-    )
+    const recorded = installation.job?.elapsed_s ?? 0
+    const updated = installation.updatedAt
+    const tick = () => setElapsed(Math.max(0, Math.round(recorded + (Date.now() - updated) / 1000)))
+    tick()
+    const timer = window.setInterval(tick, 1000)
     return () => window.clearInterval(timer)
-  }, [installing])
+  }, [installing?.id, installation.updatedAt])
+
+  useEffect(() => {
+    const job = installation.job
+    if (!job || installationActive(job) || completedJob.current === job.id) return
+    completedJob.current = job.id
+    setPlan(null)
+    setOutcome({ packTitle: job.plan.title ?? packs.find((pack) => pack.id === job.stack)?.title ?? job.stack,
+      status: job.status, message: job.message ?? `Installation ${job.status.replace(/_/g, ' ')}.`,
+      log: job.log ?? '', manual: job.needs_manual_install ?? [] })
+    if (job.message) toast(installTone(job.status), job.plan.title ?? job.stack, job.message)
+    void refreshEngines(true).then(load)
+  }, [installation.job?.id, installation.job?.status])
 
   const recheck = async () => {
     setChecking(true)
     try {
       await refreshEngines(true)
+      await installation.recover()
       load()
     } finally {
       setChecking(false)
@@ -123,17 +104,16 @@ export function Engines() {
   }
 
   const install = async (pack: MethodPack, approved: boolean) => {
-    // One install at a time, across the whole screen. This used to be the id of the
-    // pack last pressed, so opening a second plan cleared the running install's
-    // indicator and re-enabled every button: two installs writing into one package
-    // folder were a single click away.
-    if (installing) return
+    if (busy || planning) return
     if (approved) {
-      setInstalling(pack)
       setOutcome(null)
+      setPlan(null)
+      await installation.start(pack.id, pack.title)
+      return
     }
+    setPlanning(true)
     try {
-      const res = (await api.installStack(pack.id, approved)) as InstallResult
+      const res = await api.installStack(pack.id, false)
       if (res.status === 'needs_approval') {
         setPlan({ pack, plan: res.plan as InstallPlan })
         return
@@ -147,7 +127,7 @@ export function Engines() {
         manual: res.needs_manual_install ?? [],
       })
       if (res.message) toast(installTone(res.status), pack.title, res.message)
-      if (res.status === 'installed' || res.status === 'partial') {
+      if (res.status === 'installed' || res.status === 'partial' || res.status === 'already_installed') {
         await refreshEngines(true)
         load()
       }
@@ -155,16 +135,12 @@ export function Engines() {
       setOutcome({
         packTitle: pack.title,
         status: 'failed',
-        message: approved
-          ? 'Causal Capybara lost contact with the part of itself that installs packages, so it '
-            + 'cannot say what was added. Press Check again to see where things stand.'
-          : 'Causal Capybara could not work out what this group would install, so it has not '
-            + 'started anything. Press Check again, then try once more.',
+        message: 'The installation plan could not be loaded. No download was approved. Check the engine connection and try again.',
         log: String((err as { detail?: string })?.detail ?? err),
         manual: [],
       })
     } finally {
-      if (approved) setInstalling(null)
+      setPlanning(false)
     }
   }
 
@@ -207,8 +183,9 @@ export function Engines() {
           <span>
             The part of the app that computes is not answering, so nothing on this screen can be
             checked or installed just now.{' '}
-            <button className="btn ghost sm" disabled={reconnecting} onClick={() => void reconnect()}>
-              {reconnecting ? 'Trying…' : 'Try again'}
+            <button className="btn ghost sm" disabled={reconnecting || installation.checking}
+                    onClick={() => void (installing ? installation.recover() : reconnect())}>
+              {reconnecting || installation.checking ? 'Trying…' : installing ? 'Check installation status' : 'Try again'}
             </button>
           </span>
         </div>
@@ -252,7 +229,7 @@ export function Engines() {
                     Add {core.missing.join(', ')} automatically. This downloads the missing packages
                     from {k === 'r' ? 'CRAN' : 'PyPI'} into your package folder and may take a few minutes.
                   </p>
-                  <button className="btn primary sm" disabled={engineDown || installing !== null}
+                  <button className="btn primary sm" disabled={engineDown || busy || planning}
                           onClick={() => void install(core, true)}>
                     {installing?.id === core.id ? `Installing… ${elapsed}s` : `Install missing ${e.label} packages`}
                   </button>
@@ -305,16 +282,32 @@ export function Engines() {
         </p>
 
         {installing && (
-          <div className="banner info" style={{ margin: '8px 0' }}>
+          <div className="banner info" style={{ margin: '8px 0' }} role="status">
             <span className="spinner" />
             <span>
-              Installing the {installing.title} pack. A few minutes is normal, and it can take longer
-              when a package has to be built on your computer rather than downloaded ready-made. The
-              rest of the app keeps working while it runs, so feel free to carry on — just do not
-              close Causal Capybara until it has finished. {elapsedText(elapsed)}.
+              Installing the {installing.title} pack. {installation.job?.message ?? 'Waiting for the installation record…'}{' '}
+              {elapsedText(elapsed)}. You can continue using the app and return here to check progress.
+              Keep Causal Capybara open until installation finishes.
             </span>
           </div>
         )}
+        {!installation.verified && !installation.error && <p className="tiny hint" role="status">
+          Checking for an installation already in progress…
+        </p>}
+        {installation.error && <div className="banner caution" role="status" style={{ margin: '8px 0' }}>
+          <span>{installation.error}{' '}
+            <button className="btn ghost sm" disabled={installation.checking || installation.starting}
+                    onClick={() => void installation.recover()}>Check installation status</button>
+            {installation.missingRequest && <button className="btn sm"
+                disabled={installation.checking || installation.starting}
+                onClick={() => void installation.retryPending()}>Retry the same request</button>}
+          </span>
+        </div>}
+        {installing && installation.job?.log && <details style={{ margin: '8px 0' }}>
+          <summary className="tiny hint">Live installation output</summary>
+          <pre tabIndex={0} aria-label="Live installation output" className="mono code-block scroll"
+               style={{ maxHeight: 240, marginTop: 6 }}>{installation.job.log}</pre>
+        </details>}
 
         {outcome && (
           <section className="card pad" style={{ margin: '8px 0' }}>
@@ -363,11 +356,11 @@ export function Engines() {
                 {s.detail && <p className="tiny hint">{s.detail}</p>}
                 <button
                   className="btn sm"
-                  disabled={engineDown || !s.available || complete || installing !== null}
+                  disabled={engineDown || !s.available || complete || busy || planning}
                   title={installing && !running ? 'One install at a time. This one is waiting for the other to finish.' : undefined}
                   onClick={() => void install(s, false)}
                 >
-                  {running ? `Installing… ${elapsed}s` : complete ? 'All installed' : 'Install…'}
+                  {running ? `Installing… ${elapsed}s` : complete ? 'All installed' : planning ? 'Preparing plan…' : 'Install…'}
                 </button>
               </article>
             )
@@ -389,9 +382,8 @@ export function Engines() {
             </dl>
             {plan.plan.size_guide && <p className="tiny hint">{plan.plan.size_guide}</p>}
             <p className="tiny hint">
-              Expect a few minutes. Causal Capybara cannot show a progress bar, because the installer
-              only reports back once it has finished — so the screen shows a running clock instead,
-              and there is no way to stop it once it has started.
+              Expect a few minutes. Engine setup shows the running time and live installer output.
+              Returning to this screen or reloading it reconnects to the same installation.
             </p>
             {plan.plan.needs_manual_install?.map((m) => (
               <div key={m.package} style={{ marginTop: 8 }}>
@@ -414,7 +406,7 @@ export function Engines() {
               </button>
               <button
                 className="btn primary"
-                disabled={!plan.plan.can_run || installing !== null}
+                disabled={!plan.plan.can_run || busy || planning}
                 onClick={() => void install(plan.pack, true)}
               >
                 {installing?.id === plan.pack.id ? `Installing… ${elapsed}s` : 'Install'}

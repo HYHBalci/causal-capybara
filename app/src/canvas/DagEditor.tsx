@@ -15,6 +15,7 @@ import {
 } from 'react'
 import { api } from '../api'
 import { useStore } from '../store'
+import { AskButton } from '../components/AskButton'
 import { useSplitPane } from '../components/SplitPane'
 
 interface Node {
@@ -331,6 +332,7 @@ export function DagEditor() {
           </div>
           {linkFrom && <span className="chip teal">click a second node to connect</span>}
           <button className="btn ghost sm" onClick={() => { setLinkFrom(null); setSelected(null) }}>Deselect</button>
+          <AskButton disabled={graphDirty || savingGraph} selection={{ kind: 'dag', id: dag.id, node_id: selected, title: selected ? `Assumed DAG element ${dag.nodes.find((node) => node.id === selected)?.label ?? selected}` : 'Current assumed causal DAG' }} query="Explain the assumptions behind this causal DAG, possible adjustment limitations and relevant methodological sources. The graph remains an assumed model awaiting scientific review." />
           <button className="btn primary sm" disabled={savingGraph || !graphDirty} onClick={() => {
             if (!project || savingGraph) return
             const context = graphContext.current

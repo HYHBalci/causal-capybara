@@ -13,35 +13,79 @@ once, because the disagreement between them is part of what you learned.
 **[Download Causal Capybara for Windows (.exe, Python included)](https://github.com/HYHBalci/causal-capybara/releases/download/v0.1.0/Causal-Capybara-0.1.0-windows-x64-setup.exe)** — v0.1.0, Windows x64, about 132 MB.
 This preview installer is unsigned. [Release notes](https://github.com/HYHBalci/causal-capybara/releases/tag/v0.1.0) and [installation help](docs/INSTALL.md).
 
+**For the current research assistant, ontology and new analyses, use the [latest source](#alternative-install-from-github-with-the-command-line).** The published v0.1.0 installer predates these features and the screenshots below.
+
 ## See the app
 
-![Causal Capybara results dashboard comparing computed Python ATT estimates and uncertainty for a synthetic child-development example](docs/promotion/linkedin/05-results.png)
+The current source includes an open, offline [ontological research tree](docs/ONTOLOGY.md),
+local MCP tools and a portable agent skill. Browse method requirements, qualified claims, source
+versions, evidence gaps and rights decisions alongside the existing literature catalogue.
+The expanded tree covers all registered methods and probes, with causal practice
+and implementation audit questions. The app also supports [right-censored
+survival analysis](docs/SURVIVAL.md): Kaplan–Meier, RMST and log-normal/Weibull AFT,
+with explicit causal assumptions and association versus standardization labels.
+The [heterogeneity workspace](docs/HETEROGENEITY.md) adds direct tests for continuous,
+binary, count/rate, nominal/ordinal and survival outcomes, with explicit effect
+scales, prespecified baseline modifiers, joint inference and multiplicity guidance.
+Open the [research assistant](docs/ASSISTANT_GUIDE.md) beside your data, design or results.
+Conversations and unsent drafts are saved locally for each study. Ask follow-up questions,
+inspect the context before sending, and copy or save the answer as Markdown.
+Choose [Codex, Claude Code or Grok CLI](docs/AI_INTEGRATIONS.md), sources-only retrieval,
+Ollama or a supported cloud API. Each CLI uses its own sign-in. Study fields, selected results,
+diagnostics, code excerpts and notes are included only through the context controls;
+provider transmission and native configuration require explicit acknowledgement.
+Suggested study changes become a validated diff. Applying it requires desktop approval;
+an analysis requires a separate approval and runs through the ordinary R/Python engines.
+The local MCP, audit skill and copied context handoff remain available independently.
+The imported-data screen now lets you include or restore columns while preserving the full import.
+See the [data selection and research workflow](docs/RESEARCH_WORKFLOW.md).
 
-These images follow the built-in IHDP-inspired child-development example using generated synthetic data, with no original study records. The values are computed Python demonstration results, not published study findings.
-See the [five LinkedIn images, captions, and post draft](docs/PROMOTION.md).
+Install only the lightweight knowledge service, without the statistical engines:
+
+```powershell
+python -m pip install './knowledge[mcp]'
+capy-knowledge validate
+capy-knowledge coverage --method survival.aft
+capy-knowledge setup-client codex --project /absolute/project
+```
+
+The independent wheel bundles the graph and audit skill; it can be used without
+the desktop app or statistical engines. See [client and skill setup](docs/ONTOLOGY_CLIENTS.md),
+[verification](docs/ONTOLOGY_VERIFICATION.md) and [rights and provenance](docs/ONTOLOGY_RIGHTS.md).
+
+
+![Current Causal Capybara dashboard comparing actual Python ATT estimates and confidence intervals for generated child-development teaching data](docs/screenshots/05-results.png)
+
+Captured on 19 October 2026 from the current source, using the local browser UI and real Python engine.
+The child-development example contains 747 generated observations inspired by the IHDP benchmark;
+these are computed teaching results. [Capture details and reproducible screenshot command](docs/PROMOTION.md).
 
 <details>
-<summary>View the original application screenshots</summary>
+<summary>Explore the current app: design, diagnostics, methods, research tree and assistant</summary>
 
 **Guided introduction:** start with a guided child-development example.
 
-![Guided preview for the synthetic Early support and child development example](docs/promotion/screenshots/01-guided-examples.png)
+![Guided preview for the generated Early support and child development example](docs/screenshots/01-guided-example.png)
 
 **Design board:** make measured confounding explicit before adjustment.
 
-![Child-development design board with treatment, outcome, measured confounders, and a live overlap plot](docs/promotion/screenshots/02-design-board.png)
+![Child-development design board with treatment, outcome, measured confounders, and a live overlap plot](docs/screenshots/02-design-board.png)
 
 **Diagnostics:** check overlap before estimating.
 
-![Synthetic child-development diagnostics showing overlap and the assumptions behind adjustment](docs/promotion/screenshots/03-diagnostics.png)
+![Computed child-development overlap diagnostic and its review control](docs/screenshots/03-diagnostics.png)
 
 **Method explanation:** understand why a selected method fits the question.
 
-![Selected AIPW method with its rationale, caveats, and methodological references for the synthetic child-development example](docs/promotion/screenshots/04-methods.png)
+![Recommended adjustment methods and the AIPW explanation](docs/screenshots/04-methods.png)
 
-**Results:** compare ATT estimates and uncertainty across methods.
+**Research tree:** follow methods to their assumptions, diagnostics and sources.
 
-![Results dashboard comparing three computed Python ATT estimates for the synthetic child-development example](docs/promotion/screenshots/05-results.png)
+![AIPW in the local ontological research tree with linked concepts and evidence](docs/screenshots/06-research-tree.png)
+
+**Research assistant:** keep a conversation beside the workspace and inspect cited guidance.
+
+![Research assistant beside the results with a real sources-only reply](docs/screenshots/07-research-assistant.png)
 
 </details>
 
@@ -77,7 +121,7 @@ Use the **local browser preview** when you prefer a source installation. You nee
 commands one at a time; stop if a command reports an error:
 
 ```powershell
-git clone --depth 1 --branch v0.1.0 https://github.com/HYHBalci/causal-capybara.git
+git clone --depth 1 https://github.com/HYHBalci/causal-capybara.git
 Set-Location causal-capybara
 py -3.12 -m venv .venv
 .\.venv\Scripts\python.exe -m pip install -r requirements.txt
@@ -92,7 +136,7 @@ Rust, C++ build tools, and the desktop installer are not required.
 The [command-line installation guide](docs/INSTALL.md#alternative-install-from-github-with-the-command-line)
 also covers macOS/Linux, restarting, and analysis without the interface. Native
 file dialogs and desktop engine controls are available in the desktop app; the
-browser preview uses typed local paths. On managed devices, Git, Python, Node.js,
+browser preview supports file selection, drag and drop, and typed local paths. On managed devices, Git, Python, Node.js,
 and local servers must be permitted by IT. The repository is public; cloning does
 not require a GitHub account.
 
@@ -211,15 +255,17 @@ $capy study nsw_observational              # open a fetched study as a project
 
 | | |
 |---|---|
-| **86 methods** in the catalogue | 63 runnable on the Python engine, 23 grey cards that teach without an adapter |
+| **93 methods and probes** in the registry | 70 runnable on the Python engine; 23 teaching cards without a Python adapter |
 | **7 methods on the R engine** | agreeing with Python to machine precision across 9 tested configurations |
-| **9 design cards** | randomised, observational, DiD, RD, IV, synthetic control, ITS, mediation, longitudinal |
-| **111 diagnostics** | each with a summary and a "what would worry me" line |
-| **296 Explain entries** | every key the interface can ask for resolves, diagnostics included |
-| **a browsable catalogue** | all 286 articles readable on their own, with no project open and no engine running |
-| **12 worked examples** | with guided tours, explicit provenance and a built-in truth the estimators are tested against |
+| **10 research designs** | randomised, observational, DiD, RD, IV, synthetic control, ITS, mediation, longitudinal and survival |
+| **119 diagnostics** | with summaries and interpretation guidance |
+| **324 Explain entries** | every key the interface can ask for resolves, diagnostics included |
+| **a browsable catalogue** | 316 articles readable on their own, with no project open and no engine running |
+| **14 worked examples** | with guided tours, explicit provenance and a built-in truth the estimators are tested against |
 | **10 real studies** | fetched from their publishers on request, checksum-pinned, never redistributed |
 | **6 simulation templates** | bias, RMSE and coverage under a world where the answer is known |
+| **an offline research tree** | 208 concepts, 38 scoped claims and 253 sources; standalone `capy-knowledge` 0.3.0 with MCP and a research skill |
+| **a locally saved research assistant** | study-scoped conversations, inspected context, cited answers and reviewed study proposals |
 
 ```text
 app/            Tauri shell + React UI      sidecar/     Python orchestration daemon
@@ -230,7 +276,7 @@ docs/explain/   the Explain catalogue       tests/       contract, recovery and 
 
 ### Two galleries: simulated, and real
 
-**The simulated gallery** (12 examples) is generated from original simulation code in this repository.
+**The simulated gallery** (14 examples) is generated from original simulation code in this repository.
 Each reproduces a research design's *structure and identification lesson* rather than a source dataset's
 rows, and each carries a built-in causal truth -- which is what makes the recovery tests below possible
 at all. Every tile records that the data is synthetic, the study that inspired it, and a persistent

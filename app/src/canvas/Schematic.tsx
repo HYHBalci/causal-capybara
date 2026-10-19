@@ -13,6 +13,17 @@ export function Schematic({ kind, large = false }: { kind: string; large?: boole
   const size = large ? { width: 220, height: 120 } : { width: 92, height: 54 }
   const common = { ...size, viewBox: '0 0 220 120', fill: 'none', 'aria-hidden': true as const }
   switch (kind) {
+    case 'survival_steps':
+      return (
+        <svg {...common}>
+          <path d="M28 18v78h168" stroke={R} strokeWidth="1.5" />
+          <path d="M28 26h40v12h37v18h43v14h42" stroke={T} strokeWidth="2.5" />
+          <path d="M28 26h24v18h36v20h32v16h45" stroke={S} strokeWidth="2.5" />
+          <path d="M112 49v14M176 64v14" stroke={T} strokeWidth="2" />
+          <path d="M96 57v14M156 73v14" stroke={S} strokeWidth="2" />
+          <text x="110" y="113" fontSize="10" fill="var(--muted)" textAnchor="middle">event-free probability over follow-up</text>
+        </svg>
+      )
     case 'urns':
       return (
         <svg {...common}>

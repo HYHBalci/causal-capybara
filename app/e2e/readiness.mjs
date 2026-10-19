@@ -134,7 +134,14 @@ try {
           assert.equal(await chart.getByRole('alert').count(), 0)
         } else {
           assert.deepEqual(calls[1].bytes, [137, 80, 78, 71, 13, 10, 26, 10])
-          if (mode === 'fail') await chart.getByRole('alert').filter({ hasText: 'Disk is full' }).waitFor()
+          if (mode === 'fail') {
+            const failure = chart.getByRole('alert').filter({ hasText: 'Disk is full' })
+            await failure.waitFor()
+            // Unrelated workspace rerenders must not erase a failed export.
+            await page.getByRole('button', { name: 'Research assistant', exact: true }).click()
+            await page.getByRole('button', { name: 'Close research assistant', exact: true }).click()
+            await failure.waitFor()
+          }
           else await chart.getByRole('status').filter({ hasText: 'Saved C:/Results/chart.png' }).waitFor()
         }
       } finally {
@@ -219,6 +226,23 @@ try {
     await page.waitForFunction(() => document.querySelector('.sheet-viewport')?.getAttribute('aria-busy') === 'false')
     assert.equal(await page.locator('th[aria-sort="ascending"]').count(), 1)
     await audit('data')
+    // Hold a real row request so the loading status is included in the audit.
+    let releaseRows, finishRows
+    const rowsPending = new Promise((resolve) => { releaseRows = resolve })
+    const rowsFinished = new Promise((resolve) => { finishRows = resolve })
+    await page.route('**/data/rows?**', async (route) => {
+      await rowsPending
+      try { await route.continue() } finally { finishRows() }
+    }, { times: 1 })
+    try {
+      await page.getByRole('button', { name: 'Sort by age', exact: true }).click()
+      await page.getByRole('status', { name: 'Loading rows', exact: true }).waitFor()
+      await audit('data-loading')
+    } finally {
+      releaseRows()
+      await rowsFinished
+    }
+    await page.waitForFunction(() => document.querySelector('.sheet-viewport')?.getAttribute('aria-busy') === 'false')
     await page.route('**/data/rows?**', (route) => route.fulfill({ status: 503, contentType: 'application/json', body: JSON.stringify({ detail: 'Audit recovery check' }) }))
     await page.getByRole('button', { name: 'Sort by age', exact: true }).click()
     await page.getByRole('alert').filter({ hasText: 'These rows could not be loaded' }).waitFor()
@@ -229,10 +253,26 @@ try {
   await step('Saved graph opens and dirty state is explicit', async () => {
     await menu('Question', 'Graph (DAG)')
     await page.locator('.dag-canvas').waitFor()
+    const divider = page.locator('.dag-split').getByRole('separator', { name: 'Panel width', exact: true })
+    await divider.focus()
+    await divider.press('Home')
+    await page.waitForFunction(() => {
+      const pane = document.querySelector('.dag-canvas-wrap')
+      return pane && pane.getBoundingClientRect().width <= 362
+    })
+    assert(await page.locator('.dag-toolbar').evaluate((toolbar) => {
+      const pane = toolbar.closest('.dag-canvas-wrap').getBoundingClientRect()
+      return [...toolbar.querySelectorAll('button')].every((button) => {
+        const bounds = button.getBoundingClientRect()
+        return bounds.left >= pane.left && bounds.right <= pane.right
+      })
+    }), 'Graph toolbar controls overflow the narrow graph pane')
+    // A real pointer click must reach Save graph, including beside the inspector.
     await page.getByRole('button', { name: 'Save graph', exact: true }).click()
     await page.getByText('Graph saved with the project.', { exact: true }).waitFor()
     const graphs = await json(`/projects/${projectId}/dags`)
     assert.equal(graphs.length, 1)
+    await divider.dblclick()
     await audit('graph')
     await menu('Analyze', 'Results dashboard')
     await page.locator('.nav-item').filter({ hasText: graphs[0].name || graphs[0].id }).first().click()
@@ -269,8 +309,13 @@ try {
   await step('Missing R arrow installs with one click and refreshes package health', async () => {
     const engines = await json('/engines')
     const stacks = await json('/engines/stacks')
-    let installed = false, requests = 0, finishInstall
-    const installing = new Promise((resolve) => { finishInstall = resolve })
+    let installed = false, requests = 0, requestId = null
+    const installRecord = () => ({ id: 'install_e2e_arrow', request_id: requestId, stack: 'r.core',
+      status: installed ? 'installed' : 'running', plan: { title: 'R essentials' },
+      created: new Date().toISOString(), elapsed_s: installed ? 180 : 140,
+      installed: installed ? ['arrow'] : [], still_missing: installed ? [] : ['arrow'],
+      log: installed ? 'DONE (arrow)' : 'Building arrow',
+      message: installed ? 'arrow is installed.' : 'Installing arrow; this can take a few minutes.' })
     const engineRoute = /\/engines(?:\?.*)?$/
     await page.route(engineRoute, (route) => route.fulfill({ json: {
       ...engines, r: { ...engines.r, found: true, ok: true, status: installed ? 'healthy' : 'degraded',
@@ -284,11 +329,15 @@ try {
     }) }))
     await page.route('**/engines/install', async (route) => {
       requests++
-      assert.deepEqual(route.request().postDataJSON(), { stack: 'r.core', approved: true })
-      await installing
-      installed = true
-      await route.fulfill({ json: { status: 'installed', plan: {}, installed: ['arrow'], still_missing: [], message: 'arrow is installed.' } })
+      const body = route.request().postDataJSON()
+      assert.equal(body.stack, 'r.core')
+      assert.equal(body.approved, true)
+      assert.match(body.request_id, /^[A-Za-z0-9_-]{8,128}$/)
+      requestId = body.request_id
+      await route.fulfill({ json: installRecord() })
     })
+    await page.route('**/engines/installs', (route) => route.fulfill({ json: requestId ? [installRecord()] : [] }))
+    await page.route('**/engines/installs/install_e2e_arrow', (route) => route.fulfill({ json: installRecord() }))
     try {
       await page.getByRole('button', { name: 'Check again', exact: true }).first().click()
       const repair = page.getByRole('button', { name: 'Install missing R packages', exact: true })
@@ -299,15 +348,19 @@ try {
       assert(await busy.isDisabled(), 'Repair must prevent duplicate installs')
       assert.equal(await page.locator('.install-plan').count(), 0, 'Repair should take one click')
       assert.equal(await page.locator('.stack-card button:enabled').count(), 0)
-      finishInstall()
+      await page.getByText('Live installation output', { exact: true }).click()
+      await page.getByLabel('Live installation output', { exact: true }).waitFor()
+      assert.match(await page.getByLabel('Live installation output', { exact: true }).innerText(), /Building arrow/)
+      installed = true
       await page.getByText('arrow is installed.', { exact: true }).first().waitFor()
       await repair.waitFor({ state: 'detached' })
       assert.equal(requests, 1)
     } finally {
-      finishInstall()
       await page.unroute(engineRoute)
       await page.unroute('**/engines/stacks')
       await page.unroute('**/engines/install')
+      await page.unroute('**/engines/installs')
+      await page.unroute('**/engines/installs/install_e2e_arrow')
     }
   })
   await step('Catalogue search, literature, themes and minimum window size', async () => {

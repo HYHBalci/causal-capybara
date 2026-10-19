@@ -1,0 +1,157 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Closed public benchmark control",
+  "type": [
+    "object"
+  ],
+  "properties": {
+    "freeze_policy": {
+      "type": [
+        "string"
+      ]
+    },
+    "frozen_at": {
+      "type": [
+        "string"
+      ]
+    },
+    "schema_version": {
+      "type": [
+        "string"
+      ]
+    },
+    "scope": {
+      "type": [
+        "string"
+      ]
+    },
+    "tasks": {
+      "type": [
+        "array"
+      ],
+      "items": {
+        "type": [
+          "object"
+        ],
+        "properties": {
+          "answerable": {
+            "type": [
+              "boolean"
+            ]
+          },
+          "expected_ids": {
+            "type": [
+              "array"
+            ],
+            "items": {
+              "type": [
+                "string"
+              ]
+            }
+          },
+          "id": {
+            "type": [
+              "string"
+            ]
+          },
+          "purpose": {
+            "type": [
+              "string"
+            ]
+          },
+          "query": {
+            "type": [
+              "string"
+            ]
+          },
+          "review": {
+            "type": [
+              "object"
+            ],
+            "properties": {
+              "actor": {
+                "type": [
+                  "string"
+                ]
+              },
+              "actor_type": {
+                "type": [
+                  "string"
+                ]
+              },
+              "date": {
+                "type": [
+                  "string"
+                ]
+              },
+              "human_review": {
+                "type": [
+                  "boolean"
+                ]
+              },
+              "semantic": {
+                "type": [
+                  "string"
+                ]
+              }
+            },
+            "additionalProperties": false,
+            "required": [
+              "actor",
+              "actor_type",
+              "date",
+              "human_review",
+              "semantic"
+            ]
+          }
+        },
+        "additionalProperties": false,
+        "required": [
+          "answerable",
+          "expected_ids",
+          "id",
+          "purpose",
+          "query",
+          "review"
+        ]
+      }
+    },
+    "thresholds": {
+      "type": [
+        "object"
+      ],
+      "properties": {
+        "answerable_top5": {
+          "type": [
+            "number"
+          ]
+        },
+        "citation_resolution": {
+          "type": [
+            "number"
+          ]
+        },
+        "unsupported_abstention": {
+          "type": [
+            "number"
+          ]
+        }
+      },
+      "additionalProperties": false,
+      "required": [
+        "answerable_top5",
+        "citation_resolution",
+        "unsupported_abstention"
+      ]
+    }
+  },
+  "additionalProperties": false,
+  "required": [
+    "freeze_policy",
+    "frozen_at",
+    "schema_version",
+    "scope",
+    "tasks",
+    "thresholds"
+  ]
+}

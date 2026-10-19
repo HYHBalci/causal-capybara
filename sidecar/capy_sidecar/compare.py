@@ -38,24 +38,7 @@ def build(
             "title": "Estimates across methods",
             "caption": "When several methods ran, the forest is the headline. A single number is not.",
             "explain_key": "diagnostic.forest",
-            "spec": vega.forest(
-                [
-                    {
-                        "label": _label(r),
-                        "estimate": r.get("estimate"),
-                        "ci_low": r.get("ci_low"),
-                        "ci_high": r.get("ci_high"),
-                        "se": r.get("se"),
-                        "engine": r.get("engine"),
-                        "n": r.get("n"),
-                        "n_effective": r.get("n_effective"),
-                        "provisional": bool(r.get("provisional")),
-                    }
-                    for r in results
-                    if r.get("estimate") is not None
-                ],
-                x_title=_effect_axis(results),
-            ),
+            "spec": _forest(results),
         },
         {
             "id": "cmp_table",
@@ -97,10 +80,63 @@ def _label(r: dict[str, Any]) -> str:
 
 
 def _effect_axis(results: list[dict[str, Any]]) -> str:
+    if results and all(r.get("heterogeneity_target") for r in results):
+        targets = [r["heterogeneity_target"] for r in results]
+        if len({(t.get("scale"), t.get("exposure")) for t in targets}) == 1:
+            if targets[0].get("exposure"):
+                return ("Rate ratio (dimensionless; null = 1)" if targets[0]["scale"] == "mean_ratio"
+                        else "Rate difference (counts per exposure unit)")
+            return targets[0]["scale"].replace("_", " ")
+    estimands = {r.get("estimand") for r in results}
+    if any(r.get("design") == "survival" for r in results):
+        units = {(r.get("survival_target") or {}).get("time_unit") for r in results}
+        if len(estimands) > 1 or len(units) > 1:
+            return "Estimate (different survival scales or units)"
+    if estimands == {"time_ratio"}:
+        return "Conditional AFT time factor (null = 1)"
+    if estimands == {"survival_difference"}:
+        return "Survival probability difference (treatment 1 minus 0)"
+    if estimands == {"RMST_difference"}:
+        units = {(r.get("survival_target") or {}).get("time_unit") for r in results}
+        return "Restricted event-free time difference" + (f" ({next(iter(units))})" if len(units) == 1 else "")
     outcomes = {r.get("outcome") for r in results if r.get("outcome")}
     if len(outcomes) == 1:
         return f"Effect on {next(iter(outcomes))}"
     return "Estimate"
+
+
+def _forest(results: list[dict[str, Any]]) -> dict[str, Any]:
+    """Keep incompatible survival targets on separate axes with their own nulls."""
+    def chart(runs):
+        return vega.forest(
+            [{"label": _label(r), "estimate": r.get("estimate"),
+              "ci_low": r.get("ci_low"), "ci_high": r.get("ci_high"),
+              "se": r.get("se"), "engine": r.get("engine"), "n": r.get("n"),
+              "n_effective": r.get("n_effective"), "provisional": bool(r.get("provisional"))}
+             for r in runs if r.get("estimate") is not None],
+            x_title=_effect_axis(runs),
+            zero_line=1.0 if runs and all(_null(r) == 1 for r in runs) else 0.0,
+        )
+    if any(r.get("design") == "survival" or r.get("heterogeneity_target") for r in results) and any(
+        not c["ok"] for c in _comparability(results) if c["check"] != "Same inference?"
+    ):
+        panels = []
+        for r in results:
+            if r.get("estimate") is None:
+                continue
+            panel = chart([r])
+            target = r.get("survival_target") or {}
+            panel["title"] = (r.get("estimand_label") or r.get("estimand") or "Estimate")
+            if target.get("horizon") is not None:
+                panel["title"] += f"; horizon {target['horizon']:g} {target.get('time_unit') or 'duration units'}"
+            panel.pop("$schema", None)
+            panel.pop("config", None)
+            panel.pop("autosize", None)
+            panels.append(panel)
+        return {"$schema": "https://vega.github.io/schema/vega-lite/v6.json",
+                "config": vega.theme_config(), "vconcat": panels,
+                "resolve": {"scale": {"x": "independent"}}}
+    return chart(results)
 
 
 def _row(r: dict[str, Any]) -> dict[str, Any]:
@@ -112,10 +148,16 @@ def _row(r: dict[str, Any]) -> dict[str, Any]:
         "package": r.get("package"),
         "package_version": r.get("package_version"),
         "estimand": r.get("estimand"),
+        "interpretation": r.get("interpretation"),
+        "horizon": (r.get("survival_target") or {}).get("horizon"),
+        "time_unit": (r.get("survival_target") or {}).get("time_unit"),
+        "target_population": (r.get("survival_target") or {}).get("population"),
+        "heterogeneity_target": r.get("heterogeneity_target"),
         "estimate": r.get("estimate"),
         "se": r.get("se"),
         "ci_low": r.get("ci_low"),
         "ci_high": r.get("ci_high"),
+        "ci_level": r.get("ci_level"),
         "p_value": r.get("p_value"),
         "n": r.get("n"),
         "n_treated": r.get("n_treated"),
@@ -169,6 +211,23 @@ def _comparability(results: list[dict[str, Any]]) -> list[dict[str, Any]]:
         "offending_run_ids": [],
     })
     clusters = {(r.get("inference") or "").split("(")[0].strip() for r in results if r.get("inference")}
+    if any(r.get("design") == "survival" for r in results):
+        for field, label in (("horizon", "Same survival horizon?"), ("time_unit", "Same duration time units?"),
+                             ("population", "Same survival target population?")):
+            values = {str((r.get("survival_target") or {}).get(field)) for r in results}
+            checks.append({"check": label, "ok": len(values) <= 1,
+                           "detail": None if len(values) <= 1 else "Survival contrasts differ in their " + field.replace("_", " ") + "; they cannot be treated as one target.",
+                           "offending_run_ids": [] if len(values) <= 1 else [r.get("run_id") for r in results]})
+        meanings = {r.get("interpretation") for r in results}
+        checks.append({"check": "Same survival interpretation?", "ok": len(meanings) <= 1,
+                       "detail": None if len(meanings) <= 1 else "Observed-group associations, conditional model time factors and counterfactual standardization under assumptions answer different questions.",
+                       "offending_run_ids": [] if len(meanings) <= 1 else [r.get("run_id") for r in results]})
+    if any(r.get("heterogeneity_target") for r in results):
+        for field in ("outcome_family", "scale", "population", "exposure", "inference_target", "modifier", "modifier_type"):
+            values = {str((r.get("heterogeneity_target") or {}).get(field)) for r in results}
+            checks.append({"check": "Same heterogeneity " + field.replace("_", " ") + "?", "ok": len(values) <= 1,
+                "detail": None if len(values) <= 1 else "These heterogeneity results use different " + field.replace("_", " ") + "; inspect each declared target separately.",
+                "offending_run_ids": [] if len(values) <= 1 else [r.get("run_id") for r in results]})
     checks.append({
         "check": "Same inference?",
         "ok": len(clusters) <= 1,
@@ -179,12 +238,21 @@ def _comparability(results: list[dict[str, Any]]) -> list[dict[str, Any]]:
     return checks
 
 
+def _null(result):
+    return (result.get("heterogeneity_target") or {}).get("null", 1 if result.get("estimand") == "time_ratio" else 0)
+
+
 def _spread(results: list[dict[str, Any]]) -> dict[str, Any] | None:
+    if any(r.get("design") == "survival" or r.get("heterogeneity_target") for r in results) and any(
+        not c["ok"] for c in _comparability(results) if c["check"] != "Same inference?"
+    ):
+        return None
     ests = [r["estimate"] for r in results if r.get("estimate") is not None and r.get("status") == "ok"]
     if len(ests) < 2:
         return None
     lo, hi = min(ests), max(ests)
-    signs = {1 if e > 0 else (-1 if e < 0 else 0) for e in ests}
+    null = 1 if all(_null(r) == 1 for r in results) else 0
+    signs = {1 if e > null else (-1 if e < null else 0) for e in ests}
     return {
         "min": lo,
         "max": hi,
@@ -201,14 +269,28 @@ def _summary(results: list[dict[str, Any]], spread: dict[str, Any] | None,
     if not ok:
         return "No run in this comparison produced an estimate."
     if spread is None:
-        r = ok[0]
-        return (f"One method ran: {r.get('method_label')} gives {r.get('estimate'):.4g} "
-                f"({r.get('ci_low'):.4g} to {r.get('ci_high'):.4g}).") if r.get("ci_low") is not None else (
-            f"One method ran: {r.get('method_label')} gives {r.get('estimate'):.4g}.")
+        estimates = [r for r in ok if r.get("estimate") is not None]
+        if len(estimates) > 1:
+            bad = [c["check"] for c in checks if not c["ok"]]
+            return (f"{len(estimates)} estimates answer different targets. "
+                    "Their scales, units, horizons or populations are not directly comparable; "
+                    "inspect each estimate separately. " + "; ".join(bad))
+        if not estimates:
+            return (f"{len(ok)} successful run(s) report category-specific contrasts. "
+                    "Inspect their probability vectors and direct heterogeneity tests; no scalar estimate is pooled.")
+        r = estimates[0]
+        text = f"One scalar estimate: {r.get('method_label')} gives {r['estimate']:.4g}"
+        if r.get("ci_low") is not None and r.get("ci_high") is not None:
+            text += f" ({r['ci_low']:.4g} to {r['ci_high']:.4g})"
+        text += "."
+        if len(ok) > 1:
+            text += " Additional runs report category-specific contrasts; inspect their vectors separately."
+        return text
     bad = [c["check"] for c in checks if not c["ok"]]
     text = (f"{spread['n_methods']} methods span {spread['min']:.4g} to {spread['max']:.4g}. ")
-    text += ("They agree on the direction of the effect. " if spread["sign_agreement"]
-             else "They do not even agree on the direction of the effect. ")
+    quantity = "contrast" if any(r.get("design") == "survival" for r in ok) else "effect"
+    text += (f"They agree on the direction of the {quantity}. " if spread["sign_agreement"]
+             else f"They do not even agree on the direction of the {quantity}. ")
     if bad:
         text += "Not all rows are comparable: " + "; ".join(bad) + " "
     text += ("The range across defensible methods is part of the finding, not something to average away.")

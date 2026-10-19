@@ -1981,20 +1981,28 @@ def sun_abraham(ctx: RunContext) -> dict[str, Any]:
         val = float(_se_from_psi(psi.reshape(-1, 1), p.n_cl)[0])
         return val if np.isfinite(val) and val > 0 else None
 
-    pg = {g: float(np.mean(p.w_unit * (p.g_unit == g))) for g in interact}
-    cl_shares = None  # built lazily per selection
-
     def aggregate(cells: Sequence[tuple[int, int]]) -> tuple[float, np.ndarray] | None:
-        idx = [(_col(g, e), g) for g, e in cells]
-        idx = [(c, g) for c, g in idx if c is not None]
+        idx = [(_col(g, e), g, e) for g, e in cells]
+        idx = [(c, g, e) for c, g, e in idx if c is not None]
         if not idx:
             return None
-        cols = [c for c, _ in idx]
-        gs = [g for _, g in idx]
-        parts = _share_parts(gs, pg, p.g_unit, p.w_unit)
-        if parts is None:
+        cols = [c for c, _, _ in idx]
+        # A tail bin can represent several periods. Weight its coefficient by
+        # the observed unit-period mass it represents, not as one period. This
+        # also respects unequal observation counts in unbalanced panels. Keep
+        # the unit-level share influence so clustering and the delta correction
+        # still include estimation of the aggregation weights.
+        unit_mass = np.zeros((p.n_u, len(idx)))
+        for j, (_, g, e) in enumerate(idx):
+            rows = (p.g_row == g) & (e_binned == e)
+            np.add.at(unit_mass[:, j], p.ui[rows], p.w_row[rows])
+        mass = unit_mass.mean(axis=0)
+        total = float(mass.sum())
+        if total <= 0:
             return None
-        wts, M = parts
+        wts = mass / total
+        dev = unit_mass - mass[None, :]
+        M = dev / total - np.outer(dev.sum(axis=1), mass / total**2)
         d = beta[cols]
         Mcl = _collapse(M, p.cl_unit, p.n_cl, p.n_u)
         return float(d @ wts), psi_delta[:, cols] @ wts + Mcl @ d
@@ -2028,17 +2036,16 @@ def sun_abraham(ctx: RunContext) -> dict[str, Any]:
 
     cohort_rows: list[dict[str, Any]] = []
     for g in interact:
-        cols = [_col(g, e) for e in all_e if e >= 0 and (g, e) in keys]
-        cols = [c for c in cols if c is not None]
-        if not cols:
+        cells = [(g, e) for e in all_e if e >= 0 and (g, e) in keys]
+        got = aggregate(cells)
+        if got is None:
             continue
-        wts = np.full(len(cols), 1.0 / len(cols))
-        est = float(beta[cols] @ wts)
-        se = se_of(psi_delta[:, cols] @ wts)
+        est, psi = got
+        se = se_of(psi)
         lo, hi = _ci(est, se, z)
         cohort_rows.append({"label": p.cohort_label(g), "estimate": est, "se": se,
                             "ci_low": lo, "ci_high": hi, "n": p.cohort_size(g), "term": int(g),
-                            "periods_after": len(cols)})
+                            "periods_after": int(np.unique(p.ti[(p.g_row == g) & (p.rel >= 0)]).size)})
 
     fit = DidFit(
         att=att, se=se_att,
@@ -2046,7 +2053,9 @@ def sun_abraham(ctx: RunContext) -> dict[str, Any]:
                   "cohort-share weights",
         headline_label="Interaction-weighted ATT",
         cohort_rows=cohort_rows, event_points=event_points,
-        band_note=f"The band is pointwise at {level:.0%}.",
+        band_note=(f"The band is pointwise at {level:.0%}. End points pool relative periods "
+                   f"at or below -{max_lead} and at or above +{max_lag}; pooled coefficients "
+                   "are weighted by the unit-periods they represent."),
     )
     if pre_theta:
         Vpre = _vcov_from_psi(_stack(pre_psi), p.n_cl)
@@ -2110,6 +2119,7 @@ def sun_abraham(ctx: RunContext) -> dict[str, Any]:
         "    coefficient can never borrow an already-treated unit as a control.",
         "  * The path is then re-weighted by cohort share, which is the step the ordinary event",
         "    study skips and Sun and Abraham show is where the contamination enters.",
+        "  * Pooled tails retain their unit-period weights in the overall and cohort averages.",
         f"  * Clustered by {p.cluster_label} ({p.n_cl} clusters); the standard error of each",
         "    aggregate includes the effect of having estimated the cohort shares.",
     ]

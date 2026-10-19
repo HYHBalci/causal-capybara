@@ -5,8 +5,8 @@
  */
 
 import type {
-  Comparison, DataHealth, DatasetProvenance, DesignCard, EngineStatus, EstimandCard,
-  ExampleTile, ExplainEntry,
+  Comparison, DataColumnSelection, DataHealth, DatasetProvenance, DesignCard, EngineStatus, EstimandCard,
+  ExampleTile, ExplainEntry, InstallationRecord, InstallationResponse,
   Guardrails, Job, LearnArticle, LearnRow, MethodCard, ProjectFull, ProjectSummary,
   Recommendation, Report, RunResult,
   RunSummary, SearchHit, Sketch, Spec, Stack,
@@ -43,7 +43,7 @@ export class ApiError extends Error {
   }
 }
 
-async function request<T>(path: string, init?: RequestInit): Promise<T> {
+export async function request<T>(path: string, init?: RequestInit): Promise<T> {
   let res: Response
   try {
     res = await fetch(BASE + path, {
@@ -61,7 +61,9 @@ async function request<T>(path: string, init?: RequestInit): Promise<T> {
     let detail = `${res.status} ${res.statusText}`
     try {
       const body = await res.json()
-      detail = typeof body?.detail === 'string' ? body.detail : JSON.stringify(body?.detail ?? body)
+      detail = typeof body?.detail === 'string' ? body.detail
+        : typeof body?.detail?.message === 'string' ? body.detail.message
+        : JSON.stringify(body?.detail ?? body)
     } catch {
       /* keep the status line */
     }
@@ -99,8 +101,10 @@ export const api = {
   engines: (refresh = false) => get<EngineStatus>(`/engines${q({ refresh })}`),
   stacks: () => get<Stack[]>('/engines/stacks'),
   healthMatrix: () => get<Record<string, unknown>[]>('/engines/health-matrix'),
-  installStack: (stack: string, approved: boolean) =>
-    post<{ status: string; plan: Record<string, unknown>; log?: string }>('/engines/install', { stack, approved }),
+  installStack: (stack: string, approved: boolean, requestId?: string) =>
+    post<InstallationResponse | InstallationRecord>('/engines/install', { stack, approved, request_id: requestId }),
+  installations: () => request<InstallationRecord[]>('/engines/installs', { signal: AbortSignal.timeout(15000) }),
+  installation: (id: string) => request<InstallationRecord>(`/engines/installs/${encodeURIComponent(id)}`, { signal: AbortSignal.timeout(15000) }),
   lock: (engine: string) => get<string>(`/engines/lock/${engine}`),
 
   /* registry */
@@ -149,7 +153,17 @@ export const api = {
       `/projects/${id}/import`,
       { path, options },
     ),
+  uploadData: (id: string, file: File) =>
+    request<{ project: ProjectSummary; columns: unknown[]; notes: string[]; options: Record<string, unknown> }>(
+      `/projects/${id}/import-upload?filename=${encodeURIComponent(file.name)}`,
+      { method: 'POST', body: file, headers: { 'Content-Type': 'application/octet-stream' } },
+    ),
   columns: (id: string) => get<import('./types').ColumnMeta[]>(`/projects/${id}/data/columns`),
+  columnSelection: (id: string) => get<DataColumnSelection>(`/projects/${id}/data/selection`),
+  selectColumns: (id: string, included: string[], revision: string) =>
+    request<DataColumnSelection>(`/projects/${id}/data/selection`, {
+      method: 'PUT', body: JSON.stringify({ included_columns: included, expected_revision: revision }),
+    }),
   rows: (id: string, opts: { offset?: number; limit?: number; columns?: string; sort?: string; descending?: boolean }) =>
     get<{ total: number; offset: number; columns: string[]; rows: unknown[][] }>(
       `/projects/${id}/data/rows${q(opts)}`,

@@ -1,0 +1,9 @@
+Original code and original explanations: Apache-2.0.
+Copyright 2026 Yusufhan Balci; VCESR; Causal Capybara contributors.
+
+Existing project catalogue and bibliographic records retain Apache-2.0.
+The pack distributes original explanations, factual metadata and links, not
+third-party paper bodies, abstracts, figures, datasets or private reference code.
+External publication licenses remain separately unknown unless documented.
+The optional official MCP Python SDK is MIT-licensed; its distribution retains
+its own notices. No graph server, embedding provider or model is bundled.

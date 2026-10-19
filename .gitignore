@@ -9,6 +9,8 @@ node_modules/
 app/dist/
 sidecar/build/
 engines/python/build/
+knowledge/build/
+knowledge/dist/
 sidecar/dist/
 *.egg-info/
 *.tsbuildinfo
@@ -38,3 +40,7 @@ app/src-tauri/gen/
 
 # Local installer copy for preview review.
 /Release-Candidate/
+
+# Local research notes and unpublished investigation material.
+.research/
+.test-tmp/

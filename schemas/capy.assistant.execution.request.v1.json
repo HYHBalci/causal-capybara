@@ -1,0 +1,25 @@
+{
+  "$id": "https://causalcapybara.dev/schemas/capy.assistant.execution.request.v1.json",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "properties": {
+    "approval_token": {
+      "title": "Approval Token",
+      "type": "string"
+    },
+    "methods": {
+      "items": {
+        "additionalProperties": true,
+        "type": "object"
+      },
+      "maxItems": 10,
+      "title": "Methods",
+      "type": "array"
+    }
+  },
+  "required": [
+    "approval_token"
+  ],
+  "title": "ExecutionRequest",
+  "type": "object"
+}

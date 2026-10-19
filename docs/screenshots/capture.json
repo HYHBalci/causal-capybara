@@ -1,0 +1,82 @@
+{
+  "captured_at": "2026-10-19T15:23:28.467Z",
+  "source_commit": "8ce504b0475010d1ee5b7c0902435ff85e89cbb9",
+  "source_changes": [
+    "README.md",
+    "app/e2e/ontology.mjs",
+    "app/package.json",
+    "app/src/components/AssistantCli.tsx",
+    "docs/PROMOTION.md"
+  ],
+  "viewport": {
+    "width": 1680,
+    "height": 1080
+  },
+  "mode": "production browser preview with real Python engine",
+  "example": "ihdp",
+  "simulated": true,
+  "n": 747,
+  "provider_calls": false,
+  "results": [
+    {
+      "method": "obs.aipw",
+      "engine": "python",
+      "estimand": "ATT",
+      "estimate": 3.5698385349150668,
+      "se": 0.3923050648891656,
+      "ci_low": 2.800934736779653,
+      "ci_high": 4.33874233305048,
+      "n": 747
+    },
+    {
+      "method": "obs.weighting.ipw",
+      "engine": "python",
+      "estimand": "ATT",
+      "estimate": 3.6603247491424153,
+      "se": 0.406622150605004,
+      "ci_low": 2.8633599786403856,
+      "ci_high": 4.457289519644445,
+      "n": 747
+    },
+    {
+      "method": "obs.outcome_regression",
+      "engine": "python",
+      "estimand": "ATT",
+      "estimate": 3.5856489056401406,
+      "se": 0.37622092432393833,
+      "ci_low": 2.848269443734852,
+      "ci_high": 4.323028367545429,
+      "n": 747
+    }
+  ],
+  "captures": [
+    {
+      "filename": "01-guided-example.png",
+      "description": "Guided introduction to the generated child-development teaching example"
+    },
+    {
+      "filename": "02-design-board.png",
+      "description": "Treatment, outcome and measured confounders with the real overlap sketch"
+    },
+    {
+      "filename": "03-diagnostics.png",
+      "description": "Computed overlap diagnostic before estimating"
+    },
+    {
+      "filename": "04-methods.png",
+      "description": "Recommended adjustment methods and their explanations"
+    },
+    {
+      "filename": "05-results.png",
+      "description": "Actual Python ATT estimates and uncertainty on generated teaching data"
+    },
+    {
+      "filename": "07-research-assistant.png",
+      "description": "Persistent assistant with an actual sources-only reply; no AI provider was contacted"
+    },
+    {
+      "filename": "06-research-tree.png",
+      "description": "Local research tree connecting the AIPW double-robustness claim with its conditions and cited evidence"
+    }
+  ]
+}

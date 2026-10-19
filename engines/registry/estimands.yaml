@@ -8,6 +8,39 @@ schema: capy.estimands
 version: 1
 
 estimands:
+  - id: survival_difference
+    sentence: At a chosen horizon, how do event-free probabilities differ between baseline treatments?
+    acronym: S(1) - S(0)
+    name: Survival probability difference
+    profile: beginner
+    designs: [survival]
+    requires: [duration, event]
+    explain_key: estimand.survival_difference
+    short: "A probability contrast at an explicit horizon. Standardized S^1(tau) minus S^0(tau) targets a marginal counterfactual contrast under identification, censoring and model conditions; raw Kaplan–Meier compares observed groups."
+    common_mistake: Relabelling an unadjusted group difference or a hazard ratio as a marginal causal survival probability effect.
+
+  - id: RMST_difference
+    sentence: Through a chosen horizon, how much event-free follow-up time differs between baseline treatments?
+    acronym: RMST(1) - RMST(0)
+    name: Restricted mean survival time difference
+    profile: beginner
+    designs: [survival]
+    requires: [duration, event]
+    explain_key: estimand.rmst_difference
+    short: "The difference between areas under survival curves from zero through tau, in duration units. RMST is restricted to a chosen horizon, not unrestricted lifetime. Causal versus observed-group meaning depends on the design and estimator."
+    common_mistake: Choosing the horizon after seeing the effect or comparing curves beyond the shorter arm's follow-up.
+
+  - id: time_ratio
+    sentence: Conditional on baseline covariates, what common factor stretches event times in the AFT model?
+    acronym: exp(beta)
+    name: Conditional AFT time ratio
+    profile: standard
+    designs: [survival]
+    requires: [duration, event]
+    explain_key: estimand.time_ratio
+    short: "With a common-scale log-time model and no treatment interactions, exp(beta_treatment) is a conditional factor for event-time quantiles. It is a model association unless a causal interpretation is justified separately."
+    common_mistake: Calling a time ratio a hazard ratio, marginal survival difference, or structural causal AFT estimate.
+
   - id: ATE
     sentence: If everyone got the programme, how would the average outcome change?
     acronym: ATE

@@ -68,6 +68,7 @@ if (-not (Test-Path -LiteralPath $pathFile)) {
     'Lib\site-packages'
     '..\..\sidecar'
     '..\..\engines\python'
+    '..\..\knowledge'
     'import site'
 ) | Set-Content -LiteralPath $pathFile -Encoding ascii
 
@@ -91,7 +92,7 @@ if ($LASTEXITCODE -ne 0) {
 
 # Copy only tracked source/resources. A developer checkout may contain ignored
 # build directories and bytecode that must never enter a public installer.
-$tracked = & git -C $repoRoot ls-files -- sidecar engines schemas docs/explain LICENSE NOTICE docs/GUIDE.md
+$tracked = & git -C $repoRoot ls-files -- sidecar engines schemas knowledge/capy_knowledge docs/explain LICENSE NOTICE docs/GUIDE.md
 if ($LASTEXITCODE -ne 0 -or -not $tracked) {
     throw 'Could not enumerate tracked release resources.'
 }

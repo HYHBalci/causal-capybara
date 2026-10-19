@@ -893,3 +893,59 @@ diagnostics:
   ledger: positivity
   explain_key: diagnostic.weights_by_period
   engine: python
+
+- id: survival_followup
+  title: Follow-up and common horizon support
+  designs: [survival]
+  summary: Report events, right censoring, group-specific follow-up and the risk set at the chosen horizon. Common observed support does not establish conditional treatment or censoring positivity.
+  explain_key: diagnostic.survival_followup
+  engine: python
+
+- id: survival_censoring
+  title: Right-censoring assumptions
+  designs: [survival]
+  summary: Censoring counts cannot verify independence from the unobserved event time. Conditional independence does not automatically justify raw group Kaplan–Meier.
+  explain_key: diagnostic.survival_censoring
+  engine: python
+
+- id: survival_curves
+  title: Observed Kaplan–Meier curves
+  designs: [survival]
+  summary: Unadjusted event-free probabilities for the observed groups. Baseline confounding and dependent censoring limit causal interpretation.
+  explain_key: diagnostic.survival_curves
+  engine: python
+
+- id: aft_fit
+  title: AFT model fit and common time scale
+  designs: [survival]
+  summary: An interior likelihood solution with stable curvature is a numerical check, not evidence for exchangeability, censoring independence or correct model form.
+  explain_key: diagnostic.aft_fit
+  engine: python
+
+- id: aft_support
+  title: Conditional treatment and censoring support
+  designs: [survival]
+  summary: A common observed follow-up horizon does not establish treatment support in baseline covariate profiles or conditional censoring positivity.
+  explain_key: diagnostic.aft_support
+  engine: python
+
+- id: outcome_heterogeneity
+  title: Direct heterogeneity test on the selected outcome scale
+  designs: [rct, observational]
+  summary: Test equality of the prespecified subgroup treatment contrasts with their full joint covariance. Pairwise Holm adjustment covers the displayed comparison family; pointwise intervals and other analysis choices are outside that adjustment.
+  explain_key: diagnostic.outcome_heterogeneity
+  engine: python
+
+- id: link_heterogeneity
+  title: Conditional treatment-by-modifier interaction
+  designs: [rct, observational]
+  summary: Test treatment-by-baseline-modifier coefficients jointly on the fitted model's conditional link scale while retaining main effects. This null differs from equality of marginal treatment contrasts and does not verify causal identification.
+  explain_key: diagnostic.link_heterogeneity
+  engine: python
+
+- id: survival_heterogeneity
+  title: Baseline subgroup heterogeneity in survival contrasts
+  designs: [survival]
+  summary: Compare subgroup contrasts directly on one prespecified survival, RMST or log time-factor scale using joint bootstrap covariance. Check treatment and censoring support in every subgroup; separate significance labels are not an interaction test.
+  explain_key: diagnostic.survival_heterogeneity
+  engine: python

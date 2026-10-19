@@ -29,12 +29,15 @@ DESIGN_REQUIREMENTS: dict[str, list[str]] = {
     "its": ["outcome", "time"],
     "mediation": ["treatment", "outcome", "mediator"],
     "longitudinal": ["treatment", "outcome", "unit", "time"],
+    "survival": ["treatment", "duration", "event"],
     "undecided": [],
 }
 
 ROLE_LABELS = {
     "treatment": "treatment",
     "outcome": "outcome",
+    "duration": "elapsed follow-up duration",
+    "event": "single-event indicator (1 event, 0 right censored)",
     "unit": "unit id",
     "time": "time",
     "confounders": "measured confounders",
@@ -60,9 +63,9 @@ LIST_ROLES = {"confounders", "instruments", "mediator", "donor_pool", "control_s
 # (id, label, applies-to designs, default status)
 LEDGER: list[tuple[str, str, tuple[str, ...], str]] = [
     ("exchangeability", "Exchangeability / no unmeasured confounding",
-     ("observational", "longitudinal", "mediation"), "untested"),
+     ("observational", "longitudinal", "mediation", "survival"), "untested"),
     ("positivity", "Positivity / overlap",
-     ("observational", "longitudinal", "mediation"), "untested"),
+     ("observational", "longitudinal", "mediation", "survival"), "untested"),
     ("sutva", "SUTVA / no interference",
      ("rct", "observational", "did", "rd", "iv", "synth", "its", "mediation", "longitudinal"), "assumed"),
     ("consistency", "Consistency / well-defined intervention",
@@ -81,6 +84,9 @@ LEDGER: list[tuple[str, str, tuple[str, ...], str]] = [
     ("model_form", "Functional form of the counterfactual trend", ("its",), "assumed"),
     ("sequential_ignorability", "Sequential ignorability", ("mediation", "longitudinal"), "assumed"),
     ("no_time_varying_confounding", "No unmeasured time-varying confounding", ("longitudinal",), "untested"),
+    ("survival_consistency", "Consistency / well-defined baseline intervention", ("survival",), "untested"),
+    ("survival_no_interference", "No interference between people", ("survival",), "untested"),
+    ("conditional_independent_censoring", "Independent censoring conditional on treatment and baseline covariates", ("survival",), "untested"),
 ]
 
 
@@ -491,17 +497,17 @@ def infer_kind(series: pd.Series) -> str:
     nun = int(s.nunique(dropna=True))
     if pd.api.types.is_datetime64_any_dtype(s):
         return "datetime"
-    if s.dtype == bool:
+    if pd.api.types.is_bool_dtype(s):
         return "binary"
     if pd.api.types.is_numeric_dtype(s):
-        if nun <= 2:
+        if nun == 2:
             return "binary"
         if nun > 0.9 * n and n > 20 and pd.api.types.is_integer_dtype(s):
             return "id"
         if nun <= 12 and pd.api.types.is_integer_dtype(s):
             return "categorical"
         return "continuous"
-    if nun <= 2:
+    if nun == 2:
         return "binary"
     if nun > 0.5 * n and n > 20:
         return "text" if s.astype(str).str.len().mean() > 24 else "id"
@@ -537,6 +543,9 @@ def describe_estimand(estimand: str | None, treatment: str | None, outcome: str 
         "CATE": f"How does the effect of {t} on {y} vary across units?",
         "GATE": f"How does the effect of {t} on {y} vary across groups?",
         "dose_response": f"How does {y} change as the dose of {t} changes?",
+        "survival_difference": f"How do event-free probabilities differ between baseline {t} groups at the chosen horizon?",
+        "RMST_difference": f"How does restricted event-free time differ between baseline {t} groups through the chosen horizon?",
+        "time_ratio": f"What common conditional event-time factor is associated with baseline {t} in the AFT model?",
     }.get(estimand or "", f"What is the effect of {t} on {y}?")
 
 
@@ -547,7 +556,8 @@ def summarise_question(spec: Mapping[str, Any]) -> str:
     outcome = q.get("outcome") or roles.get("outcome") or "outcome"
     population = q.get("population")
     comparison = q.get("comparison")
-    text = f"Effect of {treatment} on {outcome}"
+    text = (f"Compare baseline {treatment} for event {roles.get('event') or 'an event'} over {roles.get('duration') or 'elapsed follow-up'}"
+            if spec.get("design") == "survival" else f"Effect of {treatment} on {outcome}")
     if population:
         text += f" for {population}"
     if comparison:

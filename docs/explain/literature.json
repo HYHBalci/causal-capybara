@@ -1274,5 +1274,153 @@
     "url": "https://doi.org/10.2202/1557-4679.1043",
     "topic": "Additional methodology",
     "metadata_source": "https://api.crossref.org/works/10.2202/1557-4679.1043"
+  },
+  {
+    "id": "kaplan1958",
+    "match": [
+      "kaplan",
+      "meier",
+      "1958"
+    ],
+    "citation": "Kaplan, E. L., & Meier, P. (1958). Nonparametric Estimation from Incomplete Observations. Journal of the American Statistical Association, 53(282), 457–481.",
+    "url": "https://doi.org/10.1080/01621459.1958.10501452",
+    "topic": "Survival and causal event-time analysis"
+  },
+  {
+    "id": "uno2014",
+    "match": [
+      "uno",
+      "2014"
+    ],
+    "citation": "Uno, H., et al. (2014). Moving Beyond the Hazard Ratio in Quantifying the Between-Group Difference in Survival Analysis. Journal of Clinical Oncology, 32(22), 2380–2385.",
+    "url": "https://doi.org/10.1200/JCO.2014.55.2208",
+    "topic": "Survival and causal event-time analysis"
+  },
+  {
+    "id": "wei1992",
+    "match": [
+      "wei",
+      "1992"
+    ],
+    "citation": "Wei, L. J. (1992). The accelerated failure time model: a useful alternative to the Cox regression model in survival analysis. Statistics in Medicine, 11(14–15), 1871–1879.",
+    "url": "https://doi.org/10.1002/sim.4780111409",
+    "topic": "Survival and causal event-time analysis"
+  },
+  {
+    "id": "hernan2010",
+    "match": [
+      "hernan",
+      "2010",
+      "hazard"
+    ],
+    "citation": "Hernán, M. A. (2010). The Hazards of Hazard Ratios. Epidemiology, 21(1), 13–15.",
+    "url": "https://doi.org/10.1097/EDE.0b013e3181c1ea43",
+    "topic": "Survival and causal event-time analysis"
+  },
+  {
+    "id": "rudolph2023",
+    "match": [
+      "rudolph",
+      "schisterman",
+      "2023"
+    ],
+    "citation": "Rudolph, J. E., Schisterman, E. F., & Naimi, A. I. (2023). A Simulation Study Comparing the Performance of Time-Varying Inverse Probability Weighting and G-Computation in Survival Analysis. American Journal of Epidemiology, 192(1), 102–110.",
+    "url": "https://doi.org/10.1093/aje/kwac162",
+    "topic": "Survival and causal event-time analysis"
+  },
+  {
+    "id": "altman2003",
+    "match": [
+      "altman",
+      "bland",
+      "2003"
+    ],
+    "citation": "Altman, D. G., and Bland, J. M. (2003). Interaction revisited: the difference between two estimates. BMJ 326:219.",
+    "url": "https://doi.org/10.1136/bmj.326.7382.219",
+    "topic": "Treatment effect heterogeneity"
+  },
+  {
+    "id": "knol2012",
+    "match": [
+      "knol",
+      "vanderweele",
+      "2012"
+    ],
+    "citation": "Knol, M. J., and VanderWeele, T. J. (2012). Recommendations for presenting analyses of effect modification and interaction. International Journal of Epidemiology 41(2):514-520.",
+    "url": "https://doi.org/10.1093/ije/dyr218",
+    "topic": "Treatment effect heterogeneity"
+  },
+  {
+    "id": "kent2020",
+    "match": [
+      "kent",
+      "2020",
+      "path"
+    ],
+    "citation": "Kent, D. M., et al. (2020). The Predictive Approaches to Treatment effect Heterogeneity (PATH) Statement. Annals of Internal Medicine 172(1):35-45.",
+    "url": "https://doi.org/10.7326/M18-3667",
+    "topic": "Treatment effect heterogeneity"
+  },
+  {
+    "id": "sun2010",
+    "match": [
+      "sun",
+      "2010",
+      "subgroup"
+    ],
+    "citation": "Sun, X., Briel, M., Walter, S. D., and Guyatt, G. H. (2010). Is a subgroup effect believable? Updating criteria to evaluate the credibility of subgroup analyses. BMJ 340:c117.",
+    "url": "https://doi.org/10.1136/bmj.c117",
+    "topic": "Treatment effect heterogeneity"
+  },
+  {
+    "id": "statsmodels-glm",
+    "match": [],
+    "citation": "statsmodels maintainers. GLM official documentation. Accessed 2026-10-14.",
+    "url": "https://www.statsmodels.org/stable/generated/statsmodels.genmod.generalized_linear_model.GLM.html",
+    "topic": "Treatment effect heterogeneity",
+    "aliases": [
+      "statsmodels GLM documentation"
+    ]
+  },
+  {
+    "id": "statsmodels-mnlogit",
+    "match": [],
+    "citation": "statsmodels maintainers. MNLogit official documentation. Accessed 2026-10-14.",
+    "url": "https://www.statsmodels.org/stable/generated/statsmodels.discrete.discrete_model.MNLogit.html",
+    "topic": "Treatment effect heterogeneity",
+    "aliases": [
+      "statsmodels MNLogit documentation"
+    ]
+  },
+  {
+    "id": "statsmodels-wald",
+    "match": [],
+    "citation": "statsmodels maintainers. Joint Wald test official documentation. Accessed 2026-10-14.",
+    "url": "https://www.statsmodels.org/stable/generated/statsmodels.genmod.generalized_linear_model.GLMResults.wald_test.html",
+    "topic": "Treatment effect heterogeneity",
+    "aliases": [
+      "statsmodels joint Wald test documentation"
+    ]
+  },
+  {
+    "id": "statsmodels-multiplicity",
+    "match": [],
+    "citation": "statsmodels maintainers. Multiple-testing official documentation. Accessed 2026-10-14.",
+    "url": "https://www.statsmodels.org/stable/generated/statsmodels.stats.multitest.multipletests.html",
+    "topic": "Treatment effect heterogeneity",
+    "aliases": [
+      "statsmodels multiple-testing documentation"
+    ]
+  },
+  {
+    "id": "wang2007",
+    "match": [
+      "wang",
+      "2007",
+      "subgroup"
+    ],
+    "citation": "Wang, R., Lagakos, S. W., Ware, J. H., Hunter, D. J., and Drazen, J. M. (2007). Statistics in Medicine: Reporting of Subgroup Analyses in Clinical Trials. New England Journal of Medicine 357:2189-2194.",
+    "url": "https://doi.org/10.1056/NEJMsr077003",
+    "topic": "Treatment effect heterogeneity"
   }
 ]
