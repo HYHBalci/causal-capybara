@@ -1,6 +1,6 @@
 [package]
 name = "causal-capybara"
-version = "0.1.0"
+version = "0.2.0"
 description = "Causal Capybara -- a desktop causal-inference studio"
 authors = ["Yusufhan Balci", "VCESR"]
 license = "Apache-2.0"

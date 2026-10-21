@@ -1,5 +1,14 @@
 # Causal Capybara release checklist
 
+## v0.2.0 candidate — 21 October 2026
+
+Version 0.2.0 is being prepared as an unsigned Windows x64 draft release from
+current main. See [the versioned release notes](RELEASE_NOTES_0.2.0.md).
+The checks below document v0.1.0; they are historical evidence and do not certify
+the v0.2.0 installer. Record fresh candidate verification before publication.
+
+## v0.1.0 historical checklist
+
 Updated 5 October 2026 (Europe/Amsterdam). Status: **v0.1.0 unsigned Windows
 preview published** in the public `HYHBalci/causal-capybara`
 repository. The installer has been built and audited, and current main CI passed.

@@ -15,6 +15,10 @@ This preview installer is unsigned. [Release notes](https://github.com/HYHBalci/
 
 **For the current research assistant, ontology and new analyses, use the [latest source](#alternative-install-from-github-with-the-command-line).** The published v0.1.0 installer predates these features and the screenshots below.
 
+**Next release: v0.2.0 is being prepared as a draft**, including these features
+in the bundled Windows installer. See the [release notes](docs/RELEASE_NOTES_0.2.0.md)
+for the candidate's changes and verification status.
+
 ## See the app
 
 The current source includes an open, offline [ontological research tree](docs/ONTOLOGY.md),
