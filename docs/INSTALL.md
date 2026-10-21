@@ -11,6 +11,11 @@ Python, R, Git, or programming tools to use the Windows release.
 [Download the Windows installer (.exe, Python included)](https://github.com/HYHBalci/causal-capybara/releases/download/v0.1.0/Causal-Capybara-0.1.0-windows-x64-setup.exe).
 The installer is about **132 MB**. No GitHub account is required.
 
+Version 0.2.0 is being prepared as a draft with the research assistant, ontology
+and newer analyses. Its installer is named
+`Causal-Capybara-0.2.0-windows-x64-setup.exe`; it becomes a public download only
+after publication. See the [candidate release notes](RELEASE_NOTES_0.2.0.md).
+
 1. **Download.** Use the installer link above, or open the [v0.1.0 release](https://github.com/HYHBalci/causal-capybara/releases/tag/v0.1.0),
    expand **Assets**, and choose `Causal-Capybara-0.1.0-windows-x64-setup.exe`.
    Your browser usually saves it in **Downloads**.
