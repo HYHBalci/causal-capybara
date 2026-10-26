@@ -1,9 +1,9 @@
 # Changelog
 
-Notable user-facing changes are recorded here. The latest published Windows
-preview is v0.1.0 (5 October 2026). Version 0.2.0 is being prepared as a draft.
+Notable user-facing changes are recorded here. Release assets and verification
+details are available in the [GitHub releases](https://github.com/HYHBalci/causal-capybara/releases).
 
-## 0.2.0 — draft Windows preview
+## 0.2.0 — 26 October 2026
 
 - Added an offline ontological research tree, versioned evidence and rights records,
   reproducible knowledge compiler/index, standalone CLI, local read-only MCP and
@@ -23,7 +23,7 @@ preview is v0.1.0 (5 October 2026). Version 0.2.0 is being prepared as a draft.
   request ownership during navigation.
 - Updated the application screenshots to show the current workflows.
 
-See the [draft v0.2.0 release notes](docs/RELEASE_NOTES_0.2.0.md).
+See the [v0.2.0 release notes](docs/RELEASE_NOTES_0.2.0.md).
 
 ## 0.1.0 — 5 October 2026
 

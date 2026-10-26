@@ -7,17 +7,16 @@ Python, R, Git, or programming tools to use the Windows release.
 
 ### Windows 64-bit installer
 
-**Windows preview v0.1.0 — published 5 October 2026.**
-[Download the Windows installer (.exe, Python included)](https://github.com/HYHBalci/causal-capybara/releases/download/v0.1.0/Causal-Capybara-0.1.0-windows-x64-setup.exe).
-The installer is about **132 MB**. No GitHub account is required.
+**Windows preview v0.2.0 — 26 October 2026.**
+[Download the Windows installer (.exe, Python included)](https://github.com/HYHBalci/causal-capybara/releases/download/v0.2.0/Causal-Capybara-0.2.0-windows-x64-setup.exe).
+The installer is about **135 MB**. No GitHub account is required.
 
-Version 0.2.0 is being prepared as a draft with the research assistant, ontology
-and newer analyses. Its installer is named
-`Causal-Capybara-0.2.0-windows-x64-setup.exe`; it becomes a public download only
-after publication. See the [candidate release notes](RELEASE_NOTES_0.2.0.md).
+Version 0.2.0 includes the research assistant, offline research tree, survival
+analyses and heterogeneity workflows. See the [release notes](RELEASE_NOTES_0.2.0.md)
+for changes and verification limits.
 
-1. **Download.** Use the installer link above, or open the [v0.1.0 release](https://github.com/HYHBalci/causal-capybara/releases/tag/v0.1.0),
-   expand **Assets**, and choose `Causal-Capybara-0.1.0-windows-x64-setup.exe`.
+1. **Download.** Use the installer link above, or open the [v0.2.0 release](https://github.com/HYHBalci/causal-capybara/releases/tag/v0.2.0),
+   expand **Assets**, and choose `Causal-Capybara-0.2.0-windows-x64-setup.exe`.
    Your browser usually saves it in **Downloads**.
 2. **Open.** Double-click the downloaded file and choose **Next**.
 3. **Agree.** Review the Apache license and choose **I Agree**.
@@ -26,9 +25,9 @@ after publication. See the [candidate release notes](RELEASE_NOTES_0.2.0.md).
 5. **Start.** Leave **Run Causal Capybara** checked and choose **Finish**. You can
    also open the app later from the Start menu or desktop shortcut.
 
-The preview has been tested on Windows 10 x64. Windows 11 x64 is an intended
-target with a separate clean-machine test still pending. macOS, Linux, and Windows
-ARM64 desktop packages are not included. To check your computer, open
+Windows x64 is the desktop package for this preview. Fresh-account installation,
+a separate Windows 11 check and 150%/200% display-scaling verification remain pending.
+macOS, Linux, and Windows ARM64 desktop packages are not included. To check your computer, open
 **Settings → System → About → System type** and look for an **x64-based processor**.
 Allow roughly 1 GB of free space for installation.
 
@@ -39,7 +38,7 @@ This installs the source locally and runs the **local browser preview**. You nee
 for the initial source and dependency downloads. Rust, C++ build tools, WebView2,
 and the desktop installer are not required for this route.
 
-The commands select the `v0.1.0` source tag in the public repository. Anyone can
+The commands select the `v0.2.0` source tag in the public repository. Anyone can
 clone it without a GitHub account. On a university/work computer, the tools
 and local servers must be allowed by IT; this route does not grant installation
 permissions.
@@ -51,7 +50,7 @@ Documents. Run the following commands **one at a time**, stopping if any reports
 an error. If a `causal-capybara` folder already exists, choose another parent folder.
 
 ```powershell
-git clone --depth 1 --branch v0.1.0 https://github.com/HYHBalci/causal-capybara.git
+git clone --depth 1 --branch v0.2.0 https://github.com/HYHBalci/causal-capybara.git
 Set-Location causal-capybara
 py -3.12 -m venv .venv
 .\.venv\Scripts\python.exe -m pip install -r requirements.txt
@@ -68,7 +67,7 @@ provide it. Dependencies are isolated in this checkout's `.venv` and `app/node_m
 With Git, Python 3.12, and Node.js 22.12 or newer available, run the commands one at a time:
 
 ```bash
-git clone --depth 1 --branch v0.1.0 https://github.com/HYHBalci/causal-capybara.git
+git clone --depth 1 --branch v0.2.0 https://github.com/HYHBalci/causal-capybara.git
 cd causal-capybara
 python3.12 -m venv .venv
 .venv/bin/python -m pip install -r requirements.txt
@@ -117,10 +116,11 @@ If port `5173` or `8760` is already in use, close the existing Causal Capybara
 session first. The interface proxy expects the analysis engine on port `8760`.
 
 The browser preview supports the local analysis workflow and browser downloads
-for exports. For importing data or opening a project, type its full local path;
-native file pickers, desktop drag-and-drop, and automatic engine restart are
-available in the desktop app. Stop and restart terminal 1 if the engine needs
-restarting. R methods and PDF typesetting still need their optional dependencies.
+for exports. Import data with the browser file chooser, drag and drop, or a typed
+local path. To open an existing project, type its full local path. Native file
+dialogs and automatic engine restart are available in the desktop app. Stop and
+restart terminal 1 if the engine needs restarting. R methods and PDF typesetting
+still need their optional dependencies.
 
 ### Analysis from the command line only
 
@@ -153,7 +153,7 @@ to the publisher. Downloading a real study uses the network only when you reques
 
 ### Windows shows an unknown-publisher warning
 
-The v0.1.0 preview installer is **unsigned**. Windows or your browser may warn or
+The v0.2.0 preview installer is **unsigned**. Windows or your browser may warn or
 block it. Download only from the Causal Capybara GitHub release and check that
 the filename matches. [Checksum verification](#optional-check-the-download) is available
 if you want to confirm the downloaded file matches the release. A matching checksum
@@ -172,10 +172,10 @@ ask IT to install WebView2 Runtime. The app and synthetic examples can then run 
 
 ### I cannot see the installer
 
-Use the [direct Windows installer link](https://github.com/HYHBalci/causal-capybara/releases/download/v0.1.0/Causal-Capybara-0.1.0-windows-x64-setup.exe),
-or open the [v0.1.0 release](https://github.com/HYHBalci/causal-capybara/releases/tag/v0.1.0),
+Use the [direct Windows installer link](https://github.com/HYHBalci/causal-capybara/releases/download/v0.2.0/Causal-Capybara-0.2.0-windows-x64-setup.exe),
+or open the [v0.2.0 release](https://github.com/HYHBalci/causal-capybara/releases/tag/v0.2.0),
 scroll to **Assets**, and expand the list if it is collapsed. Choose
-`Causal-Capybara-0.1.0-windows-x64-setup.exe`. The automatically generated
+`Causal-Capybara-0.2.0-windows-x64-setup.exe`. The automatically generated
 **Source code (zip)** and **Source code (tar.gz)** downloads contain the project
 source; choose the `.exe` to install the bundled desktop app. Downloads are public
 and do not require signing in. If GitHub reports a temporary loading error, reload
@@ -205,7 +205,7 @@ right-click an empty area, and choose **Open in Terminal** (or open PowerShell i
 Run:
 
 ```powershell
-Get-FileHash -Algorithm SHA256 -LiteralPath '.\Causal-Capybara-0.1.0-windows-x64-setup.exe'
+Get-FileHash -Algorithm SHA256 -LiteralPath '.\Causal-Capybara-0.2.0-windows-x64-setup.exe'
 ```
 
 Compare the full hash with the matching line in `SHA256SUMS.txt`. If they differ,
@@ -264,10 +264,9 @@ Use the release workflow for the student download.
 
 ## Verification status
 
-A local Windows x64 installer passed isolated installation, engine startup without
-system Python, example analysis, clean exit, and uninstall checks. [Hosted CI for
-current main at `a1433ab`](https://github.com/HYHBalci/causal-capybara/actions/runs/37289193350)
-passed on 5 October 2026; the installer remains the locally audited artifact.
-A fresh-account interactive test remains pending, as do Windows 11 verification and the remaining
-native GUI and display-scaling checks. See the [release checklist](RELEASE_CHECKLIST.md)
-and [final audit](RELEASE_AUDIT_2026-09-30.md) for the evidence and remaining checks.
+The [v0.2.0 release notes](RELEASE_NOTES_0.2.0.md) record the exact installer,
+checksum and completed verification. A fresh-account interactive test remains
+pending, as do a separate Windows 11 check and the remaining native GUI and
+display-scaling checks. See the [release checklist](RELEASE_CHECKLIST.md) for
+current evidence and limits. The [September audit](RELEASE_AUDIT_2026-09-30.md)
+documents the earlier v0.1.0 candidate and does not verify this installer.

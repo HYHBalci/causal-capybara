@@ -10,14 +10,12 @@ Point it at a dataset, state the question in ordinary language, complete a pictu
 design, look at the diagnostics that design depends on, and estimate — usually with several methods at
 once, because the disagreement between them is part of what you learned.
 
-**[Download Causal Capybara for Windows (.exe, Python included)](https://github.com/HYHBalci/causal-capybara/releases/download/v0.1.0/Causal-Capybara-0.1.0-windows-x64-setup.exe)** — v0.1.0, Windows x64, about 132 MB.
-This preview installer is unsigned. [Release notes](https://github.com/HYHBalci/causal-capybara/releases/tag/v0.1.0) and [installation help](docs/INSTALL.md).
+**[Download Causal Capybara for Windows (.exe, Python included)](https://github.com/HYHBalci/causal-capybara/releases/download/v0.2.0/Causal-Capybara-0.2.0-windows-x64-setup.exe)** — v0.2.0, Windows x64, about 135 MB.
+This preview installer is unsigned. [Release notes](https://github.com/HYHBalci/causal-capybara/releases/tag/v0.2.0) and [installation help](docs/INSTALL.md).
 
-**For the current research assistant, ontology and new analyses, use the [latest source](#alternative-install-from-github-with-the-command-line).** The published v0.1.0 installer predates these features and the screenshots below.
-
-**Next release: v0.2.0 is being prepared as a draft**, including these features
-in the bundled Windows installer. See the [release notes](docs/RELEASE_NOTES_0.2.0.md)
-for the candidate's changes and verification status.
+The v0.2.0 installer includes the research assistant, offline research tree,
+survival analyses and heterogeneity workflows shown below. See the
+[versioned release notes](docs/RELEASE_NOTES_0.2.0.md) for changes and verification limits.
 
 ## See the app
 
@@ -97,10 +95,10 @@ these are computed teaching results. [Capture details and reproducible screensho
 
 ### Windows 64-bit installer
 
-**Windows preview v0.1.0 — published 5 October 2026.**
-[Download the Windows installer (.exe)](https://github.com/HYHBalci/causal-capybara/releases/download/v0.1.0/Causal-Capybara-0.1.0-windows-x64-setup.exe) (about 132 MB).
-You can also open the [v0.1.0 release](https://github.com/HYHBalci/causal-capybara/releases/tag/v0.1.0),
-expand **Assets**, and choose `Causal-Capybara-0.1.0-windows-x64-setup.exe`.
+**Windows preview v0.2.0 — 26 October 2026.**
+[Download the Windows installer (.exe)](https://github.com/HYHBalci/causal-capybara/releases/download/v0.2.0/Causal-Capybara-0.2.0-windows-x64-setup.exe) (about 135 MB).
+You can also open the [v0.2.0 release](https://github.com/HYHBalci/causal-capybara/releases/tag/v0.2.0),
+expand **Assets**, and choose `Causal-Capybara-0.2.0-windows-x64-setup.exe`.
 No GitHub account is required.
 
 1. Double-click the downloaded `.exe`.
@@ -116,7 +114,7 @@ it using an internet connection; university device policies may require IT assis
 The preview installer is unsigned, so Windows may show an unknown-publisher warning.
 See [installation help](docs/INSTALL.md) for that warning, troubleshooting, and optional
 checksum verification. The [release checklist](docs/RELEASE_CHECKLIST.md) records the
-remaining preview checks, including fresh-account installation and Windows 11 verification.
+remaining preview checks, including fresh-account installation, Windows 11 and display-scaling verification.
 
 ### Alternative: install from GitHub with the command line
 
@@ -125,7 +123,7 @@ Use the **local browser preview** when you prefer a source installation. You nee
 commands one at a time; stop if a command reports an error:
 
 ```powershell
-git clone --depth 1 https://github.com/HYHBalci/causal-capybara.git
+git clone --depth 1 --branch v0.2.0 https://github.com/HYHBalci/causal-capybara.git
 Set-Location causal-capybara
 py -3.12 -m venv .venv
 .\.venv\Scripts\python.exe -m pip install -r requirements.txt
@@ -417,10 +415,10 @@ Four layers, following plan §13:
   `Synth` is later work; the grey cards say so.
 * **`engines/locks/r.lock` is not a resolved dependency solve.** The versions are plausible current CRAN
   releases; CI has to refresh them on a clean machine before a release. The file says this at the top.
-* **Windows x64 is the first desktop release target.** The release candidate passed an isolated
-  NSIS install and engine-startup smoke test on Windows 10 Home x64 build 19045. A fresh-account
-  manual GUI test remains in the release checklist. macOS and Linux desktop packages remain
-  unverified.
+* **Windows x64 is the first desktop release target.** The v0.2.0 installer passed isolated
+  NSIS installation, engine startup, example analysis, clean shutdown and uninstall in the
+  tagged Windows release workflow. A fresh-account manual GUI test remains in the release
+  checklist. macOS and Linux desktop packages remain unverified.
 * **The installed candidate still needs a fresh-machine test.** The release configuration stages a
   managed Python runtime and required packages; the source-only developer preview does not. On a
   machine without a working engine, the window still opens, the bundled catalogue remains readable,

@@ -5,9 +5,8 @@
 
 **[Download the Windows installer (.exe)](https://github.com/HYHBalci/causal-capybara/releases/download/v0.2.0/Causal-Capybara-0.2.0-windows-x64-setup.exe)**
 
-This release is being prepared as a draft on 21 October 2026. The direct download
-link becomes public when the release is published. Use the installer asset for
-the desktop app; GitHub's Source code archives require a development setup.
+Windows preview release — 26 October 2026. Use the installer asset for the desktop
+app; GitHub's Source code archives require a development setup.
 
 ## New since v0.1.0
 
@@ -49,9 +48,43 @@ and [knowledge client setup](https://github.com/HYHBalci/causal-capybara/blob/ma
 
 ## Verification
 
-The GitHub Release records the candidate's completed checks and exact installer
-checksum. Its `SHA256SUMS.txt` asset identifies the download. Review that evidence
-before publication; earlier v0.1.0 verification does not verify this installer.
+The installer was built from tag `v0.2.0`, commit
+`b9f2a8df0d1946987c741a67cb2730420be27332`, in the
+[tagged Windows release workflow](https://github.com/HYHBalci/causal-capybara/actions/runs/39614552938).
+
+- 95 frontend tests, TypeScript checking, the production UI build and the Rust
+  bootstrap test passed in the tagged build. The frontend tests and production
+  build also passed locally on 26 October 2026.
+- The bundled CPython 3.13.15 suite passed **1,279 tests**, with 6 skipped and 7
+  warnings. Optional MCP protocol/client tests and Python/R concordance are
+  outside that bundled-runtime suite.
+- The staged and installed runtime passed knowledge validation, cited assistant
+  context retrieval, a worked example with two estimators and result validation.
+- The exact installer passed isolated silent installation, desktop startup and
+  health, bundled-engine ownership, graceful shutdown, child-process cleanup,
+  resource-tree checks and uninstall on the Windows CI runner.
+- License notices were collected for the exact bundled dependencies.
+- The [source CI run](https://github.com/HYHBalci/causal-capybara/actions/runs/39613284427)
+  passed frontend, Python on Windows/Linux/macOS, Windows desktop build and
+  Python/R concordance. Its combined browser job previously reached its 20-minute
+  limit; that hosted result does not establish complete browser acceptance.
+- On 26 October, the unchanged release source passed both live-engine and
+  synthetic ontology browser suites locally on Windows, including accessibility,
+  keyboard navigation, cited context, redaction, provider consent and failure,
+  cancellation, approval boundaries, stale proposals and survival results.
+- The same local run passed the general workflow/accessibility, import, policy,
+  heterogeneity and CLI browser suites. The 13 CLI checks use real sidecar context
+  with mocked native clients/providers; they do not certify external sign-in.
+
+**Installer:** `Causal-Capybara-0.2.0-windows-x64-setup.exe` — 135,140,903 bytes
+(about 135 MB).
+
+**SHA-256:** `b1105aca3f4f83e152c014b199b09721309603da8d674dcdaf632b41f8d328aa`
+
+A fresh download on 26 October matched both `SHA256SUMS.txt` and GitHub's asset
+digest. Publication documentation is updated separately; the release tag and
+installer remain tied to the build commit above. The automated evidence does not
+certify fresh-account interactive use or display scaling.
 
 ## Known limits
 
