@@ -6,6 +6,6 @@ result. That boundary is why the product can survive package churn.
 
 from __future__ import annotations
 
-__version__ = "0.1.0"
+__version__ = "0.2.0"
 APP_NAME = "Causal Capybara"
 SCHEMA_VERSION = 1

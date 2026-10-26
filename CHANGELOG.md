@@ -1,10 +1,9 @@
 # Changelog
 
-Notable user-facing changes are recorded here. Version 0.1.0 is being prepared for
-a public release targeted for Friday, October 2, 2026 (Europe/Amsterdam).
-Publication is pending; no release is claimed by this file.
+Notable user-facing changes are recorded here. Release assets and verification
+details are available in the [GitHub releases](https://github.com/HYHBalci/causal-capybara/releases).
 
-## Unreleased — 0.1.0 release candidate
+## 0.2.0 — 26 October 2026
 
 - Added an offline ontological research tree, versioned evidence and rights records,
   reproducible knowledge compiler/index, standalone CLI, local read-only MCP and
@@ -14,8 +13,19 @@ Publication is pending; no release is claimed by this file.
   and minimal audit records. AI cannot mark assumptions or diagnostics reviewed.
 - Added direct run input/output provenance and separate numerical reproduction
   evaluations with explicit tolerances and an honest ancestry limit.
+- Added a conversational research assistant beside the workspace, with locally
+  saved conversations and drafts, follow-up questions, cited sources-only answers,
+  optional native CLI/local/cloud providers, and reviewed study-change proposals.
+- Added right-censored survival analyses and direct treatment-effect heterogeneity
+  tests across continuous, binary, count/rate, categorical and survival outcomes.
+- Improved browser imports, reversible column selection, question setup,
+  package-install progress, comparison charts, keyboard access and assistant
+  request ownership during navigation.
+- Updated the application screenshots to show the current workflows.
 
-See the [draft v0.1.0 release notes](docs/RELEASE_NOTES_0.1.0.md).
+See the [v0.2.0 release notes](docs/RELEASE_NOTES_0.2.0.md).
+
+## 0.1.0 — 5 October 2026
 
 - Documented command-line source installation from GitHub, with a local browser preview
   and an analysis-only option alongside the Windows installer.

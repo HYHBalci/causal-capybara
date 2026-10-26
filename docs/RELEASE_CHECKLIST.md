@@ -1,5 +1,36 @@
 # Causal Capybara release checklist
 
+## v0.2.0 Windows preview — 26 October 2026
+
+The unsigned Windows x64 installer includes the research tree, conversational
+assistant, survival analyses and heterogeneity workflows. See
+[the versioned release notes](RELEASE_NOTES_0.2.0.md) for the exact build, checksum
+and verification evidence.
+
+- [x] Match the tag and application, npm, Cargo, Tauri and Python package versions.
+- [x] Build the bundled installer and pass its staged/installed runtime and
+  install/startup/shutdown/uninstall checks in the tagged Windows workflow.
+- [x] Pass the tagged build's 95 frontend tests, Rust bootstrap test and 1,279
+  bundled Python tests (6 skipped); record the skips and warnings.
+- [x] Collect notices for the actual bundled dependencies.
+- [x] Download the release assets again and match the installer checksum and
+  GitHub asset digest on 26 October.
+- [x] Pass both ontology browser modes locally against unchanged release source,
+  including keyboard/accessibility, privacy, consent and approval boundaries.
+- [x] Pass local workflow/accessibility, import, policy, heterogeneity and CLI
+  browser suites; external CLI/provider execution remains mocked in those tests.
+- [ ] Obtain a complete green hosted browser job. The earlier job hit its
+  20-minute limit; the other six source CI jobs passed. Local browser results
+  are separate evidence, not a claim that the hosted job passed.
+- [ ] Verify fresh-account interactive desktop use, a separate Windows 11
+  installation, remaining native GUI cases and 150%/200% display scaling.
+- [ ] Sign the installer. This release is explicitly an unsigned preview.
+
+Publication documentation does not change the tagged installer. The following
+v0.1.0 checklist and audit remain historical evidence only.
+
+## v0.1.0 historical checklist
+
 Updated 5 October 2026 (Europe/Amsterdam). Status: **v0.1.0 unsigned Windows
 preview published** in the public `HYHBalci/causal-capybara`
 repository. The installer has been built and audited, and current main CI passed.
