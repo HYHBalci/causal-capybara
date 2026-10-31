@@ -2,6 +2,9 @@
 
 **Serious causal inference. Casual to use.**
 
+**[Explore Causal Capybara on VCESR](https://www.vcesr.com/causal-capybara.html)** — product overview,
+complete methods catalogue, and CLI/MCP workflows.
+
 A local desktop studio for applied causal inference — public policy, public health, labour, education,
 and the rest of empirical social science. The object of work is a *causal question*, not an equation,
 and the computational engines are the R and Python libraries the field already publishes with.
