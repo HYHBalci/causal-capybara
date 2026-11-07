@@ -272,3 +272,43 @@ def test_new_import_requires_diagnostic_review_again(project):
     spec = project.save_spec({"id": "spec_import", "diagnostics_viewed": ["overlap"]})
     project.set_data(pd.DataFrame({"y": [2]}))
     assert project.spec(spec["id"])["diagnostics_viewed"] == []
+
+
+def test_study_downloads_can_be_enabled_without_fetching_automatically(tmp_path, monkeypatch):
+    from dataclasses import replace
+    from capy_sidecar import realdata
+
+    cfg = settings.Settings(home=tmp_path / "home", workspace=tmp_path / "workspace", allow_downloads=False)
+    monkeypatch.setattr(api, "SETTINGS", cfg)
+    monkeypatch.setattr(realdata, "SETTINGS", cfg)
+    payload = b"treatment,outcome\n0,1\n1,2\n"
+    original = realdata.CATALOGUE[0]
+    source = replace(original.sources[0], sha256=realdata._sha256(payload))
+    dataset = replace(original, sources=[source])
+    monkeypatch.setitem(realdata.BY_ID, dataset.id, dataset)
+    downloaded = []
+
+    def download(url):
+        downloaded.append(url)
+        return payload
+
+    monkeypatch.setattr(realdata, "_download", download)
+    with TestClient(api.app, base_url="http://127.0.0.1:8760") as client:
+        assert client.get("/settings").json()["allow_downloads"] is False
+        blocked = client.post(f"/datasets/{dataset.id}/fetch", json={})
+        assert blocked.status_code == 409
+        assert "switched off" in blocked.json()["detail"]
+        assert downloaded == []
+        enabled = client.patch("/settings", json={"allow_downloads": True})
+        assert enabled.status_code == 200
+        assert enabled.json()["allow_downloads"] is True
+        assert json.loads(cfg.settings_file.read_text(encoding="utf-8"))["allow_downloads"] is True
+        assert downloaded == []
+        fetched = client.post(f"/datasets/{dataset.id}/fetch", json={})
+        assert fetched.status_code == 200
+        assert fetched.json()["tile"]["cached"] is True
+        assert fetched.json()["provenance"]["records"][0]["matched_pin"] is True
+        assert downloaded == [source.url]
+        assert dataset.path_for(source).read_bytes() == payload
+        assert client.post(f"/datasets/{dataset.id}/fetch", json={}).status_code == 200
+        assert downloaded == [source.url], "Cached study data should not be downloaded again"

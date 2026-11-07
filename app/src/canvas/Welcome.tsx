@@ -47,12 +47,16 @@ export function Welcome() {
   const [exampleDesign, setExampleDesign] = useState('all')
   const [datasets, setDatasets] = useState<ExampleTile[]>([])
   const [datasetsError, setDatasetsError] = useState<string | null>(null)
+  const [downloadsAllowed, setDownloadsAllowed] = useState<boolean | null>(null)
+  const [downloadSettingsError, setDownloadSettingsError] = useState<string | null>(null)
+  const [enablingDownloads, setEnablingDownloads] = useState(false)
   const [catalogue, setCatalogue] = useState<Record<string, DesignName>>({})
   const [preview, setPreview] = useState<Preview | null>(null)
 
   useEffect(() => {
     api.examples().then(setExamples).catch((e) => setExamplesError(String(e?.detail ?? e)))
     api.datasets().then(setDatasets).catch((e) => setDatasetsError(String(e?.detail ?? e)))
+    void loadDownloadSettings()
     // The outline is the one request that knows both registers of every name.
     // If it does not answer, the design titles already in the store carry the
     // screen on their own and only the second line goes missing.
@@ -71,6 +75,29 @@ export function Welcome() {
       })
       .catch(() => undefined)
   }, [])
+
+  async function loadDownloadSettings() {
+    setDownloadSettingsError(null)
+    try {
+      const settings = await api.settings()
+      setDownloadsAllowed(settings.allow_downloads !== false)
+    } catch (err) {
+      setDownloadSettingsError(String((err as { detail?: string })?.detail ?? err))
+    }
+  }
+
+  async function enableDownloads() {
+    setEnablingDownloads(true)
+    setDownloadSettingsError(null)
+    try {
+      const settings = await api.saveSettings({ allow_downloads: true })
+      setDownloadsAllowed(settings.allow_downloads !== false)
+    } catch (err) {
+      setDownloadSettingsError(String((err as { detail?: string })?.detail ?? err))
+    } finally {
+      setEnablingDownloads(false)
+    }
+  }
 
   // The gallery above is generated and always available; this one has to be
   // downloaded, so a tile has two states and says which it is in.
@@ -344,6 +371,25 @@ export function Welcome() {
             <span>Study data is not available in this build ({datasetsError}).</span>
           </div>
         )}
+        {(downloadsAllowed === false || downloadSettingsError) && (
+          <div className="card pad board-notice">
+            {downloadsAllowed === false && (
+              <>
+                <p role="status">Study downloads are turned off in Settings.</p>
+                <p className="hint">Enable them to download data from the publisher. Files stay on this machine.</p>
+                <button className="btn" disabled={enablingDownloads} onClick={() => void enableDownloads()}>
+                  {enablingDownloads ? 'Enabling study downloads…' : 'Enable study downloads'}
+                </button>
+              </>
+            )}
+            {downloadSettingsError && (
+              <p role="alert">Could not update study download settings: {downloadSettingsError}</p>
+            )}
+            {downloadsAllowed === null && (
+              <button className="btn" onClick={() => void loadDownloadSettings()}>Retry download settings</button>
+            )}
+          </div>
+        )}
         <div className="example-grid">
           {datasets.map((d) => {
             const design = designName(d.design)
@@ -380,7 +426,7 @@ export function Welcome() {
                       Open project →
                     </button>
                   ) : (
-                    <button className="btn" onClick={() => void downloadDataset(d.id)}>
+                    <button className="btn" disabled={downloadsAllowed !== true} onClick={() => void downloadDataset(d.id)}>
                       Download from publisher
                     </button>
                   )}

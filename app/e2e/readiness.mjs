@@ -47,6 +47,57 @@ async function json(route) {
 }
 let projectId, specId, jobs, runIds, comparisonId, reportId
 try {
+  await step('Home explains disabled study downloads and lets the user enable them', async () => {
+    const downloadsContext = await browser.newContext()
+    const downloads = await downloadsContext.newPage()
+    downloads.on('pageerror', (error) => pageErrors.push(error.message))
+    const tiles = (await json('/datasets')).slice(0, 2).map((tile, i) => ({ ...tile, cached: i === 1 }))
+    let allowed = false, failSave = true, fetches = 0
+    await downloads.route('**/settings', async (route) => {
+      if (route.request().method() === 'PATCH') {
+        assert.deepEqual(route.request().postDataJSON(), { allow_downloads: true })
+        if (failSave) {
+          await route.fulfill({ status: 500, json: { detail: 'Settings file is read-only.' } })
+          return
+        }
+        allowed = true
+      }
+      await route.fulfill({ json: { allow_downloads: allowed } })
+    })
+    await downloads.route('**/datasets', (route) => route.fulfill({ json: tiles }))
+    await downloads.route(`**/datasets/${tiles[0].id}/fetch`, async (route) => {
+      assert(allowed, 'Home must not request a download while downloads are disabled')
+      fetches++
+      tiles[0].cached = true
+      await route.fulfill({ json: { ok: true, tile: tiles[0], provenance: {
+        title: tiles[0].title, files: [{ filename: 'study.csv' }],
+      } } })
+    })
+    try {
+      await downloads.goto(url)
+      await downloads.getByText('Study downloads are turned off in Settings.', { exact: true }).waitFor()
+      const download = downloads.getByRole('button', { name: 'Download from publisher', exact: true })
+      assert(await download.isDisabled())
+      assert(await downloads.locator('.study-tile').nth(1).getByRole('button', { name: 'Open project →', exact: true }).isEnabled())
+      const enable = downloads.getByRole('button', { name: 'Enable study downloads', exact: true })
+      await enable.click()
+      await downloads.getByRole('alert').filter({ hasText: 'Settings file is read-only.' }).waitFor()
+      assert(await download.isDisabled())
+      assert.equal(fetches, 0)
+      failSave = false
+      await enable.click()
+      await downloads.getByText('Study downloads are turned off in Settings.', { exact: true }).waitFor({ state: 'hidden' })
+      assert.equal(fetches, 0, 'Enabling downloads must not fetch data automatically')
+      await download.click()
+      await downloads.locator('.study-tile').first().getByRole('button', { name: 'Open project →', exact: true }).waitFor()
+      assert.equal(fetches, 1)
+      await downloads.reload()
+      await downloads.locator('.study-tile').first().getByRole('button', { name: 'Open project →', exact: true }).waitFor()
+      assert.equal(await downloads.getByRole('button', { name: 'Enable study downloads', exact: true }).count(), 0)
+    } finally {
+      await downloadsContext.close()
+    }
+  })
   await step('Home, branding, keyboard tour and first-run copy', async () => {
     await page.goto(url)
     await page.locator('.starter').first().waitFor()
